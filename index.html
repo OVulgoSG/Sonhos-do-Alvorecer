@@ -717,32 +717,12 @@ function buildId1() {
     <div class="field"><label>Nome do Personagem ${infoIcon('Nome d@ Personagem')}</label>
       <input type="text" id="inpNome" placeholder="Ex: Monkey D. ..."></div>
     <div class="field"><label>Jogador(a) ${infoIcon('Nome d@ Jogador(a)')}</label>
-      <input type="text" id="inpJogador" placeholder="Seu nome">
-      <div id="playerRuleMessage" class="hint-text" style="margin-top:8px;min-height:1.4em"></div></div>`;
+      <input type="text" id="inpJogador" placeholder="Seu nome"></div>`;
 }
-function getPlayerRule(){
-  const nome=String(state.identidade.jogador||'').trim().toLowerCase();
-  const idade=Number.parseInt(String(state.identidade.idade||''),10);
-  if(nome.startsWith('andr')) return {mensagem:'Você já ganha buff em trair.', bloqueado:false};
-  if(nome.includes('maozinh')) return {mensagem:'Não vai passar daqui.', bloqueado:true};
-  if(nome.startsWith('vin')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
-  if(nome.startsWith('nic')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
-  if(nome.startsWith('wal')) return {mensagem:'O teu poder é o preto.', bloqueado:false};
-  if(nome.startsWith('eduard')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
-  return {mensagem:'', bloqueado:false};
-}
-function renderPlayerRule(){
-  const el=document.getElementById('playerRuleMessage');
-  if(!el) return;
-  const rule=getPlayerRule();
-  el.textContent=rule.mensagem;
-  el.style.color=rule.bloqueado?'#b42318':'';
-  el.style.fontWeight=rule.mensagem?'600':'400';
-}
-function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; renderPlayerRule(); }
+function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; }
 function bindId1(){
   document.getElementById('inpNome').addEventListener('input', e=>{state.identidade.nome=e.target.value; scheduleSave();});
-  document.getElementById('inpJogador').addEventListener('input', e=>{state.identidade.jogador=e.target.value; renderPlayerRule(); scheduleSave();});
+  document.getElementById('inpJogador').addEventListener('input', e=>{state.identidade.jogador=e.target.value; scheduleSave();});
 }
 
 function buildId2() {
@@ -763,7 +743,7 @@ function fillId2(){
   document.getElementById('inpProfissao').value=state.identidade.profissao;
 }
 function bindId2(){
-  document.getElementById('inpIdade').addEventListener('input', e=>{state.identidade.idade=e.target.value; renderPlayerRule(); scheduleSave();});
+  document.getElementById('inpIdade').addEventListener('input', e=>{state.identidade.idade=e.target.value; scheduleSave();});
   document.getElementById('inpExpectativa').addEventListener('input', e=>{state.identidade.expectativa=e.target.value; scheduleSave();});
   document.getElementById('inpRaca').addEventListener('input', e=>{state.identidade.raca=e.target.value; scheduleSave();});
   document.getElementById('inpProfissao').addEventListener('input', e=>{state.identidade.profissao=e.target.value; syncFocoMaximo(); renderFocoPips(); scheduleSave();});
@@ -999,15 +979,10 @@ function wireNav(idx, key){
   };
   const back=document.getElementById('btnBack'); if(back) back.onclick=()=>go(idx-1);
   const start=document.getElementById('btnStart'); if(start) start.onclick=()=>go(idx+1);
-  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
-    if(key==='id2' && getPlayerRule().bloqueado){ renderPlayerRule(); alert(getPlayerRule().mensagem); return; }
-    go(idx+1);
-  };
+  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>go(idx+1);
   const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
 }
 async function finalizeCharacter(){
-  const playerRule=getPlayerRule();
-  if(playerRule.bloqueado){ alert(playerRule.mensagem); if(state.wizardStep!==1){ state.wizardStep=1; renderWizard(); } return; }
   const t=totals();
 
   state.recursos.vida.atual=computeVidaFinal(t);
