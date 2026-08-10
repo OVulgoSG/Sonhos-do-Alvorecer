@@ -437,7 +437,7 @@ function frutaBonusVidaPercent(){
   state.frutas.forEach(f=>{
     if(!f.possui) return;
     if (f.tipo==='Zoan') pct += f.despertada?0.75:0.50;
-    else if (f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
+    else if (f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
   });
   return pct;
 }
