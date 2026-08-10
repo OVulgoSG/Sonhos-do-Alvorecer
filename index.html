@@ -428,9 +428,17 @@ notas:'',
 
 function total(key) { const a = state.attrs[key]; return (Number(a.valor)||0) + (Number(a.mod)||0); }
 function totals() { const t={}; Object.keys(ATTR_META).forEach(k=>t[k]=total(k)); return t; }
-function computeVida(t){ const c=state.formulaConfig; return (c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0); }
+function computeVida(t){
+  const c=state.formulaConfig;
+  const base=(c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0);
+  return base + (state.identidade.profissao === 'Combatente (não tem Profissão)' ? 15 : 0);
+}
 function computeEnergia(t){ const c=state.formulaConfig; return (c.energiaBase + t.vontade*c.energiaVontade + t.combate*c.energiaCombate + t.poder*c.energiaPoder + t.vigor*c.energiaVigor - t.raciocinio*c.energiaRaciocinio) * (Number(c.energiaMultiplicador)||1) + (Number(c.energiaAjuste)||0); }
-function computeMente(t){ const c=state.formulaConfig; return Math.ceil((c.mentalBase + t.vontade*c.mentalVontade - t.raciocinio*c.mentalRaciocinio + t.poder*c.mentalPoder - t.percepcao*c.mentalPercepcao) * (Number(c.mentalMultiplicador)||1) + (Number(c.mentalAjuste)||0)); }
+function computeMente(t){
+  const c=state.formulaConfig;
+  const base=Math.ceil((c.mentalBase + t.vontade*c.mentalVontade - t.raciocinio*c.mentalRaciocinio + t.poder*c.mentalPoder - t.percepcao*c.mentalPercepcao) * (Number(c.mentalMultiplicador)||1) + (Number(c.mentalAjuste)||0));
+  return base + (state.identidade.profissao === 'Combatente (não tem Profissão)' ? -10 : 0);
+}
 function computeIniciativa(t){ const c=state.formulaConfig; return t.rapidez + t.percepcao + Math.floor(t.combate/c.iniciativaCombateDiv) + (Number(state.iniciativaBonus)||0); }
 function frutaBonusVidaPercent(){
   let pct=0;
@@ -449,10 +457,8 @@ function frutaBonusEnergiaPercent(){
   });
   return pct;
 }
-function isCombatente(){ return state.identidade.profissao === 'Combatente (não tem Profissão)'; }
-function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())) + (isCombatente()?15:0); }
+function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())); }
 function computeEnergiaFinal(t){ return Math.ceil(computeEnergia(t) * (1+frutaBonusEnergiaPercent())); }
-function computeMenteFinal(t){ return Math.max(0, computeMente(t) - (isCombatente()?10:0)); }
 function validaRaca(v){ return true; }
 
 /* ===== Persistência online =====
@@ -480,7 +486,6 @@ let realtimeChannel = null;
 let onlineSaveTimer = null;
 let pendingRemoteState = null;
 let localSaveInFlight = false;
-let lastLocalSaveAt = 0;
 let lastSheetInteraction = 0;
 function stateSignature(v){ try{return JSON.stringify(v);}catch(e){return "";} }
 function userIsEditing(){ const el=document.activeElement; return !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName); }
@@ -530,7 +535,11 @@ function mergeState(loaded) {
   if(!merged.haki.observacao) merged.haki.observacaoAvancada=false;
   if(!merged.haki.armamento) merged.haki.armamentoAvancado=false;
   if(!merged.haki.conquistador) merged.haki.conquistadorAvancado=false;
-  merged.frutas = base.frutas.map((f,i)=> Object.assign({}, f, (loaded?.frutas&&loaded.frutas[i])||{}));
+  merged.frutas = base.frutas.map((f,i)=>{
+    const fruta = Object.assign({}, f, (loaded?.frutas&&loaded.frutas[i])||{});
+    if(fruta.tipo==='Zoan Mítica' || fruta.tipo==='Zoan (Ancestral/Primordial)') fruta.tipo='Zoan Mítica/Ancestral';
+    return fruta;
+  });
   merged.recursos = {
     vida:Object.assign({},base.recursos.vida,loaded?.recursos?.vida||{}),
     energia:Object.assign({},base.recursos.energia,loaded?.recursos?.energia||{}),
@@ -579,7 +588,6 @@ function scheduleSave(){
   saveTimer=setTimeout(saveState,350);
 }
 async function saveState(){
-  lastLocalSaveAt=Date.now();
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
   if(!ONLINE_ENABLED || !supabaseClient || !characterId || (!editToken && !IS_MASTER_SHEET)) return;
   clearTimeout(onlineSaveTimer);
@@ -601,7 +609,7 @@ function subscribeRealtime(){
       if(!payload.new?.state) return;
       const incoming=payload.new.state;
       if(stateSignature(incoming)===stateSignature(state)) return;
-      if(localSaveInFlight || sheetIsBusy() || (Date.now()-lastLocalSaveAt < 1500)){ pendingRemoteState=incoming; return; }
+      if(localSaveInFlight || sheetIsBusy()){ pendingRemoteState=incoming; return; }
       const currentTab=state.activeTab||'base';
       state=mergeState(incoming);
       state.activeTab=currentTab;
@@ -1121,7 +1129,7 @@ async function finalizeCharacter(){
 
   state.recursos.vida.atual=computeVidaFinal(t);
   state.recursos.energia.atual=computeEnergiaFinal(t);
-  state.recursos.mental.atual=computeMenteFinal(t);
+  state.recursos.mental.atual=computeMente(t);
   state.wizardDone=true;
 
   if(ONLINE_ENABLED && !characterId){
@@ -1413,7 +1421,7 @@ function fillTabBase(){
 }
 function updateResourceDisplays(){
   const t=totals();
-  const maxes={ vida:computeVidaFinal(t), energia:computeEnergiaFinal(t), mental:computeMenteFinal(t) };
+  const maxes={ vida:computeVidaFinal(t), energia:computeEnergiaFinal(t), mental:computeMente(t) };
   ['vida','energia','mental'].forEach(key=>{
     const baseMax=maxes[key]; const extra=Number(state.recursos[key].extra)||0; const atual=Number(state.recursos[key].atual)||0;
     const chip=document.getElementById(`${key}MaxChip`);
