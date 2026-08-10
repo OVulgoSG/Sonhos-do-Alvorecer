@@ -300,8 +300,12 @@ const ONLINE_ENABLED = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.incl
 let state = defaultState();
 let saveTimer = null;
 let supabaseClient = null;
-let characterId = new URLSearchParams(location.search).get('ficha') || localStorage.getItem('sonhos_ficha_id') || null;
-let editToken = new URLSearchParams(location.search).get('token') || localStorage.getItem('sonhos_ficha_token') || null;
+const URL_PARAMS = new URLSearchParams(location.search);
+// A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
+// carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
+let characterId = URL_PARAMS.get('ficha') || null;
+let editToken = URL_PARAMS.get('token') || null;
+const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
 let onlineSaveTimer = null;
 
@@ -326,8 +330,16 @@ function mergeState(loaded) {
 }
 
 async function loadState(){
+  // Sem ?ficha=... estamos na página inicial: nunca recuperar a ficha anterior.
+  if(!characterId){
+    state = defaultState();
+    try{
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('sonhos_ficha_id');
+      localStorage.removeItem('sonhos_ficha_token');
+    }catch(e){}
+  }
   if(!ONLINE_ENABLED){
-    try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw) state=mergeState(JSON.parse(raw)); }catch(e){}
     return;
   }
   try{
@@ -721,12 +733,14 @@ function renderSheet(){
         <button id="btnImport" type="button" class="btn-link">📂 Carregar backup</button>
         <input type="file" id="importFileInput" accept="application/json" hidden>
         <button id="btnReset" type="button" class="btn-link">Reiniciar ficha</button>
+        <button id="btnNewCharacter" type="button" class="btn-link">✨ Criar novo personagem</button>
       </div>
     </div>`;
   renderSheetHeader();
   bindTabs();
   switchTab(state.activeTab||'base');
   document.getElementById('btnReset').onclick = confirmReset;
+  document.getElementById('btnNewCharacter').onclick = createNewCharacter;
   document.getElementById('btnExport').onclick = exportBackup;
   document.getElementById('btnImport').onclick = ()=>document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').addEventListener('change', importBackupFile);
@@ -1072,11 +1086,29 @@ function importBackupFile(e){
   reader.readAsText(file);
 }
 function confirmReset(){
-  if (confirm('Tem certeza que quer reiniciar a ficha? Todos os dados serão apagados.')) {
+  if (confirm('Tem certeza que quer reiniciar esta ficha? Os dados atuais serão apagados.')) {
     state = defaultState();
-    saveState();
+    scheduleSave();
     renderWizard();
   }
+}
+
+function createNewCharacter(){
+  if(!confirm('Criar um novo personagem? A ficha atual continuará existindo no link que você já compartilhou.')) return;
+  if(realtimeChannel && supabaseClient){ try{ supabaseClient.removeChannel(realtimeChannel); }catch(e){} }
+  realtimeChannel = null;
+  characterId = null;
+  editToken = null;
+  try{
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('sonhos_ficha_id');
+    localStorage.removeItem('sonhos_ficha_token');
+  }catch(e){}
+  state = defaultState();
+  history.pushState({},'',location.pathname);
+  const shareBtn=document.getElementById('onlineShareBtn');
+  if(shareBtn) shareBtn.remove();
+  renderWizard();
 }
 
 /* ===== Boot ===== */
