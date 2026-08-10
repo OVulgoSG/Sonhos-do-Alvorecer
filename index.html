@@ -439,7 +439,9 @@ const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || localStorage.getItem('sonho
 let characterId = URL_PARAMS.get('ficha') || null;
 const IS_MASTER_SHEET = URL_PARAMS.has('master');
 const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-let editToken = URL_PARAMS.get('token') || localStorage.getItem(TOKEN_STORAGE_KEY) || null;
+// Segurança: uma ficha compartilhada nunca herda automaticamente o token salvo
+// no navegador. O token só é obtido após a senha, ou pelo acesso de mestre.
+let editToken = IS_MASTER_SHEET ? null : null;
 let readOnlySheet = false;
 const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
@@ -617,7 +619,11 @@ window.addEventListener('popstate',()=>{
   }
 });
 
-function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
+function fichaShareUrl(){
+  return characterId
+    ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId))
+    : '';
+}
 function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
 function copyTextOrPrompt(text,message){
   if(!text) return;
@@ -1624,9 +1630,10 @@ async function init(){
   }
 
   try{
-    // Uma ficha compartilhada sem token local ou acesso de mestre é privada.
-    // O conteúdo completo só é carregado depois que a senha for validada.
-    if(IS_SHARED_SHEET && !editToken && !IS_MASTER_SHEET){
+    // Toda ficha aberta por link é privada para jogadores.
+    // O conteúdo completo só é carregado após validar a senha.
+    // O mestre usa o acesso administrativo e não precisa da senha da ficha.
+    if(IS_SHARED_SHEET && !IS_MASTER_SHEET){
       renderLockedSheet();
       return;
     }
