@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonhos do Alvorecer — Ficha de Personagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; }
+:root {
+  --bg-void:#04070d; --bg-panel:#0f1c38; --bg-panel-alt:#152a4d; --border-soft:#2b3d63;
+  --gold:#d4a942; --gold-bright:#f2ca6e; --text-main:#e9edf7; --text-muted:#93a3c9;
+  --vida:#c0392b; --energia:#2fb8a6; --mental:#9370db; --danger:#f08a85;
+  --radius-lg:16px; --radius-md:10px; --radius-sm:6px;
+  --shadow-lg:0 14px 34px rgba(0,0,0,.5);
+}
+body {
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  color:var(--text-main);
+  background:radial-gradient(ellipse 140% 90% at 50% 115%, #1c3155 0%, #0a1226 45%, #04070d 100%);
+  min-height:100vh; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.hidden { display:none !important; }
+.app-shell { max-width:880px; margin:0 auto; padding:28px 16px 72px; }
+h1,h2,h3,h4 { font-family:'Cinzel',serif; font-weight:600; letter-spacing:.02em; margin:0 0 8px; }
+.logo-title { font-family:'Pirata One',cursive; font-size:clamp(2rem,7vw,3.2rem); color:var(--gold-bright); text-align:center; text-shadow:0 0 26px rgba(212,169,66,.35); margin-bottom:18px; }
+.mini-logo { font-family:'Pirata One',cursive; font-size:1.5rem; color:var(--gold-bright); text-align:center; margin-bottom:16px; opacity:.9; }
+.loading-screen { text-align:center; padding:80px 16px; color:var(--text-muted); font-family:'Cinzel',serif; font-size:1.1rem; }
+
+.progress-dots { display:flex; justify-content:center; gap:8px; margin-bottom:20px; }
+.dot { width:9px; height:9px; border-radius:50%; background:var(--border-soft); transition:.2s; }
+.dot.active { background:var(--gold-bright); box-shadow:0 0 8px var(--gold-bright); transform:scale(1.3); }
+.dot.done { background:var(--gold); }
+
+.wizard-card { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:28px 24px; box-shadow:var(--shadow-lg); }
+.step-title { color:var(--gold-bright); font-size:1.4rem; }
+.step-sub { color:var(--text-muted); margin-bottom:20px; font-size:.92rem; }
+.step-body { display:flex; flex-direction:column; gap:16px; }
+.welcome-text { color:var(--text-muted); text-align:center; line-height:1.7; padding:12px 0 4px; }
+.wizard-nav { display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+
+.field { display:flex; flex-direction:column; gap:6px; }
+.field label { font-size:.85rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+.field-row { display:flex; gap:14px; }
+.field-row .field { flex:1; }
+input[type="text"], input[type="number"], select, textarea {
+  background:var(--bg-void); border:1px solid var(--border-soft); border-radius:var(--radius-sm);
+  color:var(--text-main); padding:9px 11px; font-family:inherit; font-size:.95rem; width:100%;
+}
+input:focus, select:focus, textarea:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,169,66,.18); }
+textarea { resize:vertical; line-height:1.6; }
+
+.btn { font-family:'Cinzel',serif; font-size:.9rem; font-weight:600; padding:10px 20px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid transparent; transition:.15s; }
+.btn-primary { background:linear-gradient(135deg,var(--gold-bright),var(--gold)); color:#1a1206; }
+.btn-primary:hover { filter:brightness(1.08); transform:translateY(-1px); }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; filter:none; }
+.btn-ghost { background:transparent; border-color:var(--border-soft); color:var(--text-main); }
+.btn-ghost:hover { border-color:var(--gold); color:var(--gold-bright); }
+.btn-link { background:none; border:none; color:var(--text-muted); text-decoration:underline; cursor:pointer; font-size:.85rem; }
+.btn-link:hover { color:var(--danger); }
+
+.info-icon { position:relative; cursor:help; color:var(--gold); font-size:.85em; }
+.info-icon::after {
+  content:attr(data-tooltip); position:absolute; bottom:135%; left:50%; transform:translateX(-50%);
+  background:#0a1630; border:1px solid var(--gold); padding:8px 11px; border-radius:var(--radius-sm);
+  font-size:.78rem; width:max-content; max-width:230px; white-space:normal; color:var(--text-main);
+  opacity:0; pointer-events:none; transition:opacity .15s; z-index:60; line-height:1.4;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+}
+.info-icon:hover::after, .info-icon:focus::after, .info-icon.show::after { opacity:1; }
+
+.warning-text { color:var(--danger); font-size:.82rem; }
+.hint-text { color:var(--text-muted); font-size:.78rem; min-height:1em; }
+
+.attr-grid { display:flex; flex-direction:column; gap:4px; }
+.attr-row { display:grid; grid-template-columns:1fr 64px 78px; gap:8px; align-items:center; }
+.attr-head { color:var(--text-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; padding-bottom:4px; border-bottom:1px solid var(--border-soft); margin-bottom:4px; }
+.attr-label { font-size:.9rem; display:flex; align-items:center; gap:5px; }
+.attr-row input { padding:6px 7px; text-align:center; }
+.attr-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+
+.switch-row { display:flex; align-items:center; gap:10px; cursor:pointer; font-size:.95rem; }
+.switch-row.small { font-size:.85rem; }
+.switch-row input[type="checkbox"] { width:18px; height:18px; accent-color:var(--gold); cursor:pointer; }
+.haki-toggle { padding:10px 0; border-bottom:1px solid var(--border-soft); }
+.haki-toggle:last-child { border-bottom:none; }
+.sub-toggle { display:flex; align-items:center; gap:8px; margin:8px 0 2px 28px; font-size:.9rem; color:var(--text-soft); }
+.sub-toggle input:disabled + span { opacity:.45; }
+
+.fruta-block { padding:10px 0; border-bottom:1px solid var(--border-soft); }
+.fruta-block:last-child { border-bottom:none; }
+.fruta-details { display:none; gap:10px; margin-top:10px; flex-wrap:wrap; }
+.fruta-block.active .fruta-details { display:flex; }
+.fruta-details input, .fruta-details select { flex:1; min-width:120px; }
+
+.panel { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:20px; margin-bottom:18px; box-shadow:var(--shadow-lg); }
+.panel h3 { color:var(--gold-bright); font-size:1.05rem; margin-bottom:14px; }
+
+.sheet-header { display:flex; gap:18px; background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:18px; margin-bottom:16px; box-shadow:var(--shadow-lg); }
+.portrait { width:96px; height:96px; border-radius:50%; border:2px solid var(--gold); background:var(--bg-void); flex-shrink:0; cursor:pointer; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.portrait img { width:100%; height:100%; object-fit:cover; }
+.portrait-placeholder { font-size:.65rem; color:var(--text-muted); text-align:center; line-height:1.3; }
+.identity-block { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+.identity-name { font-family:'Cinzel',serif; font-size:1.2rem; font-weight:600; background:transparent; border:none; border-bottom:1px solid var(--border-soft); border-radius:0; padding:4px 2px; }
+.identity-player { font-size:.85rem; color:var(--text-muted); background:transparent; border:none; border-bottom:1px solid transparent; padding:2px; }
+.identity-mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; margin-top:6px; }
+.mini-field { display:flex; flex-direction:column; gap:2px; }
+.mini-field.wide { grid-column:span 2; }
+.mini-field label { font-size:.66rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+.mini-field input { padding:5px 8px; font-size:.85rem; }
+
+.tab-bar { display:flex; gap:4px; overflow-x:auto; margin-bottom:16px; border-bottom:1px solid var(--border-soft); }
+.tab-btn { background:none; border:none; color:var(--text-muted); font-family:'Cinzel',serif; font-size:.85rem; padding:10px 16px; cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent; }
+.tab-btn.active { color:var(--gold-bright); border-bottom-color:var(--gold-bright); }
+.tab-btn:hover { color:var(--text-main); }
+
+.resource-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.resource-card { background:var(--bg-panel-alt); border-radius:var(--radius-md); padding:14px; border-top:3px solid var(--border-soft); }
+.resource-vida { border-top-color:var(--vida); }
+.resource-energia { border-top-color:var(--energia); }
+.resource-mental { border-top-color:var(--mental); }
+.resource-title { font-size:.88rem; font-weight:600; margin-bottom:8px; }
+.resource-bar { height:8px; background:var(--bg-void); border-radius:4px; overflow:hidden; margin-bottom:10px; }
+.resource-bar-fill { height:100%; width:0%; transition:width .3s ease; }
+.resource-vida .resource-bar-fill { background:linear-gradient(90deg,#7a1c1c,var(--vida)); }
+.resource-energia .resource-bar-fill { background:linear-gradient(90deg,#186f64,var(--energia)); }
+.resource-mental .resource-bar-fill { background:linear-gradient(90deg,#5c449e,var(--mental)); }
+.resource-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.resource-fields label { font-size:.66rem; color:var(--text-muted); display:flex; flex-direction:column; gap:3px; }
+.resource-fields input { padding:5px 6px; font-size:.85rem; }
+.chip { display:inline-block; background:var(--bg-void); border:1px solid var(--border-soft); border-radius:var(--radius-sm); padding:5px 6px; font-size:.85rem; text-align:center; }
+
+.limite-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border-soft); }
+.limite-row:last-child { border-bottom:none; }
+.limite-label { font-size:.9rem; }
+.limite-pips { display:flex; gap:6px; }
+.pip { width:34px; height:34px; border-radius:50%; border:1px solid var(--border-soft); background:var(--bg-void); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; opacity:.4; transition:.15s; }
+.pip.active { opacity:1; border-color:var(--danger); background:rgba(240,138,133,.15); transform:scale(1.05); }
+
+.foco-iniciativa-panel { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.foco-pips { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+.foco-pip { width:32px; height:32px; border-radius:50%; border:1px solid var(--border-soft); background:var(--bg-void); cursor:pointer; opacity:.4; font-size:1rem; }
+.foco-pip.active { opacity:1; border-color:var(--gold); background:rgba(212,169,66,.18); }
+.formula-note { font-size:.75rem; color:var(--text-muted); margin-bottom:8px; }
+.iniciativa-mod { font-family:'Cinzel',serif; font-size:1.8rem; color:var(--gold-bright); margin-bottom:10px; }
+.iniciativa-resultado { margin-top:10px; font-size:.95rem; min-height:1.2em; }
+@keyframes pulseAnim { 0%{transform:scale(1);} 50%{transform:scale(1.1);} 100%{transform:scale(1);} }
+.pulse { animation:pulseAnim .3s ease; display:inline-block; }
+
+.item-row { display:grid; grid-template-columns:1fr 60px 1.4fr 32px; gap:8px; margin-bottom:8px; align-items:center; }
+.item-remove { background:none; border:1px solid var(--border-soft); color:var(--danger); border-radius:var(--radius-sm); cursor:pointer; height:36px; }
+.item-remove:hover { border-color:var(--danger); }
+.empty-hint { color:var(--text-muted); font-size:.88rem; font-style:italic; }
+
+.sheet-footer { text-align:center; margin-top:8px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+.iniciativa-bonus-field { display:flex; flex-direction:column; gap:3px; font-size:.75rem; color:var(--text-muted); margin-bottom:10px; }
+.iniciativa-bonus-field input { width:80px; }
+.modal-overlay { position:fixed; inset:0; background:rgba(4,7,13,.75); display:flex; align-items:center; justify-content:center; z-index:200; padding:16px; }
+.modal-box { background:var(--bg-panel); border:1px solid var(--gold); border-radius:var(--radius-lg); padding:22px; max-width:480px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0; }
+.modal-field { display:flex; flex-direction:column; gap:4px; font-size:.75rem; color:var(--text-muted); }
+.modal-field input { padding:6px 8px; }
+.modal-actions { display:flex; justify-content:space-between; gap:10px; margin-top:10px; }
+
+@media (max-width:640px) {
+  .attr-columns { grid-template-columns:1fr; gap:18px; }
+  .resource-cards { grid-template-columns:1fr; }
+  .foco-iniciativa-panel { grid-template-columns:1fr; }
+  .sheet-header { flex-direction:column; align-items:center; text-align:center; }
+  .item-row { grid-template-columns:1fr; }
+  .portrait { width:80px; height:80px; }
+}
+@media print {
+  .wizard-nav, .tab-bar, .sheet-footer, .info-icon, #btnRolarIniciativa, .item-remove, #addItemBtn { display:none !important; }
+  body { background:#fff; color:#000; }
+  .panel, .resource-card, .sheet-header, .wizard-card { border:1px solid #ccc; box-shadow:none; background:#fff; }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ===== Configuração ===== */
+const STORAGE_KEY = 'personagem';
+const LOREM_IPSUM = "Lorem ipsum";
+const PROFISSAO_OPCOES = ['Artista','Médico','Cozinheiro','Navegador & Piloto','Cientista & Engenheiro','Historiador','Diplomata','Ladrão & Espião','Combatente (não tem Profissão)'];
+function profissaoOptionsHtml(){
+  return PROFISSAO_OPCOES.map(o=>`<option value="${o}">${o.replace(/&/g,'&amp;')}</option>`).join('');
+}
+function defaultFormulaConfig(){
+  return {
+    vidaBase:25, vidaVigor:10, vidaForca:5, vidaCombate:2, vidaVontade:1,
+    energiaBase:10, energiaVontade:1, energiaCombate:3, energiaPoder:10, energiaVigor:2, energiaRaciocinio:1,
+    mentalBase:50, mentalVontade:20, mentalRaciocinio:5, mentalPoder:1, mentalPercepcao:1,
+    iniciativaCombateDiv:2,
+    vidaMultiplicador:1, energiaMultiplicador:1, mentalMultiplicador:1,
+    vidaAjuste:0, energiaAjuste:0, mentalAjuste:0
+  };
+}
+const FORMULA_FIELD_META = [
+  ['vidaBase','Vida — base'], ['vidaVigor','Vida — × Vigor'], ['vidaForca','Vida — × Força'], ['vidaCombate','Vida — × Combate'], ['vidaVontade','Vida — × Vontade'],
+  ['energiaBase','Energia — base'], ['energiaVontade','Energia — × Vontade'], ['energiaCombate','Energia — × Combate'], ['energiaPoder','Energia — × Poder'], ['energiaVigor','Energia — × Vigor'], ['energiaRaciocinio','Energia — − × Raciocínio'],
+  ['mentalBase','Mente — base'], ['mentalVontade','Mente — × Vontade'], ['mentalRaciocinio','Mente — − × Raciocínio'], ['mentalPoder','Mente — × Poder'], ['mentalPercepcao','Mente — − × Percepção'],
+  ['iniciativaCombateDiv','Iniciativa divisor de Combate'],
+  ['vidaMultiplicador','Vida multiplicador final'], ['vidaAjuste','Vida ajuste final'],
+  ['energiaMultiplicador','Energia multiplicador final'], ['energiaAjuste','Energia ajuste final'],
+  ['mentalMultiplicador','Mente multiplicador final'], ['mentalAjuste','Mente ajuste final']
+];
+
+const ATTR_META = {
+  forca: {label:'Força', group:'fisico'},
+  vigor: {label:'Vigor', group:'fisico'},
+  rapidez: {label:'Rapidez', group:'fisico'},
+  suavidade: {label:'Suavidade', group:'fisico', tip:'Coisas relacionadas à furtividade e tomar cuidado.'},
+  combate: {label:'Combate', group:'fisico'},
+  percepcao: {label:'Percepção', group:'mental'},
+  raciocinio: {label:'Raciocínio & Conhecimento', group:'mental'},
+  carisma: {label:'Carisma', group:'mental'},
+  vontade: {label:'Vontade', group:'mental'},
+  poder: {label:'Poder', group:'mental'}
+};
+
+const STEP_DEFS = [
+  {key:'welcome'},
+  {key:'id1', title:'Quem é você?', sub:'Todo grande conto começa com um nome.'},
+  {key:'id2', title:'De onde ela vem, até onde vai?', sub:''},
+  {key:'id3', title:'O que a torna única?', sub:''},
+  {key:'fisico', title:'Corpo e Instinto', sub:'Força bruta, resistência, agilidade — o corpo é a primeira arma.'},
+  {key:'mental', title:'Mente e Vontade', sub:'Mente afiada, vontade de ferro, ou o poder que dorme por dentro?'},
+  {key:'haki', title:'Dons Adormecidos', sub:'Poucos despertam esses poderes lendários.'},
+  {key:'frutas', title:'Frutas do Diabo', sub:'O mar é cheio de mistérios à espera de serem engolidos.'}
+];
+
+/* ===== Estado ===== */
+function defaultState() {
+  const attrs = {};
+  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:0, mod:0});
+  return {
+    wizardStep:0, wizardDone:false, activeTab:'base',
+    identidade:{nome:'',jogador:'',idade:'',expectativa:'',raca:'',profissao:'Combatente (não tem Profissão)',talento:'',sonho:''},
+    attrs,
+    haki:{armamento:false,armamentoAvancado:false,observacao:false,observacaoAvancada:false,conquistador:false,conquistadorAvancado:false},
+    frutas:[0,1,2].map(()=>({possui:false,nome:'',tipo:'',despertada:false})),
+    recursos:{
+      vida:{atual:0,extra:0,temporario:0},
+      energia:{atual:0,extra:0,temporario:0},
+      mental:{atual:0,extra:0,temporario:0}
+    },
+    limites:{morrendo:0,exaustao:0,enlouquecendo:0},
+    foco:{emUso:0,maximo:3},
+    imagem:null,
+    notas: '',
+    dinheiro:'B$10000000',
+    itens:[],
+    poderes:'',
+    iniciativaBonus:0,
+    formulaConfig: defaultFormulaConfig(),
+    pontoSonho:false
+  };
+}
+
+function total(key) { const a = state.attrs[key]; return (Number(a.valor)||0) + (Number(a.mod)||0); }
+function totals() { const t={}; Object.keys(ATTR_META).forEach(k=>t[k]=total(k)); return t; }
+function computeVida(t){ const c=state.formulaConfig; return (c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0); }
+function computeEnergia(t){ const c=state.formulaConfig; return (c.energiaBase + t.vontade*c.energiaVontade + t.combate*c.energiaCombate + t.poder*c.energiaPoder + t.vigor*c.energiaVigor - t.raciocinio*c.energiaRaciocinio) * (Number(c.energiaMultiplicador)||1) + (Number(c.energiaAjuste)||0); }
+function computeMente(t){ const c=state.formulaConfig; return Math.ceil((c.mentalBase + t.vontade*c.mentalVontade - t.raciocinio*c.mentalRaciocinio + t.poder*c.mentalPoder - t.percepcao*c.mentalPercepcao) * (Number(c.mentalMultiplicador)||1) + (Number(c.mentalAjuste)||0)); }
+function computeIniciativa(t){ const c=state.formulaConfig; return t.rapidez + t.percepcao + Math.floor(t.combate/c.iniciativaCombateDiv) + (Number(state.iniciativaBonus)||0); }
+function frutaBonusVidaPercent(){
+  let pct=0;
+  state.frutas.forEach(f=>{
+    if(!f.possui) return;
+    if (f.tipo==='Zoan') pct += f.despertada?0.75:0.50;
+    else if (f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
+  });
+  return pct;
+}
+function frutaBonusEnergiaPercent(){
+  let pct=0;
+  state.frutas.forEach(f=>{
+    if(!f.possui) return;
+    if (f.tipo==='Logia') pct += f.despertada?0.50:0.25;
+  });
+  return pct;
+}
+function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())); }
+function computeEnergiaFinal(t){ return Math.ceil(computeEnergia(t) * (1+frutaBonusEnergiaPercent())); }
+function validaRaca(v){ return true; }
+
+/* ===== Persistência online =====
+   Configure SUPABASE_URL e SUPABASE_ANON_KEY no bloco abaixo.
+   O restante da ficha continua igual.
+*/
+const SUPABASE_URL = 'https://ttxiiwmwiewkwhrtfexk.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_F_35YV-JNu02UCx0ND5MTQ_ORn2PzM0';
+const ONLINE_ENABLED = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('COLE_AQUI') && !SUPABASE_ANON_KEY.includes('COLE_AQUI');
+let state = defaultState();
+let saveTimer = null;
+let supabaseClient = null;
+let characterId = new URLSearchParams(location.search).get('ficha') || localStorage.getItem('sonhos_ficha_id') || null;
+let editToken = new URLSearchParams(location.search).get('token') || localStorage.getItem('sonhos_ficha_token') || null;
+let realtimeChannel = null;
+let onlineSaveTimer = null;
+
+function mergeState(loaded) {
+  const base = defaultState();
+  const merged = Object.assign({}, base, loaded || {});
+  merged.identidade = Object.assign({}, base.identidade, loaded?.identidade||{});
+  merged.attrs = {};
+  Object.keys(base.attrs).forEach(k=>{ merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{}); });
+  merged.haki = Object.assign({}, base.haki, loaded?.haki||{});
+  merged.frutas = base.frutas.map((f,i)=> Object.assign({}, f, (loaded?.frutas&&loaded.frutas[i])||{}));
+  merged.recursos = {
+    vida:Object.assign({},base.recursos.vida,loaded?.recursos?.vida||{}),
+    energia:Object.assign({},base.recursos.energia,loaded?.recursos?.energia||{}),
+    mental:Object.assign({},base.recursos.mental,loaded?.recursos?.mental||{})
+  };
+  merged.limites=Object.assign({},base.limites,loaded?.limites||{});
+  merged.foco=Object.assign({},base.foco,loaded?.foco||{});
+  merged.formulaConfig=Object.assign({},base.formulaConfig,loaded?.formulaConfig||{});
+  merged.itens=loaded?.itens||[];
+  return merged;
+}
+
+async function loadState(){
+  if(!ONLINE_ENABLED){
+    try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw) state=mergeState(JSON.parse(raw)); }catch(e){}
+    return;
+  }
+  try{
+    if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    if(characterId){
+      const {data,error}=await supabaseClient.from('characters').select('state,edit_token').eq('id',characterId).single();
+      if(error) throw error;
+      if(editToken && data.edit_token !== editToken) throw new Error('Token inválido.');
+      if(!editToken){ editToken=data.edit_token; localStorage.setItem('sonhos_ficha_token',editToken); }
+      localStorage.setItem('sonhos_ficha_id',characterId);
+      state=mergeState(data.state);
+      subscribeRealtime();
+    }
+  }catch(e){ console.warn('Modo online indisponível:',e); }
+}
+function scheduleSave(){
+  clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
+  saveTimer=setTimeout(saveState,350);
+}
+async function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
+  if(!ONLINE_ENABLED || !supabaseClient || !characterId || !editToken) return;
+  clearTimeout(onlineSaveTimer);
+  onlineSaveTimer=setTimeout(async()=>{
+    try{
+      await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
+    }catch(e){console.warn('Falha ao sincronizar:',e);}
+  },150);
+}
+function subscribeRealtime(){
+  if(!supabaseClient || !characterId) return;
+  if(realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+  realtimeChannel=supabaseClient.channel('character-'+characterId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'characters',filter:'id=eq.'+characterId},payload=>{
+      if(payload.new?.state){ state=mergeState(payload.new.state); if(state.wizardDone) renderSheet(); else renderWizard(); }
+    }).subscribe();
+}
+
+async function createOnlineCharacter(){
+  if(!ONLINE_ENABLED || !supabaseClient) return null;
+  const token=crypto.randomUUID()+crypto.randomUUID();
+  const {data,error}=await supabaseClient.from('characters').insert({state,edit_token:token}).select('id,edit_token').single();
+  if(error) throw error;
+  characterId=data.id; editToken=data.edit_token;
+  localStorage.setItem('sonhos_ficha_id',characterId);
+  localStorage.setItem('sonhos_ficha_token',editToken);
+  subscribeRealtime();
+  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken));
+  return characterId;
+}
+
+function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||'')) : ''; }
+function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); navigator.clipboard?.writeText(url).then(()=>alert('Link da ficha copiado!')).catch(()=>prompt('Copie este link:',url)); }
+
+/* ===== Utilidades de UI ===== */
+function infoIcon(text) { return `<span class="info-icon" tabindex="0" data-tooltip="${text.replace(/"/g,'&quot;')}">ⓘ</span>`; }
+
+let tooltipDocListenerAdded = false;
+function initTooltipTaps() {
+  document.querySelectorAll('.info-icon').forEach(icon=>{
+    icon.onclick = (e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.info-icon.show').forEach(o=>{ if(o!==icon) o.classList.remove('show'); });
+      icon.classList.toggle('show');
+    };
+  });
+  if (!tooltipDocListenerAdded) {
+    document.addEventListener('click', ()=> document.querySelectorAll('.info-icon.show').forEach(o=>o.classList.remove('show')));
+    tooltipDocListenerAdded = true;
+  }
+}
+
+let secretClickCount = 0; let secretClickTimer = null;
+function bindSecretTrigger(el){
+  if (!el) return;
+  el.onclick = ()=>{
+    secretClickCount++;
+    clearTimeout(secretClickTimer);
+    secretClickTimer = setTimeout(()=>{ secretClickCount=0; }, 900);
+    if (secretClickCount>=5){ secretClickCount=0; openFormulaSettings(); }
+  };
+}
+function formulaFieldsHtml(){
+  return FORMULA_FIELD_META.map(([key,label])=>`<label class="modal-field"><span>${label}</span><input type="number" step="any" class="formula-input" data-key="${key}"></label>`).join('');
+}
+function fillFormulaFields(){
+  document.querySelectorAll('.formula-input').forEach(inp=>{ inp.value = state.formulaConfig[inp.dataset.key]; });
+}
+function bindFormulaFields(){
+  document.querySelectorAll('.formula-input').forEach(inp=>{
+    inp.addEventListener('input', e=>{ state.formulaConfig[e.target.dataset.key]=Number(e.target.value)||0; scheduleSave(); });
+  });
+}
+function openFormulaSettings(){
+  if (document.getElementById('formulaModalOverlay')) return;
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.id='formulaModalOverlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <h3>Ajustes avançados</h3>
+      <p class="hint-text">Configurações internas da ficha.</p>
+      <div class="modal-grid">${formulaFieldsHtml()}</div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btnFormulaReset">Restaurar padrão</button>
+        <button type="button" class="btn btn-primary" id="btnFormulaClose">Fechar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  fillFormulaFields();
+  bindFormulaFields();
+  document.getElementById('btnFormulaClose').onclick=()=>{ overlay.remove(); updateResourceDisplays(); };
+  document.getElementById('btnFormulaReset').onclick=()=>{ state.formulaConfig=defaultFormulaConfig(); fillFormulaFields(); scheduleSave(); };
+  overlay.addEventListener('click', e=>{ if(e.target===overlay){ overlay.remove(); updateResourceDisplays(); } });
+}
+
+/* ===== Wizard: telas ===== */
+function buildWelcome() {
+  return `<p class="welcome-text">Uma nova lenda está prestes a nascer nos mares. Vamos construir sua ficha juntos, passo a passo. No fim, ela estará pronta para a mesa.</p>
+  <p style="text-align:center;"><button type="button" id="btnImportWelcome" class="btn-link">📂 Já tenho uma ficha salva (.json)</button><input type="file" id="importFileInputWelcome" accept="application/json" hidden></p>`;
+}
+function buildId1() {
+  return `
+    <div class="field"><label>Nome do Personagem ${infoIcon('Nome d@ Personagem')}</label>
+      <input type="text" id="inpNome" placeholder="Ex: Monkey D. ..."></div>
+    <div class="field"><label>Jogador(a) ${infoIcon('Nome d@ Jogador(a)')}</label>
+      <input type="text" id="inpJogador" placeholder="Seu nome"></div>`;
+}
+function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; }
+function bindId1(){
+  document.getElementById('inpNome').addEventListener('input', e=>{state.identidade.nome=e.target.value; scheduleSave();});
+  document.getElementById('inpJogador').addEventListener('input', e=>{state.identidade.jogador=e.target.value; scheduleSave();});
+}
+
+function buildId2() {
+  return `
+    <div class="field-row">
+      <div class="field"><label>Idade ${infoIcon('Em anos do Personagem')}</label><input type="text" id="inpIdade" placeholder="Idade"></div>
+      <div class="field"><label>Expectativa de Vida ${infoIcon('Expectativa de Vida do personagem')}</label><input type="text" id="inpExpectativa" placeholder="Ex: 80 anos"></div>
+    </div>
+    <div class="field"><label>Raça ${infoIcon('Raça dentro do mundo de One Piece.')}</label>
+      <input type="text" id="inpRaca" placeholder="Ex: Humano, Peixe-Homem, Mink...">
+    </div>
+    <div class="field"><label>Profissão</label><select id="inpProfissao">${profissaoOptionsHtml()}</select></div>`;
+}
+function fillId2(){
+  document.getElementById('inpIdade').value=state.identidade.idade;
+  document.getElementById('inpExpectativa').value=state.identidade.expectativa;
+  document.getElementById('inpRaca').value=state.identidade.raca;
+  document.getElementById('inpProfissao').value=state.identidade.profissao;
+}
+function bindId2(){
+  document.getElementById('inpIdade').addEventListener('input', e=>{state.identidade.idade=e.target.value; scheduleSave();});
+  document.getElementById('inpExpectativa').addEventListener('input', e=>{state.identidade.expectativa=e.target.value; scheduleSave();});
+  document.getElementById('inpRaca').addEventListener('input', e=>{state.identidade.raca=e.target.value; scheduleSave();});
+  document.getElementById('inpProfissao').addEventListener('input', e=>{state.identidade.profissao=e.target.value; syncFocoMaximo(); renderFocoPips(); scheduleSave();});
+}
+
+function buildId3() {
+  return `
+    <div class="field"><label>Talento ${infoIcon('Algo muito Específico que a Personagem faz de forma Excepcional. (e não poderá falhar fazendo)')}</label>
+      <input type="text" id="inpTalento" placeholder="Ex: Cortar qualquer coisa com uma espada"></div>
+    <div class="field"><label>Sonho ${infoIcon('Ambição/determinação da personagem simplificada em poucas palavras.')}</label>
+      <input type="text" id="inpSonho" placeholder="Ex: Encontrar o One Piece"></div>`;
+}
+function fillId3(){ document.getElementById('inpTalento').value=state.identidade.talento; document.getElementById('inpSonho').value=state.identidade.sonho; }
+function bindId3(){
+  document.getElementById('inpTalento').addEventListener('input', e=>{state.identidade.talento=e.target.value; scheduleSave();});
+  document.getElementById('inpSonho').addEventListener('input', e=>{state.identidade.sonho=e.target.value; scheduleSave();});
+}
+
+function buildAttrStep(group){
+  const items = Object.entries(ATTR_META).filter(([k,v])=>v.group===group);
+  const rows = items.map(([k,v])=>`
+    <div class="attr-row" data-attr="${k}">
+      <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
+      <input type="number" class="attr-valor" data-attr="${k}" min="0">
+      <input type="number" class="attr-mod" data-attr="${k}">
+    </div>`).join('');
+  return `
+    <div class="attr-grid">
+      <div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div></div>
+      ${rows}
+    </div>
+    <p class="hint-text">Modificador é um ajuste (+ ou −) somado ao Valor — a soma dos dois é usada nos cálculos.</p>`;
+}
+function fillAttrStep(group){
+  Object.entries(ATTR_META).filter(([k,v])=>v.group===group).forEach(([k])=>{
+    document.querySelector(`.attr-valor[data-attr="${k}"]`).value = state.attrs[k].valor;
+    document.querySelector(`.attr-mod[data-attr="${k}"]`).value = state.attrs[k].mod;
+  });
+}
+function bindAttrStep(){
+  document.querySelectorAll('.attr-valor, .attr-mod').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
+      state.attrs[key][field] = Number(e.target.value)||0;
+      scheduleSave();
+    });
+  });
+}
+
+function buildHakiStep(){
+  return `
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="chkObservacaoAvancada"><span>Haki Avançado</span></label></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="chkArmamentoAvancado"><span>Haki Avançado</span></label></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="chkConquistadorAvancado"><span>Haki Avançado</span></label></div>`;
+}
+function fillHakiStep(){
+  document.getElementById('chkObservacao').checked=state.haki.observacao;
+  document.getElementById('chkArmamento').checked=state.haki.armamento;
+  document.getElementById('chkConquistador').checked=state.haki.conquistador;
+  document.getElementById('chkObservacaoAvancada').checked=!!state.haki.observacaoAvancada;
+  document.getElementById('chkArmamentoAvancado').checked=!!state.haki.armamentoAvancado;
+  document.getElementById('chkConquistadorAvancado').checked=!!state.haki.conquistadorAvancado;
+  updateHakiAdvancedAvailability('');
+  updateHakiHints('');
+}
+function bindHakiStep(){
+  document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=e.target.checked; scheduleSave();});
+  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=e.target.checked; scheduleSave();});
+  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=e.target.checked; scheduleSave();});
+}
+function updateHakiAdvancedAvailability(prefix){
+  const pairs=[['Observacao',!!state.haki.observacao],['Armamento',!!state.haki.armamento],['Conquistador',!!state.haki.conquistador]];
+  pairs.forEach(([name,ok])=>{
+    const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.disabled=!ok;
+    if(!ok) el.checked=false;
+  });
+}
+function updateHakiHints(prefix){
+  const t=totals();
+  const items=[
+    ['Observacao', t.percepcao>=1, `Percepção atual: ${t.percepcao} (precisa de ao menos 1)`],
+    ['Armamento', t.poder>=1, `Poder atual: ${t.poder} (precisa de ao menos 1)`],
+    ['Conquistador', (t.carisma>=1 && t.vontade>=2), `Precisa de Carisma ≥ 1 e Vontade ≥ 2 (atual: Carisma ${t.carisma}, Vontade ${t.vontade})`]
+  ];
+  items.forEach(([name,ok,msg])=>{
+    const el=document.getElementById(prefix+'Hint'+name);
+    if (el) el.textContent = ok ? '' : ('⚠️ '+msg);
+  });
+}
+
+function buildFrutasStep(){
+  let blocks='';
+  for(let i=0;i<3;i++){
+    blocks += `
+    <div class="fruta-block" data-idx="${i}">
+      <label class="switch-row"><input type="checkbox" class="fruta-possui" data-idx="${i}"><span>Akuma no Mi ${i+1}</span></label>
+      <div class="fruta-details">
+        <input type="text" class="fruta-nome" data-idx="${i}" placeholder="Nome da fruta">
+        <select class="fruta-tipo" data-idx="${i}">
+          <option value="">Tipo...</option>
+          <option value="Paramecia">Paramecia</option>
+          <option value="Zoan">Zoan</option>
+          <option value="Zoan (Ancestral/Primordial)">Zoan (Ancestral/Primordial)</option>
+          <option value="Zoan Mítica">Zoan Mítica</option>
+          <option value="Logia">Logia</option>
+          <option value="Desconhecido">Desconhecido</option>
+        </select>
+        <label class="switch-row small"><input type="checkbox" class="fruta-desperta" data-idx="${i}"><span>Despertada</span></label>
+      </div>
+    </div>`;
+  }
+  return blocks;
+}
+function fillFrutasStep(){
+  state.frutas.forEach((f,i)=>{
+    const block=document.querySelector(`.fruta-block[data-idx="${i}"]`); if(!block) return;
+    block.querySelector('.fruta-possui').checked=f.possui;
+    block.querySelector('.fruta-nome').value=f.nome;
+    block.querySelector('.fruta-tipo').value=f.tipo;
+    block.querySelector('.fruta-desperta').checked=f.despertada;
+    block.classList.toggle('active', f.possui);
+  });
+}
+function bindFrutasStep(){
+  document.querySelectorAll('.fruta-possui').forEach(chk=>{
+    chk.addEventListener('change', e=>{
+      const i=Number(e.target.dataset.idx); state.frutas[i].possui=e.target.checked;
+      e.target.closest('.fruta-block').classList.toggle('active', e.target.checked);
+      scheduleSave();
+    });
+  });
+  document.querySelectorAll('.fruta-nome').forEach(inp=>{ inp.addEventListener('input', e=>{ state.frutas[Number(e.target.dataset.idx)].nome=e.target.value; scheduleSave(); }); });
+  document.querySelectorAll('.fruta-tipo').forEach(sel=>{ sel.addEventListener('change', e=>{ state.frutas[Number(e.target.dataset.idx)].tipo=e.target.value; scheduleSave(); }); });
+  document.querySelectorAll('.fruta-desperta').forEach(chk=>{ chk.addEventListener('change', e=>{ state.frutas[Number(e.target.dataset.idx)].despertada=e.target.checked; scheduleSave(); }); });
+}
+
+function buildDots(idx){
+  const totalSteps = STEP_DEFS.length-1; let dots='';
+  for(let i=1;i<=totalSteps;i++) dots += `<span class="dot ${i===idx?'active':''} ${i<idx?'done':''}"></span>`;
+  return `<div class="progress-dots">${dots}</div>`;
+}
+
+function fillAndBindStep(key){
+  switch(key){
+    case 'id1': fillId1(); bindId1(); break;
+    case 'id2': fillId2(); bindId2(); break;
+    case 'id3': fillId3(); bindId3(); break;
+    case 'fisico': fillAttrStep('fisico'); bindAttrStep(); break;
+    case 'mental': fillAttrStep('mental'); bindAttrStep(); break;
+    case 'haki': fillHakiStep(); bindHakiStep(); break;
+    case 'frutas': fillFrutasStep(); bindFrutasStep(); break;
+  }
+  if (key==='welcome') {
+    const btn=document.getElementById('btnImportWelcome');
+    const inp=document.getElementById('importFileInputWelcome');
+    if (btn && inp) { btn.onclick=()=>inp.click(); inp.addEventListener('change', importBackupFile); }
+  }
+  initTooltipTaps();
+}
+
+function renderWizard(){
+  const app=document.getElementById('app');
+  const idx=state.wizardStep; const def=STEP_DEFS[idx];
+  let bodyHtml='';
+  switch(def.key){
+    case 'welcome': bodyHtml=buildWelcome(); break;
+    case 'id1': bodyHtml=buildId1(); break;
+    case 'id2': bodyHtml=buildId2(); break;
+    case 'id3': bodyHtml=buildId3(); break;
+    case 'fisico': bodyHtml=buildAttrStep('fisico'); break;
+    case 'mental': bodyHtml=buildAttrStep('mental'); break;
+    case 'haki': bodyHtml=buildHakiStep(); break;
+    case 'frutas': bodyHtml=buildFrutasStep(); break;
+  }
+  const showDots = def.key!=='welcome';
+  app.innerHTML = `
+    <div class="app-shell">
+      <div class="logo-title">Sonhos do Alvorecer</div>
+      ${showDots?buildDots(idx):''}
+      <div class="wizard-card">
+        ${def.title?`<h2 class="step-title">${def.title}</h2>`:''}
+        ${def.sub?`<p class="step-sub">${def.sub}</p>`:''}
+        <div class="step-body">${bodyHtml}</div>
+      </div>
+      <div class="wizard-nav">
+        ${idx>0?'<button id="btnBack" type="button" class="btn btn-ghost">← Voltar</button>':'<span></span>'}
+        ${def.key==='welcome' ? '<button id="btnStart" type="button" class="btn btn-primary">Continuar ⚓</button>' :
+          def.key==='frutas' ? '<button id="btnFinish" type="button" class="btn btn-primary">Finalizar Ficha ⚓</button>' :
+          '<button id="btnNext" type="button" class="btn btn-primary">Avançar →</button>'}
+      </div>
+    </div>`;
+  fillAndBindStep(def.key);
+  wireNav(idx, def.key);
+  bindSecretTrigger(document.querySelector('.logo-title'));
+}
+function wireNav(idx, key){
+  const back=document.getElementById('btnBack'); if(back) back.onclick=()=>{ state.wizardStep=idx-1; renderWizard(); };
+  const start=document.getElementById('btnStart'); if(start) start.onclick=()=>{ state.wizardStep=idx+1; renderWizard(); };
+  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
+    state.wizardStep=idx+1; renderWizard(); scheduleSave();
+  };
+  const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
+}
+async function finalizeCharacter(){
+  const t=totals();
+  state.recursos.vida.atual=computeVidaFinal(t);
+  state.recursos.energia.atual=computeEnergiaFinal(t);
+  state.recursos.mental.atual=computeMente(t);
+  state.wizardDone=true;
+  scheduleSave();
+  renderSheet();
+  if(ONLINE_ENABLED && supabaseClient && !characterId){ try{ await createOnlineCharacter(); addOnlineControls(); }catch(e){ console.warn('Não foi possível criar a ficha online:',e); } }
+}
+
+/* ===== Ficha final ===== */
+function renderSheet(){
+  const app=document.getElementById('app');
+  app.innerHTML = `
+    <div class="app-shell sheet-shell">
+      <div class="mini-logo">Sonhos do Alvorecer</div>
+      <div class="sheet-header" id="sheetHeader"></div>
+      <div class="tab-bar" id="tabBar">
+        <button type="button" class="tab-btn" data-tab="base">📜 Ficha Base</button>
+        <button type="button" class="tab-btn" data-tab="poderes">🔥 Poderes</button>
+        <button type="button" class="tab-btn" data-tab="notas">📖 Anotações</button>
+        <button type="button" class="tab-btn" data-tab="inventario">💰 Inventário</button>
+      </div>
+      <div class="tab-content" id="tabContent"></div>
+      <div class="sheet-footer">
+        <button id="btnExport" type="button" class="btn-link">💾 Baixar backup (.json)</button>
+        <button id="btnImport" type="button" class="btn-link">📂 Carregar backup</button>
+        <input type="file" id="importFileInput" accept="application/json" hidden>
+        <button id="btnReset" type="button" class="btn-link">Reiniciar ficha</button>
+      </div>
+    </div>`;
+  renderSheetHeader();
+  bindTabs();
+  switchTab(state.activeTab||'base');
+  document.getElementById('btnReset').onclick = confirmReset;
+  document.getElementById('btnExport').onclick = exportBackup;
+  document.getElementById('btnImport').onclick = ()=>document.getElementById('importFileInput').click();
+  document.getElementById('importFileInput').addEventListener('change', importBackupFile);
+  bindSecretTrigger(document.querySelector('.mini-logo'));
+}
+
+function renderSheetHeader(){
+  const header=document.getElementById('sheetHeader');
+  header.innerHTML = `
+    <div class="portrait" id="portraitFrame">
+      <img id="portraitImg" alt="Retrato do personagem" ${state.imagem?'':'hidden'}>
+      <div id="portraitPlaceholder" class="portrait-placeholder" ${state.imagem?'hidden':''}>📷<br>Adicionar<br>retrato</div>
+      <input type="file" id="imagemInput" accept="image/*" hidden>
+    </div>
+    <div class="identity-block">
+      <input type="text" id="hdrNome" class="identity-name" placeholder="Nome do Personagem">
+      <input type="text" id="hdrJogador" class="identity-player" placeholder="Jogador(a)">
+      <div class="identity-mini-grid">
+        <div class="mini-field"><label>Idade</label><input type="text" id="hdrIdade" placeholder="Idade"></div>
+        <div class="mini-field"><label>Expectativa</label><input type="text" id="hdrExpectativa" placeholder="Expectativa"></div>
+        <div class="mini-field wide"><label>Raça</label><input type="text" id="hdrRaca"></div>
+        <div class="mini-field wide"><label>Profissão</label><select id="hdrProfissao">${profissaoOptionsHtml()}</select></div>
+        <div class="mini-field wide"><label>Talento</label><input type="text" id="hdrTalento"></div>
+        <div class="mini-field wide"><label>Sonho</label><input type="text" id="hdrSonho"></div>
+        <div class="mini-field wide"><label class="switch-row small"><input type="checkbox" id="hdrPontoSonho"><span>✦ Ponto de Sonho</span></label></div>
+      </div>
+    </div>`;
+  document.getElementById('hdrNome').value=state.identidade.nome;
+  document.getElementById('hdrJogador').value=state.identidade.jogador;
+  document.getElementById('hdrIdade').value=state.identidade.idade;
+  document.getElementById('hdrExpectativa').value=state.identidade.expectativa;
+  document.getElementById('hdrRaca').value=state.identidade.raca;
+  document.getElementById('hdrProfissao').value=state.identidade.profissao;
+  document.getElementById('hdrTalento').value=state.identidade.talento;
+  document.getElementById('hdrSonho').value=state.identidade.sonho;
+  document.getElementById('hdrPontoSonho').checked=state.pontoSonho;
+  if (state.imagem) document.getElementById('portraitImg').src=state.imagem;
+
+  ['Nome','Jogador','Idade','Expectativa','Raca','Profissao','Talento','Sonho'].forEach(field=>{
+    const stateKey = field.charAt(0).toLowerCase()+field.slice(1);
+    document.getElementById('hdr'+field).addEventListener('input', e=>{
+      state.identidade[stateKey]=e.target.value;
+      if (field==='Profissao') { syncFocoMaximo(); renderFocoPips(); }
+      scheduleSave();
+    });
+  });
+  document.getElementById('hdrPontoSonho').addEventListener('change', e=>{ state.pontoSonho=e.target.checked; scheduleSave(); });
+  document.getElementById('portraitFrame').addEventListener('click', ()=>document.getElementById('imagemInput').click());
+  document.getElementById('imagemInput').addEventListener('change', handleImagemUpload);
+}
+function handleImagemUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    state.imagem=ev.target.result;
+    document.getElementById('portraitImg').src=state.imagem;
+    document.getElementById('portraitImg').hidden=false;
+    document.getElementById('portraitPlaceholder').hidden=true;
+    scheduleSave();
+  };
+  reader.readAsDataURL(file);
+}
+
+function bindTabs(){ document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>switchTab(btn.dataset.tab)); }); }
+function switchTab(tab){
+  state.activeTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  const content=document.getElementById('tabContent');
+  if (tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
+  else if (tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
+  else if (tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
+  else if (tab==='inventario'){ content.innerHTML=buildTabInventario(); fillTabInventario(); bindTabInventario(); }
+  initTooltipTaps();
+  scheduleSave();
+}
+
+function buildTabBase(){
+  const attrRows=(group)=>Object.entries(ATTR_META).filter(([k,v])=>v.group===group).map(([k,v])=>`
+    <div class="attr-row" data-attr="${k}">
+      <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
+      <input type="number" class="attr-valor" data-attr="${k}" min="0">
+      <input type="number" class="attr-mod" data-attr="${k}">
+    </div>`).join('');
+  return `
+    <div class="panel">
+      <h3>Atributos</h3>
+      <div class="attr-columns">
+        <div><h4>Físico</h4><div class="attr-grid"><div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div></div>${attrRows('fisico')}</div></div>
+        <div><h4>Mental</h4><div class="attr-grid"><div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div></div>${attrRows('mental')}</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Recursos</h3>
+      <div class="resource-cards">
+        ${buildResourceCard('vida','Vida','❤')}
+        ${buildResourceCard('energia','Energia','⚡')}
+        ${buildResourceCard('mental','Mente','🧠')}
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Limites</h3>
+      ${buildLimiteRow('morrendo','Morrendo','💀')}
+      ${buildLimiteRow('exaustao','Exaustão','🌊')}
+      ${buildLimiteRow('enlouquecendo','Enlouquecendo','🌀')}
+    </div>
+    <div class="panel foco-iniciativa-panel">
+      <div class="foco-block">
+        <h3>Foco 𓂀</h3>
+        <div class="foco-pips" id="focoPips"></div>
+
+      </div>
+      <div class="iniciativa-block">
+        <h3>Iniciativa</h3>
+        <div class="iniciativa-mod" id="iniciativaMod">+0</div>
+        <label class="iniciativa-bonus-field">Bônus extra <input type="number" id="iniciativaBonusInput"></label>
+        <button id="btnRolarIniciativa" type="button" class="btn btn-primary">🎲 Rolar</button>
+        <p id="iniciativaResultado" class="iniciativa-resultado"></p>
+      </div>
+    </div>`;
+}
+function buildResourceCard(key,label,icon){
+  return `
+    <div class="resource-card resource-${key}">
+      <div class="resource-title">${icon} ${label}</div>
+      <div class="resource-bar"><div class="resource-bar-fill" id="${key}BarFill"></div></div>
+      <div class="resource-fields">
+        <label>Atual <input type="number" id="${key}Atual"></label>
+        <label>Máximo <span class="chip" id="${key}MaxChip">0</span></label>
+        <label>Extra <input type="number" id="${key}Extra"></label>
+        <label>Temp. <input type="number" id="${key}Temp"></label>
+      </div>
+    </div>`;
+}
+function buildLimiteRow(key,label,icon){
+  let pips=''; for(let i=0;i<3;i++) pips+=`<button type="button" class="pip" data-limite="${key}" data-idx="${i}">${icon}</button>`;
+  return `<div class="limite-row"><span class="limite-label">${label}</span><div class="limite-pips">${pips}</div></div>`;
+}
+function fillTabBase(){
+  Object.keys(ATTR_META).forEach(k=>{
+    document.querySelector(`.attr-valor[data-attr="${k}"]`).value=state.attrs[k].valor;
+    document.querySelector(`.attr-mod[data-attr="${k}"]`).value=state.attrs[k].mod;
+  });
+  ['vida','energia','mental'].forEach(key=>{
+    document.getElementById(`${key}Atual`).value=state.recursos[key].atual;
+    document.getElementById(`${key}Extra`).value=state.recursos[key].extra;
+    document.getElementById(`${key}Temp`).value=state.recursos[key].temporario;
+  });
+  updateResourceDisplays();
+  ['morrendo','exaustao','enlouquecendo'].forEach(fillLimitePips);
+  syncFocoMaximo();
+  renderFocoPips();
+  document.getElementById('iniciativaBonusInput').value=state.iniciativaBonus;
+}
+function updateResourceDisplays(){
+  const t=totals();
+  const maxes={ vida:computeVidaFinal(t), energia:computeEnergiaFinal(t), mental:computeMente(t) };
+  ['vida','energia','mental'].forEach(key=>{
+    const baseMax=maxes[key]; const extra=Number(state.recursos[key].extra)||0; const atual=Number(state.recursos[key].atual)||0;
+    const chip=document.getElementById(`${key}MaxChip`);
+    if (chip) chip.textContent = extra ? `${baseMax} (+${extra})` : `${baseMax}`;
+    const totalCap=Math.max(1, baseMax+extra);
+    const pct=Math.max(0, Math.min(100, (atual/totalCap)*100));
+    const fill=document.getElementById(`${key}BarFill`);
+    if (fill) fill.style.width=pct+'%';
+  });
+  updateIniciativaDisplay();
+}
+function updateIniciativaDisplay(){
+  const t=totals(); const mod=computeIniciativa(t);
+  const el=document.getElementById('iniciativaMod');
+  if (el) el.textContent=(mod>=0?'+':'')+mod;
+}
+function fillLimitePips(key){
+  const level=state.limites[key];
+  document.querySelectorAll(`.pip[data-limite="${key}"]`).forEach(pip=>{
+    pip.classList.toggle('active', Number(pip.dataset.idx)<level);
+  });
+}
+function onLimitePipClick(key, idx){
+  state.limites[key] = (state.limites[key]===idx+1) ? idx : idx+1;
+  fillLimitePips(key);
+  scheduleSave();
+}
+function syncFocoMaximo(){
+  const max = state.identidade.profissao === 'Combatente (não tem Profissão)' ? 4 : 3;
+  state.foco.maximo = max;
+  if (state.foco.emUso > max) state.foco.emUso = max;
+}
+function renderFocoPips(){
+  const container=document.getElementById('focoPips');
+  const max=Math.max(0, state.foco.maximo);
+  let html=''; for(let i=0;i<max;i++) html+=`<button type="button" class="pip foco-pip ${i<state.foco.emUso?'active':''}" data-idx="${i}">𓂀</button>`;
+  container.innerHTML=html;
+  container.querySelectorAll('.foco-pip').forEach(pip=>{
+    pip.addEventListener('click', ()=>{
+      const idx=Number(pip.dataset.idx);
+      state.foco.emUso = (state.foco.emUso===idx+1) ? idx : idx+1;
+      renderFocoPips();
+      scheduleSave();
+    });
+  });
+}
+function rollIniciativa(){
+  const t=totals(); const mod=computeIniciativa(t);
+  const d20=Math.floor(Math.random()*20)+1; const totalRoll=d20+mod;
+  const el=document.getElementById('iniciativaResultado');
+  el.textContent = `🎲 ${d20} + ${mod} = ${totalRoll}`;
+  el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+}
+function bindTabBase(){
+  document.querySelectorAll('#tabContent .attr-valor, #tabContent .attr-mod').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
+      state.attrs[key][field]=Number(e.target.value)||0;
+      updateResourceDisplays();
+      scheduleSave();
+    });
+  });
+  ['vida','energia','mental'].forEach(key=>{
+    document.getElementById(`${key}Atual`).addEventListener('input', e=>{ state.recursos[key].atual=Number(e.target.value)||0; updateResourceDisplays(); scheduleSave(); });
+    document.getElementById(`${key}Extra`).addEventListener('input', e=>{ state.recursos[key].extra=Number(e.target.value)||0; updateResourceDisplays(); scheduleSave(); });
+    document.getElementById(`${key}Temp`).addEventListener('input', e=>{ state.recursos[key].temporario=Number(e.target.value)||0; scheduleSave(); });
+  });
+  document.querySelectorAll('.pip[data-limite]').forEach(pip=>{
+    pip.addEventListener('click', ()=> onLimitePipClick(pip.dataset.limite, Number(pip.dataset.idx)));
+  });
+  document.getElementById('btnRolarIniciativa').addEventListener('click', rollIniciativa);
+  document.getElementById('iniciativaBonusInput').addEventListener('input', e=>{ state.iniciativaBonus=Number(e.target.value)||0; updateIniciativaDisplay(); scheduleSave(); });
+}
+
+function buildTabPoderes(){
+  return `
+    <div class="panel">
+      <h3>Haki</h3>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="pHintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="pChkObservacaoAvancada"><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancado"><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancado"><span>Haki Avançado</span></label></div>
+    </div>
+    <div class="panel"><h3>Akuma no Mi</h3>${buildFrutasStep()}</div>
+    <div class="panel">
+      <h3>Poderes / Habilidades / Capacidades / Notas "Mecânicas"</h3>
+      <textarea id="poderesTextarea" rows="8" placeholder="Golpes, técnicas, habilidades especiais, anotações mecânicas..."></textarea>
+    </div>`;
+}
+function fillTabPoderes(){
+  document.getElementById('pChkObservacao').checked=state.haki.observacao;
+  document.getElementById('pChkArmamento').checked=state.haki.armamento;
+  document.getElementById('pChkConquistador').checked=state.haki.conquistador;
+  document.getElementById('pChkObservacaoAvancada').checked=!!state.haki.observacaoAvancada;
+  document.getElementById('pChkArmamentoAvancado').checked=!!state.haki.armamentoAvancado;
+  document.getElementById('pChkConquistadorAvancado').checked=!!state.haki.conquistadorAvancado;
+  updateHakiAdvancedAvailability('p');
+  updateHakiHints('p');
+  fillFrutasStep();
+  document.getElementById('poderesTextarea').value=state.poderes;
+}
+function bindTabPoderes(){
+  document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=e.target.checked; scheduleSave();});
+  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=e.target.checked; scheduleSave();});
+  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=e.target.checked; scheduleSave();});
+  bindFrutasStep();
+  document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
+}
+
+function buildTabNotas(){ return `<div class="panel"><h3>Notas de História/Personagem</h3><textarea id="notasTextarea" rows="14" placeholder="${LOREM_IPSUM}"></textarea></div>`; }
+function fillTabNotas(){ document.getElementById('notasTextarea').value=state.notas; }
+function bindTabNotas(){ document.getElementById('notasTextarea').addEventListener('input', e=>{ state.notas=e.target.value; scheduleSave(); }); }
+
+function formatDinheiro(value){
+  const raw=String(value??'').replace(/^B\$\s*/i,'').replace(/\D/g,'');
+  if(!raw) return 'B$';
+  return 'B$'+Number(raw).toLocaleString('pt-BR');
+}
+function buildTabInventario(){
+  return `
+    <div class="panel"><h3>Posses</h3><div class="field"><label>Dinheiro</label><input type="text" id="dinheiroInput" inputmode="numeric" autocomplete="off"></div></div>
+    <div class="panel"><h3>Itens</h3><div id="itensList"></div><button id="addItemBtn" type="button" class="btn btn-ghost">+ Adicionar item</button></div>`;
+}
+function fillTabInventario(){
+  state.dinheiro=formatDinheiro(state.dinheiro);
+  document.getElementById('dinheiroInput').value=state.dinheiro;
+  renderItens();
+}
+function bindTabInventario(){
+  const dinheiroInput=document.getElementById('dinheiroInput');
+  dinheiroInput.addEventListener('input', e=>{
+    state.dinheiro=formatDinheiro(e.target.value);
+    e.target.value=state.dinheiro;
+    scheduleSave();
+  });
+  document.getElementById('addItemBtn').addEventListener('click', ()=>{
+    state.itens.push({nome:'',qtd:1,desc:''});
+    renderItens(); scheduleSave();
+    const rows=document.querySelectorAll('#itensList .item-row'); const last=rows[rows.length-1];
+    if (last) last.querySelector('.item-nome').focus();
+  });
+}
+function renderItens(){
+  const list=document.getElementById('itensList');
+  if (state.itens.length===0){ list.innerHTML='<p class="empty-hint">Nenhum item ainda.</p>'; return; }
+  list.innerHTML = state.itens.map(()=>`
+    <div class="item-row">
+      <input type="text" class="item-nome" placeholder="Nome do item">
+      <input type="number" class="item-qtd" min="0">
+      <input type="text" class="item-desc" placeholder="Descrição (opcional)">
+      <button type="button" class="item-remove" title="Remover">✕</button>
+    </div>`).join('');
+  state.itens.forEach((item,i)=>{
+    const row=list.children[i];
+    row.querySelector('.item-nome').value=item.nome||'';
+    row.querySelector('.item-qtd').value= (item.qtd===undefined||item.qtd===null) ? 1 : item.qtd;
+    row.querySelector('.item-desc').value=item.desc||'';
+  });
+  list.querySelectorAll('.item-nome').forEach((inp,i)=> inp.addEventListener('input', e=>{ state.itens[i].nome=e.target.value; scheduleSave(); }));
+  list.querySelectorAll('.item-qtd').forEach((inp,i)=> inp.addEventListener('input', e=>{ state.itens[i].qtd=Number(e.target.value)||0; scheduleSave(); }));
+  list.querySelectorAll('.item-desc').forEach((inp,i)=> inp.addEventListener('input', e=>{ state.itens[i].desc=e.target.value; scheduleSave(); }));
+  list.querySelectorAll('.item-remove').forEach((btn,i)=> btn.addEventListener('click', ()=>{ state.itens.splice(i,1); renderItens(); scheduleSave(); }));
+}
+
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = (state.identidade.nome||'personagem').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'personagem';
+  a.href = url; a.download = `ficha-${safeName}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function importBackupFile(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    try {
+      const loaded = JSON.parse(ev.target.result);
+      state = mergeState(loaded);
+      scheduleSave();
+      if (state.wizardDone) renderSheet(); else renderWizard();
+    } catch(err){ alert('Não consegui ler esse arquivo. Confira se é um backup válido da ficha.'); }
+  };
+  reader.readAsText(file);
+}
+function confirmReset(){
+  if (confirm('Tem certeza que quer reiniciar a ficha? Todos os dados serão apagados.')) {
+    state = defaultState();
+    saveState();
+    renderWizard();
+  }
+}
+
+/* ===== Boot ===== */
+async function init(){
+  document.getElementById('app').innerHTML = '<div class="loading-screen">⚓ Erguendo velas...</div>';
+  try {
+    await loadState();
+  } catch(e) {
+    console.warn('Não foi possível carregar a ficha online. Continuando em modo local.', e);
+  }
+  try {
+    if (state.wizardDone) renderSheet(); else renderWizard();
+  } catch(e) {
+    console.error('Erro ao abrir a ficha:', e);
+    state = defaultState();
+    renderWizard();
+  }
+  if (ONLINE_ENABLED && state.wizardDone && !characterId) {
+    try { await createOnlineCharacter(); } catch(e) { console.warn('Não foi possível criar a ficha online:', e); }
+  }
+  if (ONLINE_ENABLED) addOnlineControls();
+}
+function addOnlineControls(){
+  if(document.getElementById('onlineShareBtn')) return;
+  const b=document.createElement('button'); b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
+  b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
+  b.onclick=copyShareLink; document.body.appendChild(b);
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
