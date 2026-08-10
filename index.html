@@ -922,7 +922,8 @@ function fillLimitePips(key){
 function onLimitePipClick(key, idx){
   state.limites[key] = (state.limites[key]===idx+1) ? idx : idx+1;
   fillLimitePips(key);
-  scheduleSave();
+  // Limites são estados importantes da ficha: salva imediatamente.
+  saveState();
 }
 function syncFocoMaximo(){
   const max = state.identidade.profissao === 'Combatente (não tem Profissão)' ? 4 : 3;
@@ -1072,16 +1073,46 @@ function exportBackup(){
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
-function importBackupFile(e){
+async function importBackupFile(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=(ev)=>{
+  reader.onload=async(ev)=>{
     try {
       const loaded = JSON.parse(ev.target.result);
+
+      // Um backup JSON representa uma nova cópia da ficha.
+      // Não reutilizamos o ID/token da ficha que estava aberta.
+      if(realtimeChannel && supabaseClient){
+        try{ supabaseClient.removeChannel(realtimeChannel); }catch(e){}
+      }
+      realtimeChannel = null;
+      characterId = null;
+      editToken = null;
+      try{
+        localStorage.removeItem('sonhos_ficha_id');
+        localStorage.removeItem('sonhos_ficha_token');
+      }catch(e){}
+
       state = mergeState(loaded);
       scheduleSave();
-      if (state.wizardDone) renderSheet(); else renderWizard();
-    } catch(err){ alert('Não consegui ler esse arquivo. Confira se é um backup válido da ficha.'); }
+
+      if (state.wizardDone) {
+        renderSheet();
+        if(ONLINE_ENABLED && supabaseClient){
+          try{
+            await createOnlineCharacter();
+            addOnlineControls();
+          }catch(err){
+            console.warn('Não foi possível criar a cópia online do backup:', err);
+          }
+        }
+      } else {
+        renderWizard();
+      }
+    } catch(err){
+      alert('Não consegui ler esse arquivo. Confira se é um backup válido da ficha.');
+    }
+    e.target.value='';
   };
   reader.readAsText(file);
 }
