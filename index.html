@@ -88,7 +88,10 @@ textarea { resize:vertical; line-height:1.6; }
 .haki-toggle { padding:10px 0; border-bottom:1px solid var(--border-soft); }
 .haki-toggle:last-child { border-bottom:none; }
 .sub-toggle { display:flex; align-items:center; gap:8px; margin:8px 0 2px 28px; font-size:.9rem; color:var(--text-soft); }
-.sub-toggle input:disabled + span { opacity:.45; }
+.sub-toggle input:disabled + span, .sub-toggle.locked span { opacity:.42; color:var(--text-muted); }
+.sub-toggle.locked { opacity:.55; cursor:not-allowed; }
+.sub-toggle.locked input { opacity:.45; cursor:not-allowed; }
+.sub-toggle.locked label, .sub-toggle.locked span { cursor:not-allowed; }
 
 .fruta-block { padding:10px 0; border-bottom:1px solid var(--border-soft); }
 .fruta-block:last-child { border-bottom:none; }
@@ -881,7 +884,12 @@ function updateHakiAdvancedAvailability(prefix){
     el.setAttribute('aria-disabled',String(!ok));
     el.title=ok?'Haki Avançado liberado':'Libere o Haki normal primeiro';
     const row=el.closest('.sub-toggle');
-    if(row){ row.classList.toggle('locked',!ok); row.setAttribute('aria-disabled',String(!ok)); }
+    if(row){
+      row.classList.toggle('locked',!ok);
+      row.setAttribute('aria-disabled',String(!ok));
+      row.style.opacity=ok?'':'0.55';
+      row.querySelectorAll('span').forEach(span=>{ span.style.opacity=ok?'':'0.42'; });
+    }
   });
 }
 function bindHakiAdvancedGuards(){
@@ -889,7 +897,7 @@ function bindHakiAdvancedGuards(){
   const pairs=[
     ['Observacao','observacao','observacaoAvancada'],
     ['Armamento','armamento','armamentoAvancado'],
-    ['Conquistador','conquistador','conquistadorAvancada']
+    ['Conquistador','conquistador','conquistadorAvancado']
   ];
   pairs.forEach(([name,normalKey,advancedKeyRaw])=>{
     const advancedKey = advancedKeyRaw==='conquistadorAvancada' ? 'conquistadorAvancado' : advancedKeyRaw;
