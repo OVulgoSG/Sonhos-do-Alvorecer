@@ -1026,15 +1026,24 @@ function wireNav(idx, key){
   const back=document.getElementById('btnBack'); if(back) back.onclick=()=>go(idx-1);
   const start=document.getElementById('btnStart'); if(start) start.onclick=()=>go(idx+1);
   const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
+    // As regras do jogador são verificadas no PRIMEIRO Avançar,
+    // logo depois de preencher o nome do jogador (tela id1).
+    if(key==='id1'){
+      const rule=getPlayerRule();
+      if(rule.mensagem){
+        showPlayerRule();
+        if(rule.bloqueado) return;
+        setTimeout(()=>go(idx+1),3000);
+        return;
+      }
+    }
+    // Para Vin/Eduard, a idade ainda não existe na primeira tela.
+    // A mensagem já aparece no primeiro Avançar; a restrição de idade
+    // é aplicada quando a idade passa a estar disponível.
     if(key==='id2'){
       const rule=getPlayerRule();
       if(rule.bloqueado){
         showPlayerRule();
-        return;
-      }
-      if(rule.mensagem){
-        showPlayerRule();
-        setTimeout(()=>go(idx+1),3000);
         return;
       }
     }
