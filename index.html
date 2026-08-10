@@ -717,7 +717,31 @@ function buildId1() {
     <div class="field"><label>Nome do Personagem ${infoIcon('Nome d@ Personagem')}</label>
       <input type="text" id="inpNome" placeholder="Ex: Monkey D. ..."></div>
     <div class="field"><label>Jogador(a) ${infoIcon('Nome d@ Jogador(a)')}</label>
-      <input type="text" id="inpJogador" placeholder="Seu nome"></div>`;
+      <input type="text" id="inpJogador" placeholder="Seu nome"></div>
+    <div id="playerRuleMessage" class="hint-text" style="margin-top:8px;min-height:1.4em"></div>`;
+}
+function getPlayerRule(){
+  const nome=String(state.identidade.jogador||'').trim().toLowerCase();
+  const idade=Number.parseInt(String(state.identidade.idade||''),10);
+  if(nome.startsWith('andr')) return {mensagem:'Você já ganha buff em trair.', bloqueado:false};
+  if(nome.includes('maozinh')) return {mensagem:'Não vai passar daqui.', bloqueado:true};
+  if(nome.startsWith('vin')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
+  if(nome.startsWith('nic')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
+  if(nome.startsWith('wal')) return {mensagem:'O teu poder é o preto.', bloqueado:false};
+  if(nome.startsWith('eduard')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
+  return {mensagem:'', bloqueado:false};
+}
+function showPlayerRule(){
+  const el=document.getElementById('playerRuleMessage');
+  if(!el) return;
+  const rule=getPlayerRule();
+  el.textContent=rule.mensagem;
+  el.style.color=rule.bloqueado?'#b42318':'';
+  el.style.fontWeight=rule.mensagem?'600':'400';
+  clearTimeout(window.__playerRuleTimer);
+  if(rule.mensagem && !rule.bloqueado){
+    window.__playerRuleTimer=setTimeout(()=>{ if(el) el.textContent=''; },3000);
+  }
 }
 function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; }
 function bindId1(){
@@ -979,7 +1003,21 @@ function wireNav(idx, key){
   };
   const back=document.getElementById('btnBack'); if(back) back.onclick=()=>go(idx-1);
   const start=document.getElementById('btnStart'); if(start) start.onclick=()=>go(idx+1);
-  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>go(idx+1);
+  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
+    if(key==='id2'){
+      const rule=getPlayerRule();
+      if(rule.bloqueado){
+        showPlayerRule();
+        return;
+      }
+      if(rule.mensagem){
+        showPlayerRule();
+        setTimeout(()=>go(idx+1),120);
+        return;
+      }
+    }
+    go(idx+1);
+  };
   const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
 }
 async function finalizeCharacter(){
