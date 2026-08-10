@@ -178,6 +178,125 @@ textarea { resize:vertical; line-height:1.6; }
   body { background:#fff; color:#000; }
   .panel, .resource-card, .sheet-header, .wizard-card { border:1px solid #ccc; box-shadow:none; background:#fff; }
 }
+  .lobby-header{
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius-lg);
+  padding:22px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow-lg);
+  text-align:center;
+}
+
+.lobby-header h1{
+  color:var(--gold-bright);
+  font-size:1.4rem;
+}
+
+.lobby-header p{
+  color:var(--text-muted);
+  font-size:.9rem;
+  margin-bottom:18px;
+}
+
+.lobby-add{
+  display:flex;
+  gap:8px;
+}
+
+.lobby-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:14px;
+}
+
+.lobby-card{
+  position:relative;
+  display:flex;
+  gap:14px;
+  align-items:center;
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow-lg);
+}
+
+.lobby-portrait{
+  width:78px;
+  height:78px;
+  flex-shrink:0;
+  border-radius:50%;
+  border:2px solid var(--gold);
+  background:var(--bg-void);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  font-size:2rem;
+}
+
+.lobby-portrait img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.lobby-info{
+  min-width:0;
+  flex:1;
+}
+
+.lobby-name{
+  font-family:'Cinzel',serif;
+  font-size:1.05rem;
+  color:var(--gold-bright);
+  margin-bottom:7px;
+}
+
+.lobby-resource{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  font-size:.82rem;
+  color:var(--text-muted);
+  padding:2px 0;
+}
+
+.lobby-resource strong{
+  color:var(--text-main);
+}
+
+.lobby-remove{
+  position:absolute;
+  top:7px;
+  right:8px;
+  border:0;
+  background:none;
+  color:var(--text-muted);
+  cursor:pointer;
+  font-size:1.2rem;
+}
+
+.lobby-remove:hover{
+  color:var(--danger);
+}
+
+.lobby-empty{
+  grid-column:1/-1;
+  text-align:center;
+  color:var(--text-muted);
+  padding:50px 20px;
+  background:var(--bg-panel);
+  border:1px dashed var(--border-soft);
+  border-radius:var(--radius-lg);
+}
+
+@media(max-width:640px){
+  .lobby-add{
+    flex-direction:column;
+  }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -253,7 +372,16 @@ function defaultState() {
     limites:{morrendo:0,exaustao:0,enlouquecendo:0},
     foco:{emUso:0,maximo:3},
     imagem:null,
-    notas: '',
+
+lobby:{
+  mostrarNome:true,
+  mostrarFoto:true,
+  mostrarVida:true,
+  mostrarEnergia:true,
+  mostrarMental:true
+},
+
+notas:'',
     dinheiro:'B$10000000',
     itens:[],
     poderes:'',
@@ -301,6 +429,7 @@ let state = defaultState();
 let saveTimer = null;
 let supabaseClient = null;
 const URL_PARAMS = new URLSearchParams(location.search);
+  const IS_LOBBY = URL_PARAMS.has('lobby');
 // A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
 // carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
 let characterId = URL_PARAMS.get('ficha') || null;
@@ -361,6 +490,11 @@ function mergeState(loaded) {
   merged.limites=Object.assign({},base.limites,loaded?.limites||{});
   merged.foco=Object.assign({},base.foco,loaded?.foco||{});
   merged.formulaConfig=Object.assign({},base.formulaConfig,loaded?.formulaConfig||{});
+  merged.lobby=Object.assign(
+  {},
+  base.lobby,
+  loaded?.lobby||{}
+);
   merged.itens=loaded?.itens||[];
   return merged;
 }
@@ -1208,26 +1342,363 @@ function createNewCharacter(){
   if(shareBtn) shareBtn.remove();
   renderWizard();
 }
+/* ===== Lobby ===== */
 
+function lobbyVisibleValue(visible, value){
+  return visible ? value : '???';
+}
+
+function getLobbyCharacterIdFromUrl(value){
+  try{
+    const u = new URL(value, location.href);
+    return u.searchParams.get('ficha');
+  }catch(e){
+    return null;
+  }
+}
+
+function buildLobbyCard(character){
+  const s = mergeState(character.state || {});
+  const lobby = s.lobby || {};
+
+  const nome = lobby.mostrarNome
+    ? (s.identidade.nome || 'Personagem sem nome')
+    : '???';
+
+  const foto = lobby.mostrarFoto && s.imagem
+    ? `<img src="${s.imagem}" alt="">`
+    : '<span>👤</span>';
+
+  const vidaMax = computeVidaFinal(totalsFromState(s));
+  const energiaMax = computeEnergiaFinal(totalsFromState(s));
+  const mentalMax = computeMente(totalsFromState(s));
+
+  const vida = lobbyVisibleValue(
+    lobby.mostrarVida,
+    `${Number(s.recursos.vida.atual)||0} / ${vidaMax}`
+  );
+
+  const energia = lobbyVisibleValue(
+    lobby.mostrarEnergia,
+    `${Number(s.recursos.energia.atual)||0} / ${energiaMax}`
+  );
+
+  const mental = lobbyVisibleValue(
+    lobby.mostrarMental,
+    `${Number(s.recursos.mental.atual)||0} / ${mentalMax}`
+  );
+
+  return `
+    <div class="lobby-card" data-character-id="${character.id}">
+      <div class="lobby-portrait">
+        ${foto}
+      </div>
+
+      <div class="lobby-info">
+        <div class="lobby-name">${escapeHtml(nome)}</div>
+
+        <div class="lobby-resource">
+          <span>❤️ Vida</span>
+          <strong>${vida}</strong>
+        </div>
+
+        <div class="lobby-resource">
+          <span>⚡ Energia</span>
+          <strong>${energia}</strong>
+        </div>
+
+        <div class="lobby-resource">
+          <span>🧠 Mental</span>
+          <strong>${mental}</strong>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="lobby-remove"
+        data-remove-lobby="${character.id}">
+        ×
+      </button>
+    </div>`;
+}
+
+function totalsFromState(s){
+  const old=state;
+  state=s;
+  const t=totals();
+  state=old;
+  return t;
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+async function loadLobbyCharacters(){
+  const {data: lobbyRows, error:lobbyError} =
+    await supabaseClient
+      .from('lobby_characters')
+      .select('id,character_id,active,show_name,show_photo,show_health,show_energy,show_mental')
+      .eq('active',true)
+      .order('created_at',{ascending:true});
+
+  if(lobbyError) throw lobbyError;
+
+  if(!lobbyRows.length){
+    renderLobby([]);
+    return;
+  }
+
+  const ids=lobbyRows.map(x=>x.character_id);
+
+  const {data:characters,error:characterError} =
+    await supabaseClient
+      .from('characters')
+      .select('id,state')
+      .in('id',ids);
+
+  if(characterError) throw characterError;
+
+  const byId={};
+  (characters||[]).forEach(c=>byId[c.id]=c);
+
+  const result=lobbyRows
+    .map(row=>{
+      const c=byId[row.character_id];
+      if(!c) return null;
+
+      const copy=JSON.parse(JSON.stringify(c));
+
+      copy.state=mergeState(copy.state);
+
+      copy.state.lobby={
+        mostrarNome:row.show_name,
+        mostrarFoto:row.show_photo,
+        mostrarVida:row.show_health,
+        mostrarEnergia:row.show_energy,
+        mostrarMental:row.show_mental
+      };
+
+      return copy;
+    })
+    .filter(Boolean);
+
+  renderLobby(result);
+}
+
+function renderLobby(characters){
+  const app=document.getElementById('app');
+
+  app.innerHTML=`
+    <div class="app-shell">
+      <div class="mini-logo">Sonhos do Alvorecer</div>
+
+      <div class="lobby-header">
+        <h1>Personagens em Cena</h1>
+        <p>
+          Cole o link de uma ficha para colocá-la no lobby.
+        </p>
+
+        <div class="lobby-add">
+          <input
+            type="text"
+            id="lobbyLinkInput"
+            placeholder="Cole aqui o link da ficha..."
+          >
+          <button
+            type="button"
+            id="lobbyAddButton"
+            class="btn btn-primary">
+            Adicionar
+          </button>
+        </div>
+      </div>
+
+      <div id="lobbyCharacters" class="lobby-grid">
+        ${
+          characters.length
+          ? characters.map(buildLobbyCard).join('')
+          : `
+            <div class="lobby-empty">
+              Nenhum personagem está em cena.
+            </div>`
+        }
+      </div>
+    </div>
+  `;
+
+  document.getElementById('lobbyAddButton')
+    .addEventListener('click', addCharacterToLobby);
+
+  document.getElementById('lobbyLinkInput')
+    .addEventListener('keydown',e=>{
+      if(e.key==='Enter') addCharacterToLobby();
+    });
+
+  document.querySelectorAll('[data-remove-lobby]')
+    .forEach(btn=>{
+      btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby));
+    });
+}
+
+async function addCharacterToLobby(){
+  const input=document.getElementById('lobbyLinkInput');
+  const value=input.value.trim();
+
+  const characterId=getLobbyCharacterIdFromUrl(value);
+
+  if(!characterId){
+    alert('Esse link não parece ser um link válido de ficha.');
+    return;
+  }
+
+  const {data:character,error:characterError} =
+    await supabaseClient
+      .from('characters')
+      .select('id,state')
+      .eq('id',characterId)
+      .single();
+
+  if(characterError || !character){
+    alert('Não encontrei essa ficha.');
+    return;
+  }
+
+  const s=mergeState(character.state);
+
+  const lobby=s.lobby || {
+    mostrarNome:true,
+    mostrarFoto:true,
+    mostrarVida:true,
+    mostrarEnergia:true,
+    mostrarMental:true
+  };
+
+  const {error}=
+    await supabaseClient
+      .from('lobby_characters')
+      .upsert({
+        character_id:characterId,
+        active:true,
+        show_name:lobby.mostrarNome,
+        show_photo:lobby.mostrarFoto,
+        show_health:lobby.mostrarVida,
+        show_energy:lobby.mostrarEnergia,
+        show_mental:lobby.mostrarMental
+      },{
+        onConflict:'character_id'
+      });
+
+  if(error){
+    console.error(error);
+    alert('Não consegui colocar a ficha no lobby.');
+    return;
+  }
+
+  input.value='';
+  await loadLobbyCharacters();
+}
+
+async function removeCharacterFromLobby(characterId){
+  await supabaseClient
+    .from('lobby_characters')
+    .update({active:false})
+    .eq('character_id',characterId);
+
+  await loadLobbyCharacters();
+}
+
+let lobbyRealtimeChannel=null;
+
+function subscribeLobbyRealtime(){
+  if(lobbyRealtimeChannel)
+    supabaseClient.removeChannel(lobbyRealtimeChannel);
+
+  lobbyRealtimeChannel=supabaseClient
+    .channel('sonhos-lobby')
+    .on(
+      'postgres_changes',
+      {
+        event:'*',
+        schema:'public',
+        table:'lobby_characters'
+      },
+      ()=>loadLobbyCharacters()
+    )
+    .on(
+      'postgres_changes',
+      {
+        event:'UPDATE',
+        schema:'public',
+        table:'characters'
+      },
+      ()=>loadLobbyCharacters()
+    )
+    .subscribe();
+}
+
+async function initLobby(){
+  if(!ONLINE_ENABLED){
+    document.getElementById('app').innerHTML=
+      '<div class="loading-screen">Supabase não configurado.</div>';
+    return;
+  }
+
+  try{
+    supabaseClient=window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    await loadLobbyCharacters();
+    subscribeLobbyRealtime();
+  }catch(e){
+    console.error(e);
+
+    document.getElementById('app').innerHTML=`
+      <div class="loading-screen">
+        Não foi possível carregar o lobby.
+      </div>`;
+  }
+}
 /* ===== Boot ===== */
 async function init(){
-  document.getElementById('app').innerHTML = '<div class="loading-screen">⚓ Erguendo velas...</div>';
-  try {
-    await loadState();
-  } catch(e) {
-    console.warn('Não foi possível carregar a ficha online. Continuando em modo local.', e);
+  document.getElementById('app').innerHTML =
+    '<div class="loading-screen">⚓ Erguendo velas...</div>';
+
+  if(IS_LOBBY){
+    await initLobby();
+    return;
   }
-  try {
-    if (state.wizardDone) renderSheet(); else renderWizard();
-  } catch(e) {
-    console.error('Erro ao abrir a ficha:', e);
+
+  try{
+    await loadState();
+
+    if(state.wizardDone){
+      renderSheet();
+    }else{
+      renderWizard();
+    }
+
+    if(ONLINE_ENABLED && state.wizardDone && !characterId){
+      try{
+        await createOnlineCharacter();
+      }catch(e){
+        console.warn('Não foi possível criar a ficha online:',e);
+      }
+    }
+
+    if(ONLINE_ENABLED) addOnlineControls();
+  }catch(e){
+    console.error('Erro ao abrir a ficha:',e);
     state = defaultState();
     renderWizard();
   }
-  if (ONLINE_ENABLED && state.wizardDone && !characterId) {
-    try { await createOnlineCharacter(); } catch(e) { console.warn('Não foi possível criar a ficha online:', e); }
-  }
-  if (ONLINE_ENABLED) addOnlineControls();
 }
 function addOnlineControls(){
   if(document.getElementById('onlineShareBtn')) return;
