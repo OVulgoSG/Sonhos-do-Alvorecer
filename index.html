@@ -278,6 +278,9 @@ textarea { resize:vertical; line-height:1.6; }
   font-size:1.2rem;
 }
 
+.lobby-admin-actions{display:flex;gap:6px;align-items:center;}
+.lobby-edit{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:inherit;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;}
+.lobby-edit:hover{background:rgba(255,255,255,.12);}
 .lobby-remove:hover{
   color:var(--danger);
 }
@@ -430,10 +433,14 @@ let saveTimer = null;
 let supabaseClient = null;
 const URL_PARAMS = new URLSearchParams(location.search);
   const IS_LOBBY = URL_PARAMS.has('lobby');
+const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || localStorage.getItem('sonhos_lobby_admin_token') || '';
 // A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
 // carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
 let characterId = URL_PARAMS.get('ficha') || null;
-let editToken = URL_PARAMS.get('token') || null;
+const IS_MASTER_SHEET = URL_PARAMS.has('master');
+const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
+let editToken = URL_PARAMS.get('token') || localStorage.getItem(TOKEN_STORAGE_KEY) || null;
+let readOnlySheet = false;
 const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
 let onlineSaveTimer = null;
@@ -514,14 +521,12 @@ async function loadState(){
   }
   try{
     if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY, LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined);
     if(characterId){
-      const {data,error}=await supabaseClient.from('characters').select('state,edit_token').eq('id',characterId).single();
+      const {data,error}=await supabaseClient.rpc('get_character_state',{p_id:characterId});
       if(error) throw error;
-      if(editToken && data.edit_token !== editToken) throw new Error('Token inválido.');
-      if(!editToken){ editToken=data.edit_token; localStorage.setItem('sonhos_ficha_token',editToken); }
       localStorage.setItem('sonhos_ficha_id',characterId);
-      state=mergeState(data.state);
+      state=mergeState(data);
       subscribeRealtime();
     }
   }catch(e){ console.warn('Modo online indisponível:',e); }
@@ -532,11 +537,14 @@ function scheduleSave(){
 }
 async function saveState(){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
-  if(!ONLINE_ENABLED || !supabaseClient || !characterId || !editToken) return;
+  if(!ONLINE_ENABLED || !supabaseClient || !characterId || (!editToken && !IS_MASTER_SHEET)) return;
   clearTimeout(onlineSaveTimer);
   localSaveInFlight=true;
   onlineSaveTimer=setTimeout(async()=>{
-    try{ await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state}); }
+    try{
+      if(IS_MASTER_SHEET) await supabaseClient.rpc('update_character_by_admin',{p_id:characterId,p_state:state});
+      else await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
+    }
     catch(e){ console.warn('Falha ao sincronizar:',e); }
     finally{ setTimeout(()=>{ localSaveInFlight=false; applyPendingRemoteState(); },250); }
   },150);
@@ -562,25 +570,29 @@ if(!window.__sonhosBlurBound){
 }
 async function createOnlineCharacter(){
   if(!ONLINE_ENABLED || !supabaseClient) return null;
-  const token=crypto.randomUUID()+crypto.randomUUID();
-  const {data,error}=await supabaseClient.from('characters').insert({state,edit_token:token}).select('id,edit_token').single();
+  const {data,error}=await supabaseClient.rpc('create_character',{p_state:state});
   if(error) throw error;
   characterId=data.id; editToken=data.edit_token;
   localStorage.setItem('sonhos_ficha_id',characterId);
-  localStorage.setItem('sonhos_ficha_token',editToken);
+  localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
   subscribeRealtime();
-  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken));
+  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
   return characterId;
 }
 
 window.addEventListener('popstate',()=>{
   if(characterId && location.search.indexOf('ficha=')===-1){
-    history.pushState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||''));
+    history.pushState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
   }
 });
 
-function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||'')) : ''; }
-function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); navigator.clipboard?.writeText(url).then(()=>alert('Link da ficha copiado!')).catch(()=>prompt('Copie este link:',url)); }
+function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
+function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
+function copyTextOrPrompt(text,message){
+  if(!text) return;
+  navigator.clipboard?.writeText(text).then(()=>alert(message)).catch(()=>prompt('Copie este link:',text));
+}
+function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); copyTextOrPrompt(url,'Link da ficha copiado!'); }
 
 /* ===== Utilidades de UI ===== */
 function infoIcon(text) { return `<span class="info-icon" tabindex="0" data-tooltip="${text.replace(/"/g,'&quot;')}">ⓘ</span>`; }
@@ -1348,268 +1360,116 @@ function lobbyVisibleValue(visible, value){
   return visible ? value : '???';
 }
 
-function getLobbyCharacterIdFromUrl(value){
-  try{
-    const u = new URL(value, location.href);
-    return u.searchParams.get('ficha');
-  }catch(e){
-    return null;
-  }
-}
-
 function buildLobbyCard(character){
-  const s = mergeState(character.state || {});
-  const lobby = s.lobby || {};
-
-  const nome = lobby.mostrarNome
-    ? (s.identidade.nome || 'Personagem sem nome')
-    : '???';
-
-  const foto = lobby.mostrarFoto && s.imagem
-    ? `<img src="${s.imagem}" alt="">`
-    : '<span>👤</span>';
-
-  const vidaMax = computeVidaFinal(totalsFromState(s));
-  const energiaMax = computeEnergiaFinal(totalsFromState(s));
-  const mentalMax = computeMente(totalsFromState(s));
-
-  const vida = lobbyVisibleValue(
-    lobby.mostrarVida,
-    `${Number(s.recursos.vida.atual)||0} / ${vidaMax}`
-  );
-
-  const energia = lobbyVisibleValue(
-    lobby.mostrarEnergia,
-    `${Number(s.recursos.energia.atual)||0} / ${energiaMax}`
-  );
-
-  const mental = lobbyVisibleValue(
-    lobby.mostrarMental,
-    `${Number(s.recursos.mental.atual)||0} / ${mentalMax}`
-  );
+  const lobby = character.lobby || {};
+  const pub = character.public_data || {};
+  const nome = lobby.mostrarNome ? (pub.nome || 'Personagem sem nome') : '???';
+  const foto = lobby.mostrarFoto && pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : '<span>👤</span>';
+  const vida = lobbyVisibleValue(lobby.mostrarVida, Number(pub.vida)||0);
+  const energia = lobbyVisibleValue(lobby.mostrarEnergia, Number(pub.energia)||0);
+  const mental = lobbyVisibleValue(lobby.mostrarMental, Number(pub.mental)||0);
 
   return `
     <div class="lobby-card" data-character-id="${character.id}">
-      <div class="lobby-portrait">
-        ${foto}
-      </div>
-
+      <div class="lobby-portrait">${foto}</div>
       <div class="lobby-info">
         <div class="lobby-name">${escapeHtml(nome)}</div>
-
-        <div class="lobby-resource">
-          <span>❤️ Vida</span>
-          <strong>${vida}</strong>
-        </div>
-
-        <div class="lobby-resource">
-          <span>⚡ Energia</span>
-          <strong>${energia}</strong>
-        </div>
-
-        <div class="lobby-resource">
-          <span>🧠 Mental</span>
-          <strong>${mental}</strong>
-        </div>
+        ${pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
+        ${(pub.profissao || pub.raca) ? `<div class="lobby-resource"><span>${escapeHtml([pub.profissao,pub.raca].filter(Boolean).join(' • '))}</span></div>` : ''}
+        <div class="lobby-resource"><span>❤️ Vida</span><strong>${vida}</strong></div>
+        <div class="lobby-resource"><span>⚡ Energia</span><strong>${energia}</strong></div>
+        <div class="lobby-resource"><span>🧠 Mental</span><strong>${mental}</strong></div>
       </div>
-
-      <button
-        type="button"
-        class="lobby-remove"
-        data-remove-lobby="${character.id}">
-        ×
-      </button>
+      ${LOBBY_ADMIN_TOKEN ? `<div class="lobby-admin-actions"><button type="button" class="lobby-edit" data-edit-lobby="${character.id}">Editar</button><button type="button" class="lobby-remove" data-remove-lobby="${character.id}">×</button></div>` : ''}
     </div>`;
-}
-
-function totalsFromState(s){
-  const old=state;
-  state=s;
-  const t=totals();
-  state=old;
-  return t;
 }
 
 function escapeHtml(value){
   return String(value ?? '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
 async function loadLobbyCharacters(){
-  const {data: lobbyRows, error:lobbyError} =
-    await supabaseClient
-      .from('lobby_characters')
-      .select('id,character_id,active,show_name,show_photo,show_health,show_energy,show_mental')
-      .eq('active',true)
-      .order('created_at',{ascending:true});
+  const {data: lobbyRows, error:lobbyError} = await supabaseClient
+    .from('lobby_characters')
+    .select('id,character_id,active,show_name,show_photo,show_health,show_energy,show_mental,public_data')
+    .eq('active',true)
+    .order('created_at',{ascending:true});
 
   if(lobbyError) throw lobbyError;
 
-  if(!lobbyRows.length){
-    renderLobby([]);
-    return;
-  }
-
-  const ids=lobbyRows.map(x=>x.character_id);
-
-  const {data:characters,error:characterError} =
-    await supabaseClient
-      .from('characters')
-      .select('id,state')
-      .in('id',ids);
-
-  if(characterError) throw characterError;
-
-  const byId={};
-  (characters||[]).forEach(c=>byId[c.id]=c);
-
-  const result=lobbyRows
-    .map(row=>{
-      const c=byId[row.character_id];
-      if(!c) return null;
-
-      const copy=JSON.parse(JSON.stringify(c));
-
-      copy.state=mergeState(copy.state);
-
-      copy.state.lobby={
-        mostrarNome:row.show_name,
-        mostrarFoto:row.show_photo,
-        mostrarVida:row.show_health,
-        mostrarEnergia:row.show_energy,
-        mostrarMental:row.show_mental
-      };
-
-      return copy;
-    })
-    .filter(Boolean);
+  const result=(lobbyRows||[]).map(row=>({
+    id:row.character_id,
+    public_data:row.public_data||{},
+    lobby:{
+      mostrarNome:row.show_name,
+      mostrarFoto:row.show_photo,
+      mostrarVida:row.show_health,
+      mostrarEnergia:row.show_energy,
+      mostrarMental:row.show_mental
+    }
+  }));
 
   renderLobby(result);
 }
 
 function renderLobby(characters){
   const app=document.getElementById('app');
-
+  const isAdmin=!!LOBBY_ADMIN_TOKEN;
   app.innerHTML=`
     <div class="app-shell">
       <div class="mini-logo">Sonhos do Alvorecer</div>
 
       <div class="lobby-header">
         <h1>Personagens em Cena</h1>
-        <p>
-          Cole o link de uma ficha para colocá-la no lobby.
-        </p>
-
+        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa.'}</p>
+        ${isAdmin ? `
         <div class="lobby-add">
-          <input
-            type="text"
-            id="lobbyLinkInput"
-            placeholder="Cole aqui o link da ficha..."
-          >
-          <button
-            type="button"
-            id="lobbyAddButton"
-            class="btn btn-primary">
-            Adicionar
-          </button>
-        </div>
+          <input type="text" id="lobbyLinkInput" placeholder="Cole aqui o link da ficha...">
+          <button type="button" id="lobbyAddButton" class="btn btn-primary">Adicionar à cena</button>
+        </div>` : ''}
       </div>
 
       <div id="lobbyCharacters" class="lobby-grid">
-        ${
-          characters.length
-          ? characters.map(buildLobbyCard).join('')
-          : `
-            <div class="lobby-empty">
-              Nenhum personagem está em cena.
-            </div>`
-        }
+        ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty">Nenhum personagem está em cena.</div>`}
       </div>
-    </div>
-  `;
+    </div>`;
 
-  document.getElementById('lobbyAddButton')
-    .addEventListener('click', addCharacterToLobby);
-
-  document.getElementById('lobbyLinkInput')
-    .addEventListener('keydown',e=>{
-      if(e.key==='Enter') addCharacterToLobby();
-    });
-
-  document.querySelectorAll('[data-remove-lobby]')
-    .forEach(btn=>{
-      btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby));
-    });
+  if(isAdmin){
+    document.getElementById('lobbyAddButton').addEventListener('click',addCharacterToLobby);
+    document.getElementById('lobbyLinkInput').addEventListener('keydown',e=>{if(e.key==='Enter') addCharacterToLobby();});
+    document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby)));
+    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1'; }));
+  } else {
+    document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.remove());
+  }
+}
+function getLobbyCharacterIdFromUrl(value){
+  try{
+    const u=new URL(value,location.href);
+    const id=u.searchParams.get('ficha');
+    return id && /^[0-9a-fA-F-]{36}$/.test(id) ? id : null;
+  }catch(e){ return null; }
 }
 
 async function addCharacterToLobby(){
+  if(!LOBBY_ADMIN_TOKEN){ alert('Somente o link de controle da mesa pode adicionar personagens.'); return; }
   const input=document.getElementById('lobbyLinkInput');
   const value=input.value.trim();
-
   const characterId=getLobbyCharacterIdFromUrl(value);
+  if(!characterId){ alert('Esse link não parece ser um link válido de ficha.'); return; }
 
-  if(!characterId){
-    alert('Esse link não parece ser um link válido de ficha.');
-    return;
-  }
-
-  const {data:character,error:characterError} =
-    await supabaseClient
-      .from('characters')
-      .select('id,state')
-      .eq('id',characterId)
-      .single();
-
-  if(characterError || !character){
-    alert('Não encontrei essa ficha.');
-    return;
-  }
-
-  const s=mergeState(character.state);
-
-  const lobby=s.lobby || {
-    mostrarNome:true,
-    mostrarFoto:true,
-    mostrarVida:true,
-    mostrarEnergia:true,
-    mostrarMental:true
-  };
-
-  const {error}=
-    await supabaseClient
-      .from('lobby_characters')
-      .upsert({
-        character_id:characterId,
-        active:true,
-        show_name:lobby.mostrarNome,
-        show_photo:lobby.mostrarFoto,
-        show_health:lobby.mostrarVida,
-        show_energy:lobby.mostrarEnergia,
-        show_mental:lobby.mostrarMental
-      },{
-        onConflict:'character_id'
-      });
-
-  if(error){
-    console.error(error);
-    alert('Não consegui colocar a ficha no lobby.');
-    return;
-  }
-
+  const {data,error}=await supabaseClient.rpc('add_character_to_lobby',{p_character_id:characterId});
+  if(error){ console.error(error); alert('Não consegui colocar a ficha no lobby. Verifique o link e o acesso de mestre.'); return; }
   input.value='';
   await loadLobbyCharacters();
 }
 
 async function removeCharacterFromLobby(characterId){
-  await supabaseClient
-    .from('lobby_characters')
-    .update({active:false})
-    .eq('character_id',characterId);
-
+  if(!LOBBY_ADMIN_TOKEN) return;
+  const {error}=await supabaseClient.rpc('remove_character_from_lobby',{p_character_id:characterId});
+  if(error){ console.error(error); alert('Não consegui retirar a ficha do lobby.'); return; }
   await loadLobbyCharacters();
 }
 
@@ -1643,6 +1503,9 @@ function subscribeLobbyRealtime(){
 }
 
 async function initLobby(){
+  if(LOBBY_ADMIN_TOKEN && URL_PARAMS.get('admin')){
+    try{ localStorage.setItem('sonhos_lobby_admin_token',LOBBY_ADMIN_TOKEN); }catch(e){}
+  }
   if(!ONLINE_ENABLED){
     document.getElementById('app').innerHTML=
       '<div class="loading-screen">Supabase não configurado.</div>';
@@ -1652,7 +1515,8 @@ async function initLobby(){
   try{
     supabaseClient=window.supabase.createClient(
       SUPABASE_URL,
-      SUPABASE_ANON_KEY
+      SUPABASE_ANON_KEY,
+      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
     );
 
     await loadLobbyCharacters();
@@ -1700,11 +1564,67 @@ async function init(){
     renderWizard();
   }
 }
+async function setEditPassword(){
+  if(!characterId || !editToken) return alert('Você precisa desbloquear a ficha primeiro.');
+  const p1=prompt('Crie uma senha para editar esta ficha em outro dispositivo:');
+  if(p1===null) return;
+  if(p1.length < 6) return alert('Use uma senha com pelo menos 6 caracteres.');
+  const p2=prompt('Digite a senha novamente:');
+  if(p1!==p2) return alert('As senhas não conferem.');
+  try{
+    const {error}=await supabaseClient.rpc('set_character_edit_password',{p_id:characterId,p_token:editToken,p_password:p1});
+    if(error) throw error;
+    alert('Senha de edição definida. Guarde-a com segurança.');
+  }catch(e){ console.error(e); alert('Não foi possível definir a senha de edição.'); }
+}
+
+async function unlockSheet(){
+  if(!characterId) return;
+  const password=prompt('Digite a senha de edição desta ficha:');
+  if(password===null) return;
+  try{
+    const {data,error}=await supabaseClient.rpc('unlock_character',{p_id:characterId,p_password:password});
+    if(error) throw error;
+    editToken=data;
+    localStorage.setItem('sonhos_ficha_id',characterId);
+    localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
+    readOnlySheet=false;
+    setSheetReadOnly(false);
+    document.getElementById('unlockSheetBtn')?.remove();
+    alert('Ficha desbloqueada.');
+  }catch(e){ console.error(e); alert('Senha incorreta ou ficha sem senha de edição.'); }
+}
+
+function setSheetReadOnly(flag){
+  readOnlySheet=flag;
+  const root=document.getElementById('app');
+  if(!root) return;
+  root.classList.toggle('sheet-read-only',flag);
+  root.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=flag);
+  root.querySelectorAll('button').forEach(btn=>{
+    if(btn.classList.contains('tab-btn')) return;
+    if(btn.id==='unlockSheetBtn' || btn.id==='onlineShareBtn' || btn.id==='editPasswordBtn') return;
+    btn.disabled=flag;
+  });
+}
+
 function addOnlineControls(){
   if(document.getElementById('onlineShareBtn')) return;
   const b=document.createElement('button'); b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
   b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
   b.onclick=copyShareLink; document.body.appendChild(b);
+  if(characterId && !IS_MASTER_SHEET){
+    const p=document.createElement('button'); p.id='editPasswordBtn'; p.type='button'; p.className='btn btn-ghost'; p.textContent='🔐 Senha de edição';
+    p.style.cssText='position:fixed;right:18px;bottom:64px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
+    p.onclick=setEditPassword; document.body.appendChild(p);
+    if(!editToken && !IS_MASTER_SHEET){
+      const u=document.createElement('button'); u.id='unlockSheetBtn'; u.type='button'; u.className='btn btn-primary'; u.textContent='🔓 Editar ficha';
+      u.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,.35);';
+      u.onclick=unlockSheet; document.body.appendChild(u);
+      readOnlySheet=true;
+      setSheetReadOnly(true);
+    }
+  }
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
