@@ -1532,20 +1532,21 @@ function lobbyVisibleValue(visible, value){
 }
 
 function buildLobbyCard(character){
+  const isAdmin = !!LOBBY_ADMIN_TOKEN;
   const lobby = character.lobby || {};
   const pub = character.public_data || {};
-  const nome = lobby.mostrarNome ? (pub.nome || 'Personagem sem nome') : '???';
-  const foto = lobby.mostrarFoto && pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : '<span>👤</span>';
-  const vida = lobbyVisibleValue(lobby.mostrarVida, Number(pub.vida)||0);
-  const energia = lobbyVisibleValue(lobby.mostrarEnergia, Number(pub.energia)||0);
-  const mental = lobbyVisibleValue(lobby.mostrarMental, Number(pub.mental)||0);
+  const nome = (isAdmin || lobby.mostrarNome) ? (pub.nome || 'Personagem sem nome') : '???';
+  const foto = (isAdmin || lobby.mostrarFoto) && pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : '<span>👤</span>';
+  const vida = lobbyVisibleValue(isAdmin || lobby.mostrarVida, Number(pub.vida)||0);
+  const energia = lobbyVisibleValue(isAdmin || lobby.mostrarEnergia, Number(pub.energia)||0);
+  const mental = lobbyVisibleValue(isAdmin || lobby.mostrarMental, Number(pub.mental)||0);
 
   return `
     <div class="lobby-card" data-character-id="${character.id}" aria-label="Personagem em cena — ficha privada">
       <div class="lobby-portrait">${foto}</div>
       <div class="lobby-info">
         <div class="lobby-name">${escapeHtml(nome)}</div>
-        ${lobby.mostrarNome && pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
+        ${(isAdmin || lobby.mostrarNome) && pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
         ${(pub.profissao || pub.raca) ? `<div class="lobby-resource"><span>${escapeHtml([pub.profissao,pub.raca].filter(Boolean).join(' • '))}</span></div>` : ''}
         <div class="lobby-resource"><span>❤️ Vida</span><strong>${vida}</strong></div>
         <div class="lobby-resource"><span>⚡ Energia</span><strong>${energia}</strong></div>
@@ -1576,7 +1577,7 @@ async function loadLobbyCharacters(){
       const {data:fullState}=await supabaseClient.rpc('get_character_state',{p_id:row.character_id});
       fichaLobby=fullState?.lobby||{};
     }catch(e){}
-    const privacy={...fichaLobby,...(pub.lobby||{})};
+    const privacy={...(pub.lobby||{}),...fichaLobby};
     return {
       id:row.character_id,
       public_data:pub,
