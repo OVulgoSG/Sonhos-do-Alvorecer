@@ -309,6 +309,17 @@ textarea { resize:vertical; line-height:1.6; }
 .capanga-row .capanga-count{font-weight:700;text-align:center;}
 .capanga-remove{background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;height:36px;padding:0 10px;}
 .capanga-remove:hover{border-color:var(--danger);}
+.lobby-capangas{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
+.lobby-capangas h2{color:var(--gold-bright);font-size:1.1rem;margin-bottom:6px;}
+.lobby-capangas-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:14px;}
+.lobby-capangas-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:14px;}
+.lobby-capanga-card{background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px;position:relative;}
+.lobby-capanga-title{font-family:'Cinzel',serif;color:var(--gold-bright);font-weight:600;margin-bottom:7px;}
+.lobby-capanga-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;font-size:.82rem;color:var(--text-muted);}
+.lobby-capanga-stats strong{display:block;color:var(--text-main);font-size:1rem;margin-top:2px;}
+.lobby-capanga-remove{margin-top:10px;width:100%;background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;padding:7px;}
+.lobby-capanga-remove:hover{border-color:var(--danger);}
+@media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
 @media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -749,7 +760,7 @@ function buildAttrStep(group){
   const rows = items.map(([k,v])=>`
     <div class="attr-row" data-attr="${k}">
       <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
-      <input type="number" class="attr-valor" data-attr="${k}" min="1">
+      <input type="number" class="attr-valor" data-attr="${k}" min="0">
       <input type="number" class="attr-mod" data-attr="${k}">
     </div>`).join('');
   return `
@@ -769,7 +780,7 @@ function bindAttrStep(){
   document.querySelectorAll('.attr-valor, .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
-      state.attrs[key][field] = Number(e.target.value)||0;
+      state.attrs[key][field] = field === 'valor' ? Math.max(0, Number(e.target.value)||0) : (Number(e.target.value)||0);
       scheduleSave();
     });
   });
@@ -805,7 +816,9 @@ function updateHakiAdvancedAvailability(prefix){
     const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
     const el=document.getElementById(id);
     if(!el) return;
+    // Haki Avançado só pode ser liberado depois que o Haki normal estiver ativo.
     el.disabled=!ok;
+    el.title = ok ? 'Haki Avançado liberado' : 'Libere o Haki normal primeiro';
     if(!ok) el.checked=false;
   });
 }
@@ -1173,7 +1186,7 @@ function buildTabBase(){
   const attrRows=(group)=>Object.entries(ATTR_META).filter(([k,v])=>v.group===group).map(([k,v])=>`
     <div class="attr-row" data-attr="${k}">
       <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
-      <input type="number" class="attr-valor" data-attr="${k}" min="1">
+      <input type="number" class="attr-valor" data-attr="${k}" min="0">
       <input type="number" class="attr-mod" data-attr="${k}">
     </div>`).join('');
   return `
@@ -1307,7 +1320,7 @@ function bindTabBase(){
   document.querySelectorAll('#tabContent .attr-valor, #tabContent .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
-      state.attrs[key][field]=Number(e.target.value)||0;
+      state.attrs[key][field]=field === 'valor' ? Math.max(0, Number(e.target.value)||0) : (Number(e.target.value)||0);
       updateResourceDisplays();
       scheduleSave();
     });
@@ -1354,9 +1367,9 @@ function bindTabPoderes(){
   document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=!!e.target.checked && !!state.haki.observacao; updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=!!e.target.checked && !!state.haki.armamento; updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=!!e.target.checked && !!state.haki.conquistador; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=!!e.target.checked && !!state.haki.observacao; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=!!e.target.checked && !!state.haki.armamento; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=!!e.target.checked && !!state.haki.conquistador; updateHakiAdvancedAvailability('p'); scheduleSave();});
   bindFrutasStep();
   document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
 }
@@ -1553,6 +1566,52 @@ async function loadLobbyCharacters(){
   renderLobby(result);
 }
 
+function getLobbyCapangas(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(CAPANGAS_STORAGE_KEY)||'[]');
+    return Array.isArray(parsed)?parsed:[];
+  }catch(e){ return []; }
+}
+function saveLobbyCapangas(groups){
+  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(groups)); }catch(e){}
+}
+function buildLobbyCapangaCard(c,isAdmin){
+  return `<div class="lobby-capanga-card">
+    <div class="lobby-capanga-title">⚔️ ${escapeHtml(c.nome||'Capangas')}</div>
+    <div class="lobby-capanga-stats">
+      <div>❤️ Vida<strong>${Number(c.vida)||0}</strong></div>
+      <div>⚡ Energia<strong>${Number(c.energia)||0}</strong></div>
+      <div>👥 Quantidade<strong>${Number(c.quantidade)||1}</strong></div>
+    </div>
+    ${isAdmin?`<button type="button" class="lobby-capanga-remove" data-remove-lobby-capanga="${escapeHtml(c.id)}">Remover grupo</button>`:''}
+  </div>`;
+}
+function renderLobbyCapangas(){
+  const list=document.getElementById('lobbyCapangasList');
+  if(!list) return;
+  const groups=getLobbyCapangas();
+  const isAdmin=!!LOBBY_ADMIN_TOKEN;
+  list.innerHTML=groups.length?groups.map(c=>buildLobbyCapangaCard(c,isAdmin)).join(''):'<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>';
+  if(isAdmin){
+    list.querySelectorAll('[data-remove-lobby-capanga]').forEach(btn=>btn.onclick=()=>{
+      saveLobbyCapangas(getLobbyCapangas().filter(c=>c.id!==btn.dataset.removeLobbyCapanga));
+      renderLobbyCapangas();
+    });
+  }
+}
+function addLobbyCapanga(){
+  if(!LOBBY_ADMIN_TOKEN) return;
+  const nome=document.getElementById('lobbyCapangaNome')?.value.trim();
+  if(!nome) return alert('Digite um nome para o grupo.');
+  const vida=Math.max(0,Number(document.getElementById('lobbyCapangaVida')?.value)||0);
+  const energia=Math.max(0,Number(document.getElementById('lobbyCapangaEnergia')?.value)||0);
+  const quantidade=Math.max(1,Number(document.getElementById('lobbyCapangaQuantidade')?.value)||1);
+  const groups=getLobbyCapangas();
+  groups.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),nome,vida,energia,quantidade});
+  saveLobbyCapangas(groups);
+  document.getElementById('lobbyCapangaNome').value='';
+  renderLobbyCapangas();
+}
 function renderLobby(characters){
   const app=document.getElementById('app');
   const isAdmin=!!LOBBY_ADMIN_TOKEN;
@@ -1570,12 +1629,28 @@ function renderLobby(characters){
         </div>` : ''}
       </div>
 
+      <div class="lobby-capangas">
+        <h2>⚔️ Capangas</h2>
+        <p class="hint-text">${isAdmin ? 'Somente o mestre pode adicionar ou remover grupos.' : 'Grupos de capangas da cena atual.'}</p>
+        ${isAdmin?`<div class="lobby-capangas-form">
+          <div class="field"><label>Grupo</label><input id="lobbyCapangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
+          <div class="field"><label>Vida</label><input id="lobbyCapangaVida" type="number" min="0" value="10"></div>
+          <div class="field"><label>Energia</label><input id="lobbyCapangaEnergia" type="number" min="0" value="5"></div>
+          <div class="field"><label>Quantidade</label><input id="lobbyCapangaQuantidade" type="number" min="1" value="1"></div>
+          <button type="button" class="btn btn-primary" id="addLobbyCapangaBtn">Adicionar</button>
+        </div>`:''}
+        <div class="lobby-capangas-list" id="lobbyCapangasList"></div>
+      </div>
+
       <div id="lobbyCharacters" class="lobby-grid">
         ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty">Nenhum personagem está em cena.</div>`}
       </div>
     </div>`;
 
+  renderLobbyCapangas();
   if(isAdmin){
+    document.getElementById('addLobbyCapangaBtn')?.addEventListener('click',addLobbyCapanga);
+    document.getElementById('lobbyCapangaNome')?.addEventListener('keydown',e=>{if(e.key==='Enter') addLobbyCapanga();});
     document.getElementById('lobbyAddButton').addEventListener('click',addCharacterToLobby);
     document.getElementById('lobbyLinkInput').addEventListener('keydown',e=>{if(e.key==='Enter') addCharacterToLobby();});
     document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby)));
@@ -1639,6 +1714,11 @@ function subscribeLobbyRealtime(){
       ()=>loadLobbyCharacters()
     )
     .subscribe();
+}
+
+if(!window.__sonhosCapangasStorageBound){
+  window.__sonhosCapangasStorageBound=true;
+  window.addEventListener('storage',e=>{ if(e.key===CAPANGAS_STORAGE_KEY) renderLobbyCapangas(); });
 }
 
 async function initLobby(){
