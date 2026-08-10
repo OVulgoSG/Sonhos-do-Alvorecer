@@ -811,9 +811,9 @@ function bindHakiStep(){
   document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
 }
 function updateHakiAdvancedAvailability(prefix){
   const pairs=[
@@ -1366,9 +1366,9 @@ function bindTabPoderes(){
   document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   bindFrutasStep();
   document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
 }
@@ -1557,11 +1557,11 @@ async function loadLobbyCharacters(){
       id:row.character_id,
       public_data:pub,
       lobby:{
-        mostrarNome:row.show_name ?? privacy.mostrarNome ?? false,
-        mostrarFoto:row.show_photo ?? privacy.mostrarFoto ?? true,
-        mostrarVida:row.show_health ?? privacy.mostrarVida ?? false,
-        mostrarEnergia:row.show_energy ?? privacy.mostrarEnergia ?? false,
-        mostrarMental:row.show_mental ?? privacy.mostrarMental ?? false
+        mostrarNome:privacy.mostrarNome ?? row.show_name ?? false,
+        mostrarFoto:privacy.mostrarFoto ?? row.show_photo ?? true,
+        mostrarVida:privacy.mostrarVida ?? row.show_health ?? false,
+        mostrarEnergia:privacy.mostrarEnergia ?? row.show_energy ?? false,
+        mostrarMental:privacy.mostrarMental ?? row.show_mental ?? false
       }
     };
   });
