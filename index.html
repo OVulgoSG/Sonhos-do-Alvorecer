@@ -459,6 +459,21 @@ function frutaBonusEnergiaPercent(){
 }
 function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())); }
 function computeEnergiaFinal(t){ return Math.ceil(computeEnergia(t) * (1+frutaBonusEnergiaPercent())); }
+function syncCombatenteRecursos(profissaoAnterior){
+  const eraCombatente = profissaoAnterior === 'Combatente (não tem Profissão)';
+  const ehCombatente = state.identidade.profissao === 'Combatente (não tem Profissão)';
+  if (eraCombatente === ehCombatente) return;
+
+  const t=totals();
+  const vidaAnterior=computeVidaFinal(t) + (eraCombatente ? 0 : 15);
+  const menteAnterior=computeMente(t) + (eraCombatente ? 0 : -10);
+  const vidaNova=computeVidaFinal(t);
+  const menteNova=computeMente(t);
+
+  // Se o recurso estava cheio, mantém-no cheio após a troca.
+  if ((Number(state.recursos.vida.atual)||0) >= vidaAnterior) state.recursos.vida.atual=vidaNova;
+  if ((Number(state.recursos.mental.atual)||0) >= menteAnterior) state.recursos.mental.atual=menteNova;
+}
 function validaRaca(v){ return true; }
 
 /* ===== Persistência online =====
@@ -807,7 +822,7 @@ function bindId2(){
   document.getElementById('inpIdade').addEventListener('input', e=>{state.identidade.idade=e.target.value; scheduleSave();});
   document.getElementById('inpExpectativa').addEventListener('input', e=>{state.identidade.expectativa=e.target.value; scheduleSave();});
   document.getElementById('inpRaca').addEventListener('input', e=>{state.identidade.raca=e.target.value; scheduleSave();});
-  document.getElementById('inpProfissao').addEventListener('change', e=>{ state.identidade.profissao=e.target.value; syncFocoMaximo(); renderFocoPips(); updateResourceDisplays(); scheduleSave(); });
+  document.getElementById('inpProfissao').addEventListener('change', e=>{ const anterior=state.identidade.profissao; state.identidade.profissao=e.target.value; syncCombatenteRecursos(anterior); syncFocoMaximo(); renderFocoPips(); updateResourceDisplays(); scheduleSave(); });
 }
 
 function buildId3() {
@@ -1298,7 +1313,7 @@ function renderSheetHeader(){
     const stateKey = field.charAt(0).toLowerCase()+field.slice(1);
     document.getElementById('hdr'+field).addEventListener('input', e=>{
       state.identidade[stateKey]=e.target.value;
-      if (field==='Profissao') { syncFocoMaximo(); renderFocoPips(); updateResourceDisplays(); }
+      if (field==='Profissao') { const anterior=state.identidade.profissao; state.identidade.profissao=e.target.value; syncCombatenteRecursos(anterior); syncFocoMaximo(); renderFocoPips(); updateResourceDisplays(); return; }
       scheduleSave();
     });
   });
