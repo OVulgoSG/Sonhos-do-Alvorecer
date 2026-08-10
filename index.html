@@ -310,15 +310,39 @@ let realtimeChannel = null;
 let onlineSaveTimer = null;
 let pendingRemoteState = null;
 let localSaveInFlight = false;
+let lastSheetInteraction = 0;
 function stateSignature(v){ try{return JSON.stringify(v);}catch(e){return "";} }
 function userIsEditing(){ const el=document.activeElement; return !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName); }
+function markSheetInteraction(){ lastSheetInteraction=Date.now(); }
+function sheetIsBusy(){ return userIsEditing() || (Date.now()-lastSheetInteraction < 900); }
 function applyPendingRemoteState(){
-  if(!pendingRemoteState || userIsEditing()) return;
+  if(!pendingRemoteState || sheetIsBusy()) return;
   const next=pendingRemoteState; pendingRemoteState=null;
   if(stateSignature(next)!==stateSignature(state)){
+    const currentTab=state.activeTab||'base';
     state=mergeState(next);
-    if(state.wizardDone) renderSheet(); else renderWizard();
+    // A sincronização nunca deve trocar a aba que o usuário está vendo.
+    state.activeTab=currentTab;
+    if(state.wizardDone) refreshCurrentSheetTab(); else renderWizard();
   }
+}
+function refreshCurrentSheetTab(){
+  const tab=state.activeTab||'base';
+  const content=document.getElementById('tabContent');
+  if(!content) return;
+  if(tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
+  else if(tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
+  else if(tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
+  else if(tab==='inventario'){ content.innerHTML=buildTabInventario(); fillTabInventario(); bindTabInventario(); }
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  initTooltipTaps();
+}
+if(!window.__sonhosInteractionGuard){
+  window.__sonhosInteractionGuard=true;
+  document.addEventListener('pointerdown', markSheetInteraction, true);
+  document.addEventListener('keydown', markSheetInteraction, true);
+  document.addEventListener('input', markSheetInteraction, true);
+  document.addEventListener('change', markSheetInteraction, true);
 }
 
 function mergeState(loaded) {
@@ -391,9 +415,11 @@ function subscribeRealtime(){
       if(!payload.new?.state) return;
       const incoming=payload.new.state;
       if(stateSignature(incoming)===stateSignature(state)) return;
-      if(localSaveInFlight || userIsEditing()){ pendingRemoteState=incoming; return; }
+      if(localSaveInFlight || sheetIsBusy()){ pendingRemoteState=incoming; return; }
+      const currentTab=state.activeTab||'base';
       state=mergeState(incoming);
-      if(state.wizardDone) renderSheet(); else renderWizard();
+      state.activeTab=currentTab;
+      if(state.wizardDone) refreshCurrentSheetTab(); else renderWizard();
     }).subscribe();
 }
 if(!window.__sonhosBlurBound){
@@ -835,17 +861,27 @@ function handleImagemUpload(e){
   reader.readAsDataURL(file);
 }
 
-function bindTabs(){ document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>switchTab(btn.dataset.tab)); }); }
+function bindTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.preventDefault();
+      markSheetInteraction();
+      switchTab(btn.dataset.tab);
+    });
+  });
+}
 function switchTab(tab){
+  // A aba é estado apenas da interface local, não deve ser sobrescrita por outra sessão.
   state.activeTab=tab;
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   const content=document.getElementById('tabContent');
   if (tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
   else if (tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
   else if (tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
   else if (tab==='inventario'){ content.innerHTML=buildTabInventario(); fillTabInventario(); bindTabInventario(); }
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   initTooltipTaps();
-  scheduleSave();
+  // Não sincroniza a aba como se fosse uma alteração da ficha.
+  markSheetInteraction();
 }
 
 function buildTabBase(){
