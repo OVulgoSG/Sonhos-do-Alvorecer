@@ -874,64 +874,94 @@ function updateHakiAdvancedAvailability(prefix){
     ['Conquistador','conquistador','conquistadorAvancado']
   ];
   pairs.forEach(([name,normalKey,advancedKey])=>{
-    const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancado';
-    const el=document.getElementById(id);
-    if(!el) return;
-    const ok=state.haki[normalKey]===true;
-    if(!ok) state.haki[advancedKey]=false;
-    el.checked=ok && state.haki[advancedKey]===true;
-    el.disabled=!ok;
-    el.setAttribute('aria-disabled',String(!ok));
-    el.title=ok?'Haki Avançado liberado':'Libere o Haki normal primeiro';
-    const row=el.closest('.sub-toggle');
+    const advId = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
+    const normalId = prefix ? prefix+'Chk'+name : 'chk'+name;
+    const adv=document.getElementById(advId);
+    const normal=document.getElementById(normalId);
+    if(!adv || !normal) return;
+
+    const unlocked = normal.checked === true;
+
+    // Regra única para os TRÊS Hakis:
+    // sem o Haki normal, o Avançado obrigatoriamente fica desmarcado e desativado.
+    if(!unlocked){
+      adv.checked=false;
+      state.haki[advancedKey]=false;
+    }else{
+      adv.checked=state.haki[advancedKey]===true;
+    }
+
+    adv.disabled=!unlocked;
+    adv.setAttribute('aria-disabled', String(!unlocked));
+    adv.title=unlocked ? 'Haki Avançado liberado' : 'Marque o Haki normal primeiro';
+
+    const row=adv.closest('.sub-toggle');
     if(row){
-      row.classList.toggle('locked',!ok);
-      row.setAttribute('aria-disabled',String(!ok));
-      row.style.opacity=ok?'':'0.55';
-      row.querySelectorAll('span').forEach(span=>{ span.style.opacity=ok?'':'0.42'; });
+      row.classList.toggle('locked', !unlocked);
+      row.setAttribute('aria-disabled', String(!unlocked));
+      row.style.opacity=unlocked ? '1' : '0.45';
+      row.style.filter=unlocked ? 'none' : 'grayscale(1)';
+      row.style.pointerEvents=unlocked ? '' : 'none';
+      row.querySelectorAll('span').forEach(span=>{
+        span.style.opacity=unlocked ? '1' : '0.42';
+        span.style.color=unlocked ? '' : '#888';
+      });
     }
   });
 }
+
 function bindHakiAdvancedGuards(){
-  // Proteção extra: o Avançado só pode existir enquanto o Haki normal estiver ativo.
   const pairs=[
     ['Observacao','observacao','observacaoAvancada'],
     ['Armamento','armamento','armamentoAvancado'],
     ['Conquistador','conquistador','conquistadorAvancado']
   ];
-  pairs.forEach(([name,normalKey,advancedKeyRaw])=>{
-    const advancedKey = advancedKeyRaw==='conquistadorAvancada' ? 'conquistadorAvancado' : advancedKeyRaw;
+
+  pairs.forEach(([name,normalKey,advancedKey])=>{
     ['','p'].forEach(prefix=>{
       const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
       const normal=document.getElementById(prefix+'Chk'+name);
       if(!adv || !normal) return;
-      const enforce=()=>{
-        const ok=!!normal.checked;
-        if(!ok){
+
+      const sync=()=>updateHakiAdvancedAvailability(prefix);
+
+      // Protege o Avançado contra qualquer tentativa de marcar sem o normal.
+      adv.onchange=()=>{
+        if(!normal.checked){
           adv.checked=false;
           state.haki[advancedKey]=false;
+        }else{
+          state.haki[advancedKey]=adv.checked;
         }
-        adv.disabled=!ok;
-        const row=adv.closest('.sub-toggle');
-        if(row) row.classList.toggle('locked',!ok);
+        sync();
+        scheduleSave();
       };
-      if(!adv.dataset.guardBound){
-        adv.dataset.guardBound='1';
-        adv.addEventListener('click',e=>{
-          if(!normal.checked){
-            e.preventDefault(); e.stopPropagation();
+
+      normal.onchange=()=>{
+        state.haki[normalKey]=normal.checked;
+        if(!normal.checked) state.haki[advancedKey]=false;
+        sync();
+        updateHakiAdvancedAvailability(prefix ? '' : 'p');
+        scheduleSave();
+      };
+
+      // Bloqueia também o clique no container/label quando estiver travado.
+      const row=adv.closest('.sub-toggle');
+      if(row){
+        row.onclick=(e)=>{
+          if(adv.disabled || !normal.checked){
+            e.preventDefault();
+            e.stopPropagation();
             adv.checked=false;
             state.haki[advancedKey]=false;
-            enforce();
-            return;
+            sync();
           }
-        },true);
+        };
       }
-      enforce();
+
+      sync();
     });
   });
-  updateHakiAdvancedAvailability('');
-  updateHakiAdvancedAvailability('p');
 }
 
 function updateHakiHints(prefix){
