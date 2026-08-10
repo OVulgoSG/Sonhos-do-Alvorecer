@@ -433,14 +433,12 @@ let saveTimer = null;
 let supabaseClient = null;
 const URL_PARAMS = new URLSearchParams(location.search);
   const IS_LOBBY = URL_PARAMS.has('lobby');
-const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || localStorage.getItem('sonhos_lobby_admin_token') || '';
+const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
 // A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
 // carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
 let characterId = URL_PARAMS.get('ficha') || null;
-const IS_MASTER_SHEET = URL_PARAMS.has('master');
+const IS_MASTER_SHEET = URL_PARAMS.has('master') && !!LOBBY_ADMIN_TOKEN;
 const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-// Segurança: uma ficha compartilhada nunca herda automaticamente o token salvo
-// no navegador. O token só é obtido após a senha, ou pelo acesso de mestre.
 let editToken = IS_MASTER_SHEET ? null : null;
 let readOnlySheet = false;
 const IS_SHARED_SHEET = !!characterId;
@@ -506,23 +504,6 @@ function mergeState(loaded) {
 );
   merged.itens=loaded?.itens||[];
   return merged;
-}
-
-function renderLockedSheet(){
-  const app=document.getElementById('app');
-  if(!app) return;
-  app.innerHTML=`
-    <div class="app-shell">
-      <div class="mini-logo">Sonhos do Alvorecer</div>
-      <div class="loading-screen" style="min-height:70vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;">
-        <div style="font-size:3rem;">🔒</div>
-        <h1>Ficha protegida</h1>
-        <p style="max-width:520px;">Esta ficha é privada. Para abrir e editar este personagem, informe a senha de edição.</p>
-        <button type="button" id="unlockSheetBtn" class="btn btn-primary">🔓 Desbloquear ficha</button>
-        <a href="?lobby" class="btn btn-ghost">← Voltar ao lobby</a>
-      </div>
-    </div>`;
-  document.getElementById('unlockSheetBtn')?.addEventListener('click',unlockSheet);
 }
 
 async function loadState(){
@@ -619,11 +600,7 @@ window.addEventListener('popstate',()=>{
   }
 });
 
-function fichaShareUrl(){
-  return characterId
-    ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId))
-    : '';
-}
+function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
 function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
 function copyTextOrPrompt(text,message){
   if(!text) return;
@@ -1452,7 +1429,7 @@ function buildLobbyCard(character){
   const mental = lobbyVisibleValue(lobby.mostrarMental, Number(pub.mental)||0);
 
   return `
-    <div class="lobby-card" data-character-id="${character.id}" role="article" aria-label="Personagem em cena">
+    <div class="lobby-card" data-character-id="${character.id}" aria-label="Personagem em cena — ficha privada">
       <div class="lobby-portrait">${foto}</div>
       <div class="lobby-info">
         <div class="lobby-name">${escapeHtml(nome)}</div>
@@ -1505,7 +1482,7 @@ function renderLobby(characters){
 
       <div class="lobby-header">
         <h1>Personagens em Cena</h1>
-        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa. As fichas são privadas e não podem ser abertas pelo lobby.'}</p>
+        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa.'}</p>
         ${isAdmin ? `
         <div class="lobby-add">
           <input type="text" id="lobbyLinkInput" placeholder="Cole aqui o link da ficha...">
@@ -1522,16 +1499,9 @@ function renderLobby(characters){
     document.getElementById('lobbyAddButton').addEventListener('click',addCharacterToLobby);
     document.getElementById('lobbyLinkInput').addEventListener('keydown',e=>{if(e.key==='Enter') addCharacterToLobby();});
     document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby)));
-    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1'; }));
+    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1&admin='+encodeURIComponent(LOBBY_ADMIN_TOKEN); }));
   } else {
     document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.remove());
-    document.querySelectorAll('.lobby-card').forEach(card=>{
-      card.addEventListener('click',e=>{
-        if(e.target.closest('button,a,input,textarea,select')) return;
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    });
   }
 }
 function getLobbyCharacterIdFromUrl(value){
@@ -1592,9 +1562,6 @@ function subscribeLobbyRealtime(){
 }
 
 async function initLobby(){
-  if(LOBBY_ADMIN_TOKEN && URL_PARAMS.get('admin')){
-    try{ localStorage.setItem('sonhos_lobby_admin_token',LOBBY_ADMIN_TOKEN); }catch(e){}
-  }
   if(!ONLINE_ENABLED){
     document.getElementById('app').innerHTML=
       '<div class="loading-screen">Supabase não configurado.</div>';
@@ -1630,14 +1597,6 @@ async function init(){
   }
 
   try{
-    // Toda ficha aberta por link é privada para jogadores.
-    // O conteúdo completo só é carregado após validar a senha.
-    // O mestre usa o acesso administrativo e não precisa da senha da ficha.
-    if(IS_SHARED_SHEET && !IS_MASTER_SHEET){
-      renderLockedSheet();
-      return;
-    }
-
     await loadState();
 
     if(state.wizardDone){
@@ -1680,28 +1639,16 @@ async function unlockSheet(){
   const password=prompt('Digite a senha de edição desta ficha:');
   if(password===null) return;
   try{
-    ensureSupabaseClient();
     const {data,error}=await supabaseClient.rpc('unlock_character',{p_id:characterId,p_password:password});
     if(error) throw error;
-    if(!data) throw new Error('A ficha não retornou um token de edição.');
-
     editToken=data;
     localStorage.setItem('sonhos_ficha_id',characterId);
     localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
-
-    // Só agora buscamos o conteúdo completo da ficha.
-    const loaded=await supabaseClient.rpc('get_character_state',{p_id:characterId});
-    if(loaded.error) throw loaded.error;
-    state=mergeState(loaded.data);
     readOnlySheet=false;
-    renderSheet();
-    subscribeRealtime();
-    addOnlineControls();
+    setSheetReadOnly(false);
+    document.getElementById('unlockSheetBtn')?.remove();
     alert('Ficha desbloqueada.');
-  }catch(e){
-    console.error(e);
-    alert('Senha incorreta ou ficha sem senha de edição.');
-  }
+  }catch(e){ console.error(e); alert('Senha incorreta ou ficha sem senha de edição.'); }
 }
 
 function setSheetReadOnly(flag){
