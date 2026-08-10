@@ -732,17 +732,39 @@ function getPlayerRule(){
   return {mensagem:'', bloqueado:false};
 }
 function showPlayerRule(){
-  const el=document.getElementById('playerRuleMessage');
-  if(!el) return;
   const rule=getPlayerRule();
-  el.textContent=rule.mensagem;
-  el.style.color=rule.bloqueado?'#b42318':'';
-  el.style.fontWeight=rule.mensagem?'600':'400';
+  const old=document.getElementById('playerRuleToast');
+  if(old) old.remove();
   clearTimeout(window.__playerRuleTimer);
-  if(rule.mensagem && !rule.bloqueado){
-    window.__playerRuleTimer=setTimeout(()=>{ if(el) el.textContent=''; },3000);
-  }
+  if(!rule.mensagem) return;
+
+  const toast=document.createElement('div');
+  toast.id='playerRuleToast';
+  toast.textContent=rule.mensagem;
+  toast.style.cssText=`
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:99999;
+    max-width:min(90vw,520px);
+    padding:18px 24px;
+    border-radius:14px;
+    background:var(--panel,#151922);
+    color:${rule.bloqueado?'#ff6b6b':'#fff'};
+    border:2px solid ${rule.bloqueado?'#b42318':'var(--accent,#d4af37)'};
+    box-shadow:0 12px 40px rgba(0,0,0,.55);
+    font-size:1rem;
+    font-weight:700;
+    text-align:center;
+    pointer-events:none;
+  `;
+  document.body.appendChild(toast);
+  window.__playerRuleTimer=setTimeout(()=>{
+    if(toast.isConnected) toast.remove();
+  },3000);
 }
+
 function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; }
 function bindId1(){
   document.getElementById('inpNome').addEventListener('input', e=>{state.identidade.nome=e.target.value; scheduleSave();});
@@ -1012,7 +1034,7 @@ function wireNav(idx, key){
       }
       if(rule.mensagem){
         showPlayerRule();
-        setTimeout(()=>go(idx+1),120);
+        setTimeout(()=>go(idx+1),3000);
         return;
       }
     }
