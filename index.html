@@ -568,27 +568,23 @@ if(!window.__sonhosBlurBound){
   window.__sonhosBlurBound=true;
   document.addEventListener('focusout',()=>setTimeout(applyPendingRemoteState,0));
 }
-function ensureSupabaseClient(){
-  if(!ONLINE_ENABLED) throw new Error('Supabase não configurado.');
-  if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
-  if(!supabaseClient){
-    supabaseClient=window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
-    );
-  }
-  return supabaseClient;
-}
-
-async function createOnlineCharacter(){
-  if(!ONLINE_ENABLED) return null;
-  ensureSupabaseClient();
+async function createOnlineCharacter(editPassword=null){
+  if(!ONLINE_ENABLED || !supabaseClient) return null;
   const {data,error}=await supabaseClient.rpc('create_character',{p_state:state});
   if(error) throw error;
   characterId=data.id; editToken=data.edit_token;
   localStorage.setItem('sonhos_ficha_id',characterId);
   localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
+
+  if(editPassword){
+    const {error:passwordError}=await supabaseClient.rpc('set_character_edit_password',{
+      p_id:characterId,
+      p_token:editToken,
+      p_password:editPassword
+    });
+    if(passwordError) throw passwordError;
+  }
+
   subscribeRealtime();
   history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
   return characterId;
@@ -920,29 +916,45 @@ function wireNav(idx, key){
   const next=document.getElementById('btnNext'); if(next) next.onclick=()=>go(idx+1);
   const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
 }
+async function askForEditPassword(){
+  while(true){
+    const p1=prompt('Crie uma senha para editar esta ficha em outro dispositivo.\n\nMínimo: 6 caracteres.');
+    if(p1===null) return null;
+    if(p1.length < 6){ alert('Use uma senha com pelo menos 6 caracteres.'); continue; }
+    const p2=prompt('Digite a senha novamente:');
+    if(p2===null) return null;
+    if(p1!==p2){ alert('As senhas não conferem.'); continue; }
+    return p1;
+  }
+}
+
 async function finalizeCharacter(){
   const t=totals();
   state.recursos.vida.atual=computeVidaFinal(t);
   state.recursos.energia.atual=computeEnergiaFinal(t);
   state.recursos.mental.atual=computeMente(t);
-  state.wizardDone=true;
 
-  // A ficha nova ainda não tem characterId nem um cliente Supabase criado.
-  // O cliente agora é inicializado aqui para que a ficha seja criada online
-  // imediatamente ao finalizar, permitindo gerar o link compartilhável.
-  if(ONLINE_ENABLED && !characterId){
+  let firstOnlinePassword=null;
+  if(ONLINE_ENABLED && supabaseClient && !characterId){
+    firstOnlinePassword=await askForEditPassword();
+    if(firstOnlinePassword===null){
+      alert('A ficha não foi finalizada. É necessário criar uma senha de edição para proteger a ficha online.');
+      return;
+    }
+  }
+
+  state.wizardDone=true;
+  scheduleSave();
+  renderSheet();
+  if(ONLINE_ENABLED && supabaseClient && !characterId){
     try{
-      ensureSupabaseClient();
-      await createOnlineCharacter();
+      await createOnlineCharacter(firstOnlinePassword);
+      addOnlineControls();
     }catch(e){
       console.error('Não foi possível criar a ficha online:',e);
       alert('A ficha foi finalizada, mas não consegui criar o link online. Verifique a conexão com o Supabase e tente novamente.');
     }
   }
-
-  scheduleSave();
-  renderSheet();
-  if(ONLINE_ENABLED && characterId) addOnlineControls();
 }
 
 /* ===== Ficha final ===== */
