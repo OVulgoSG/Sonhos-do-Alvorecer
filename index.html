@@ -178,156 +178,6 @@ textarea { resize:vertical; line-height:1.6; }
   body { background:#fff; color:#000; }
   .panel, .resource-card, .sheet-header, .wizard-card { border:1px solid #ccc; box-shadow:none; background:#fff; }
 }
-  .lobby-header{
-  background:var(--bg-panel);
-  border:1px solid var(--border-soft);
-  border-radius:var(--radius-lg);
-  padding:22px;
-  margin-bottom:18px;
-  box-shadow:var(--shadow-lg);
-  text-align:center;
-}
-
-.lobby-header h1{
-  color:var(--gold-bright);
-  font-size:1.4rem;
-}
-
-.lobby-header p{
-  color:var(--text-muted);
-  font-size:.9rem;
-  margin-bottom:18px;
-}
-
-.lobby-add{
-  display:flex;
-  gap:8px;
-}
-
-.lobby-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:14px;
-}
-
-.lobby-card{
-  position:relative;
-  display:flex;
-  gap:14px;
-  align-items:center;
-  background:var(--bg-panel);
-  border:1px solid var(--border-soft);
-  border-radius:var(--radius-lg);
-  padding:16px;
-  box-shadow:var(--shadow-lg);
-}
-
-.lobby-portrait{
-  width:78px;
-  height:78px;
-  flex-shrink:0;
-  border-radius:50%;
-  border:2px solid var(--gold);
-  background:var(--bg-void);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  font-size:2rem;
-}
-
-.lobby-portrait img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.lobby-info{
-  min-width:0;
-  flex:1;
-}
-
-.lobby-name{
-  font-family:'Cinzel',serif;
-  font-size:1.05rem;
-  color:var(--gold-bright);
-  margin-bottom:7px;
-}
-
-.lobby-resource{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  font-size:.82rem;
-  color:var(--text-muted);
-  padding:2px 0;
-}
-
-.lobby-resource strong{
-  color:var(--text-main);
-}
-
-.lobby-remove{
-  position:absolute;
-  top:7px;
-  right:8px;
-  border:0;
-  background:none;
-  color:var(--text-muted);
-  cursor:pointer;
-  font-size:1.2rem;
-}
-
-.lobby-admin-actions{display:flex;gap:6px;align-items:center;}
-.lobby-edit{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:inherit;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;}
-.lobby-edit:hover{background:rgba(255,255,255,.12);}
-.lobby-remove:hover{
-  color:var(--danger);
-}
-
-.lobby-empty{
-  grid-column:1/-1;
-  text-align:center;
-  color:var(--text-muted);
-  padding:50px 20px;
-  background:var(--bg-panel);
-  border:1px dashed var(--border-soft);
-  border-radius:var(--radius-lg);
-}
-
-@media(max-width:640px){
-  .lobby-add{
-    flex-direction:column;
-  }
-}
-
-.capangas-panel{background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;margin-bottom:18px;box-shadow:var(--shadow-lg);}
-.capangas-panel h3{color:var(--gold-bright);font-size:1.05rem;margin-bottom:6px;}
-.capangas-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:14px;}
-.capangas-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
-.capanga-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:9px;}
-.capanga-row .capanga-count{font-weight:700;text-align:center;}
-.capanga-remove{background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;height:36px;padding:0 10px;}
-.capanga-remove:hover{border-color:var(--danger);}
-.lobby-capangas{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
-.lobby-capangas h2{color:var(--gold-bright);font-size:1.1rem;margin-bottom:6px;}
-.lobby-capangas-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:14px;}
-.lobby-capangas-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:14px;}
-.lobby-capanga-card{background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px;position:relative;}
-.lobby-capanga-title{font-family:'Cinzel',serif;color:var(--gold-bright);font-weight:600;margin-bottom:7px;}
-.lobby-capanga-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;font-size:.82rem;color:var(--text-muted);}
-.lobby-capanga-stats strong{display:block;color:var(--text-main);font-size:1rem;margin-top:2px;}
-.lobby-capanga-remove{margin-top:10px;width:100%;background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;padding:7px;}
-.lobby-capanga-remove:hover{border-color:var(--danger);}
-.lobby-capanga-privacy{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;font-size:.8rem;color:var(--text-soft);}
-.lobby-capanga-privacy label{display:flex;align-items:center;gap:5px;}
-.lobby-privacy-panel{background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:16px;margin-bottom:18px;}
-.lobby-privacy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px;}
-.lobby-privacy-grid label{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:10px;border-radius:var(--radius-md);}
-@media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
-@media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
-
-.sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed}.sub-toggle.locked span{color:#888}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -388,7 +238,7 @@ const STEP_DEFS = [
 /* ===== Estado ===== */
 function defaultState() {
   const attrs = {};
-  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:1, mod:0});
+  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:0, mod:0});
   return {
     wizardStep:0, wizardDone:false, activeTab:'base',
     identidade:{nome:'',jogador:'',idade:'',expectativa:'',raca:'',profissao:'Combatente (não tem Profissão)',talento:'',sonho:''},
@@ -403,23 +253,13 @@ function defaultState() {
     limites:{morrendo:0,exaustao:0,enlouquecendo:0},
     foco:{emUso:0,maximo:3},
     imagem:null,
-
-lobby:{
-  mostrarNome:false,
-  mostrarFoto:true,
-  mostrarVida:false,
-  mostrarEnergia:false,
-  mostrarMental:false
-},
-
-notas:'',
+    notas: '',
     dinheiro:'B$10000000',
     itens:[],
     poderes:'',
     iniciativaBonus:0,
     formulaConfig: defaultFormulaConfig(),
-    pontoSonho:false,
-    capangas:[]
+    pontoSonho:false
   };
 }
 
@@ -461,15 +301,10 @@ let state = defaultState();
 let saveTimer = null;
 let supabaseClient = null;
 const URL_PARAMS = new URLSearchParams(location.search);
-  const IS_LOBBY = URL_PARAMS.has('lobby');
-const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
 // A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
 // carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
 let characterId = URL_PARAMS.get('ficha') || null;
-const IS_MASTER_SHEET = URL_PARAMS.has('master') && !!LOBBY_ADMIN_TOKEN;
-const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-let editToken = IS_MASTER_SHEET ? null : null;
-let readOnlySheet = false;
+let editToken = URL_PARAMS.get('token') || null;
 const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
 let onlineSaveTimer = null;
@@ -515,15 +350,8 @@ function mergeState(loaded) {
   const merged = Object.assign({}, base, loaded || {});
   merged.identidade = Object.assign({}, base.identidade, loaded?.identidade||{});
   merged.attrs = {};
-  Object.keys(base.attrs).forEach(k=>{
-    merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{});
-    if(Number(merged.attrs[k].valor) < 0) merged.attrs[k].valor = 0;
-  });
+  Object.keys(base.attrs).forEach(k=>{ merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{}); });
   merged.haki = Object.assign({}, base.haki, loaded?.haki||{});
-  // Haki avançado nunca pode existir sem o Haki normal correspondente.
-  if(!merged.haki.observacao) merged.haki.observacaoAvancada=false;
-  if(!merged.haki.armamento) merged.haki.armamentoAvancado=false;
-  if(!merged.haki.conquistador) merged.haki.conquistadorAvancado=false;
   merged.frutas = base.frutas.map((f,i)=> Object.assign({}, f, (loaded?.frutas&&loaded.frutas[i])||{}));
   merged.recursos = {
     vida:Object.assign({},base.recursos.vida,loaded?.recursos?.vida||{}),
@@ -533,13 +361,7 @@ function mergeState(loaded) {
   merged.limites=Object.assign({},base.limites,loaded?.limites||{});
   merged.foco=Object.assign({},base.foco,loaded?.foco||{});
   merged.formulaConfig=Object.assign({},base.formulaConfig,loaded?.formulaConfig||{});
-  merged.lobby=Object.assign(
-  {},
-  base.lobby,
-  loaded?.lobby||{}
-);
   merged.itens=loaded?.itens||[];
-  merged.capangas=Array.isArray(loaded?.capangas) ? loaded.capangas.map(c=>({id:c.id||crypto.randomUUID?.()||String(Date.now()+Math.random()),nome:String(c.nome||'Capangas'),vida:Math.max(0,Number(c.vida)||0),energia:Math.max(0,Number(c.energia)||0),quantidade:Math.max(1,Number(c.quantidade)||1)})) : [];
   return merged;
 }
 
@@ -558,12 +380,14 @@ async function loadState(){
   }
   try{
     if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY, LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined);
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     if(characterId){
-      const {data,error}=await supabaseClient.rpc('get_character_state',{p_id:characterId});
+      const {data,error}=await supabaseClient.from('characters').select('state,edit_token').eq('id',characterId).single();
       if(error) throw error;
+      if(editToken && data.edit_token !== editToken) throw new Error('Token inválido.');
+      if(!editToken){ editToken=data.edit_token; localStorage.setItem('sonhos_ficha_token',editToken); }
       localStorage.setItem('sonhos_ficha_id',characterId);
-      state=mergeState(data);
+      state=mergeState(data.state);
       subscribeRealtime();
     }
   }catch(e){ console.warn('Modo online indisponível:',e); }
@@ -574,14 +398,11 @@ function scheduleSave(){
 }
 async function saveState(){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
-  if(!ONLINE_ENABLED || !supabaseClient || !characterId || (!editToken && !IS_MASTER_SHEET)) return;
+  if(!ONLINE_ENABLED || !supabaseClient || !characterId || !editToken) return;
   clearTimeout(onlineSaveTimer);
   localSaveInFlight=true;
   onlineSaveTimer=setTimeout(async()=>{
-    try{
-      if(IS_MASTER_SHEET) await supabaseClient.rpc('update_character_by_admin',{p_id:characterId,p_state:state});
-      else await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
-    }
+    try{ await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state}); }
     catch(e){ console.warn('Falha ao sincronizar:',e); }
     finally{ setTimeout(()=>{ localSaveInFlight=false; applyPendingRemoteState(); },250); }
   },150);
@@ -605,45 +426,27 @@ if(!window.__sonhosBlurBound){
   window.__sonhosBlurBound=true;
   document.addEventListener('focusout',()=>setTimeout(applyPendingRemoteState,0));
 }
-function ensureSupabaseClient(){
-  if(!ONLINE_ENABLED) throw new Error('Supabase não configurado.');
-  if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
-  if(!supabaseClient){
-    supabaseClient=window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
-    );
-  }
-  return supabaseClient;
-}
-
 async function createOnlineCharacter(){
-  if(!ONLINE_ENABLED) return null;
-  ensureSupabaseClient();
-  const {data,error}=await supabaseClient.rpc('create_character',{p_state:state});
+  if(!ONLINE_ENABLED || !supabaseClient) return null;
+  const token=crypto.randomUUID()+crypto.randomUUID();
+  const {data,error}=await supabaseClient.from('characters').insert({state,edit_token:token}).select('id,edit_token').single();
   if(error) throw error;
   characterId=data.id; editToken=data.edit_token;
   localStorage.setItem('sonhos_ficha_id',characterId);
-  localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
+  localStorage.setItem('sonhos_ficha_token',editToken);
   subscribeRealtime();
-  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
+  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken));
   return characterId;
 }
 
 window.addEventListener('popstate',()=>{
   if(characterId && location.search.indexOf('ficha=')===-1){
-    history.pushState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
+    history.pushState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||''));
   }
 });
 
-function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
-function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
-function copyTextOrPrompt(text,message){
-  if(!text) return;
-  navigator.clipboard?.writeText(text).then(()=>alert(message)).catch(()=>prompt('Copie este link:',text));
-}
-function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); copyTextOrPrompt(url,'Link da ficha copiado!'); }
+function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||'')) : ''; }
+function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); navigator.clipboard?.writeText(url).then(()=>alert('Link da ficha copiado!')).catch(()=>prompt('Copie este link:',url)); }
 
 /* ===== Utilidades de UI ===== */
 function infoIcon(text) { return `<span class="info-icon" tabindex="0" data-tooltip="${text.replace(/"/g,'&quot;')}">ⓘ</span>`; }
@@ -787,7 +590,7 @@ function bindAttrStep(){
   document.querySelectorAll('.attr-valor, .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
-      state.attrs[key][field] = field === 'valor' ? Math.max(0, Number(e.target.value)||0) : (Number(e.target.value)||0);
+      state.attrs[key][field] = Number(e.target.value)||0;
       scheduleSave();
     });
   });
@@ -810,48 +613,23 @@ function fillHakiStep(){
   updateHakiHints('');
 }
 function bindHakiStep(){
-  bindHakiAdvancedGuards();
-  document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=e.target.checked; scheduleSave();});
+  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=e.target.checked; scheduleSave();});
+  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=e.target.checked; scheduleSave();});
 }
 function updateHakiAdvancedAvailability(prefix){
-  const pairs=[
-    ['Observacao','observacao','observacaoAvancada'],
-    ['Armamento','armamento','armamentoAvancado'],
-    ['Conquistador','conquistador','conquistadorAvancado']
-  ];
-  pairs.forEach(([name,normalKey,advancedKey])=>{
-    const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancado';
+  const pairs=[['Observacao',!!state.haki.observacao],['Armamento',!!state.haki.armamento],['Conquistador',!!state.haki.conquistador]];
+  pairs.forEach(([name,ok])=>{
+    const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
     const el=document.getElementById(id);
     if(!el) return;
-    const ok=state.haki[normalKey]===true;
-    if(!ok) state.haki[advancedKey]=false;
-    el.checked=ok && state.haki[advancedKey]===true;
     el.disabled=!ok;
-    el.setAttribute('aria-disabled',String(!ok));
-    el.title=ok?'Haki Avançado liberado':'Libere o Haki normal primeiro';
-    const row=el.closest('.sub-toggle');
-    if(row){ row.classList.toggle('locked',!ok); row.setAttribute('aria-disabled',String(!ok)); }
+    if(!ok) el.checked=false;
   });
 }
-function bindHakiAdvancedGuards(){
-  document.querySelectorAll('.sub-toggle input[type="checkbox"]').forEach(el=>{
-    const row=el.closest('.sub-toggle');
-    if(row && !row.dataset.guardBound){
-      row.dataset.guardBound='1';
-      row.addEventListener('click',e=>{
-        if(el.disabled){ e.preventDefault(); e.stopPropagation(); }
-      },true);
-    }
-  });
-  updateHakiAdvancedAvailability('');
-  updateHakiAdvancedAvailability('p');
-}
-
 function updateHakiHints(prefix){
   const t=totals();
   const items=[
@@ -970,6 +748,34 @@ function renderWizard(){
   wireNav(idx, def.key);
   bindSecretTrigger(document.querySelector('.logo-title'));
 }
+function normalizarNomeEasterEgg(nome){
+  return String(nome||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+function mostrarAvisoEasterEgg(mensagem){
+  if(!mensagem) return;
+  let el=document.getElementById('easterEggAviso');
+  if(!el){
+    el=document.createElement('div');
+    el.id='easterEggAviso';
+    el.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:9999;background:var(--bg-panel);border:1px solid var(--gold);color:var(--gold-bright);padding:12px 18px;border-radius:10px;box-shadow:var(--shadow-lg);font-family:Cinzel,serif;text-align:center;max-width:90vw;';
+    document.body.appendChild(el);
+  }
+  el.textContent=mensagem;
+  clearTimeout(window.__easterEggAvisoTimer);
+  window.__easterEggAvisoTimer=setTimeout(()=>el.remove(),4500);
+}
+function verificarEasterEggNome(){
+  const nome=normalizarNomeEasterEgg(state.identidade.nome);
+  const idade=Number(String(state.identidade.idade||'').replace(/[^0-9.-]/g,''));
+
+  if(nome.startsWith('andr')) return {mensagem:'Você já ganha buff em trair.', bloqueado:false};
+  if(nome.includes('maozinh')) return {mensagem:'Não vai passar daqui.', bloqueado:true};
+  if(nome.startsWith('vini')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
+  if(nome==='nicholas') return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
+  if(nome==='wallace') return {mensagem:'O teu poder é o preto.', bloqueado:false};
+  return {mensagem:'', bloqueado:false};
+}
+
 function wireNav(idx, key){
   const go=(target)=>{
     clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
@@ -979,119 +785,35 @@ function wireNav(idx, key){
   };
   const back=document.getElementById('btnBack'); if(back) back.onclick=()=>go(idx-1);
   const start=document.getElementById('btnStart'); if(start) start.onclick=()=>go(idx+1);
-  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>go(idx+1);
+  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
+    const egg=verificarEasterEggNome();
+    if(egg.bloqueado){
+      mostrarAvisoEasterEgg(egg.mensagem);
+      return;
+    }
+    go(idx+1);
+    if(egg.mensagem) setTimeout(()=>mostrarAvisoEasterEgg(egg.mensagem),50);
+  };
   const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
 }
 async function finalizeCharacter(){
   const t=totals();
-
   state.recursos.vida.atual=computeVidaFinal(t);
   state.recursos.energia.atual=computeEnergiaFinal(t);
   state.recursos.mental.atual=computeMente(t);
   state.wizardDone=true;
-
-  if(ONLINE_ENABLED && !characterId){
-    try{
-      ensureSupabaseClient();
-      await createOnlineCharacter();
-    }catch(e){
-      console.error('Não foi possível criar/configurar a ficha online:',e);
-      alert('A ficha foi finalizada, mas ocorreu um erro ao criar ou configurar a ficha online. Você ainda pode usar o botão "🔐 Senha de edição" para definir a senha.');
-    }
-  }
-
   scheduleSave();
   renderSheet();
-  if(ONLINE_ENABLED && characterId) addOnlineControls();
+  if(ONLINE_ENABLED && supabaseClient && !characterId){ try{ await createOnlineCharacter(); addOnlineControls(); }catch(e){ console.warn('Não foi possível criar a ficha online:',e); } }
 }
 
 /* ===== Ficha final ===== */
-
-const CAPANGAS_STORAGE_KEY='sonhos_capangas_mestre';
-function loadMasterCapangas(){
-  try{
-    const raw=localStorage.getItem(CAPANGAS_STORAGE_KEY);
-    const parsed=JSON.parse(raw||'[]');
-    return typeof normalizeLobbyCapangas==='function' ? normalizeLobbyCapangas(parsed) : (Array.isArray(parsed) ? parsed : []);
-  }catch(e){ return []; }
-}
-function saveMasterCapangas(){
-  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(typeof normalizeLobbyCapangas==='function' ? normalizeLobbyCapangas(state.capangas||[]) : (state.capangas||[]))); }catch(e){}
-}
-function buildCapangasPanel(){
-  const groups=Array.isArray(state.capangas)?state.capangas:[];
-  return `<div class="capangas-panel" id="capangasPanel">
-    <h3>⚔️ Capangas</h3>
-    <p class="hint-text">Ferramenta do mestre. Os grupos ficam salvos neste navegador e não exigem nenhuma alteração na estrutura do Supabase.</p>
-    <div class="capangas-form">
-      <div class="field"><label>Grupo</label><input id="capangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
-      <div class="field"><label>Vida</label><input id="capangaVida" type="number" min="0" value="10"></div>
-      <div class="field"><label>Energia</label><input id="capangaEnergia" type="number" min="0" value="5"></div>
-      <div class="field"><label>Quantidade</label><input id="capangaQuantidade" type="number" min="1" value="1"></div>
-      <button type="button" class="btn btn-primary" id="addCapangaBtn">Adicionar</button>
-    </div>
-    <div class="capangas-list" id="capangasList">${groups.length?groups.map(buildCapangaRow).join(''):'<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>'}</div>
-  </div>`;
-}
-function buildCapangaRow(c){
-  return `<div class="capanga-row" data-capanga-id="${escapeHtml(c.id)}">
-    <div class="capanga-name"><strong>${escapeHtml(c.nome||'Capangas')}</strong></div>
-    <div>❤️ Vida <strong>${Number(c.vida)||0}</strong></div>
-    <div>⚡ Energia <strong>${Number(c.energia)||0}</strong></div>
-    <div>👥 <span class="capanga-count">${Number(c.quantidade)||1}</span></div>
-    <button type="button" class="capanga-remove" data-remove-capanga="${escapeHtml(c.id)}">Remover</button>
-  </div>`;
-}
-function renderCapangasPanel(){
-  const list=document.getElementById('capangasList'); if(!list) return;
-  list.innerHTML=(state.capangas||[]).length ? state.capangas.map(buildCapangaRow).join('') : '<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>';
-  list.querySelectorAll('[data-remove-capanga]').forEach(btn=>btn.onclick=()=>{
-    state.capangas=state.capangas.filter(c=>c.id!==btn.dataset.removeCapanga);
-    saveMasterCapangas(); renderCapangasPanel();
-  });
-}
-function bindCapangasPanel(){
-  const btn=document.getElementById('addCapangaBtn'); if(!btn) return;
-  btn.onclick=()=>{
-    const nome=document.getElementById('capangaNome').value.trim();
-    if(!nome) return alert('Digite um nome para o grupo.');
-    const vida=Math.max(0,Number(document.getElementById('capangaVida').value)||0);
-    const energia=Math.max(0,Number(document.getElementById('capangaEnergia').value)||0);
-    const quantidade=Math.max(1,Number(document.getElementById('capangaQuantidade').value)||1);
-    state.capangas.push({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())),nome,vida,energia,quantidade});
-    saveMasterCapangas(); renderCapangasPanel();
-    document.getElementById('capangaNome').value='';
-  };
-  renderCapangasPanel();
-}
-
-function buildLobbyPrivacyPanel(){
-  if(!characterId) return '';
-  const l=state.lobby||{};
-  return `<div class="lobby-privacy-panel">
-    <h3>👁️ Privacidade no Lobby</h3>
-    <p class="hint-text">Escolha o que os outros jogadores poderão ver quando sua ficha estiver no lobby. O mestre continua podendo ver a ficha completa.</p>
-    <div class="lobby-privacy-grid">
-      <label><input type="checkbox" id="privacyNome" ${l.mostrarNome?'checked':''}> Nome visível</label>
-      <label><input type="checkbox" id="privacyVida" ${l.mostrarVida?'checked':''}> Vida visível</label>
-      <label><input type="checkbox" id="privacyEnergia" ${l.mostrarEnergia?'checked':''}> Energia visível</label>
-      <label><input type="checkbox" id="privacyMental" ${l.mostrarMental?'checked':''}> Mental visível</label>
-    </div>
-  </div>`;
-}
-function bindLobbyPrivacyPanel(){
-  const map=[['privacyNome','mostrarNome'],['privacyVida','mostrarVida'],['privacyEnergia','mostrarEnergia'],['privacyMental','mostrarMental']];
-  map.forEach(([id,key])=>document.getElementById(id)?.addEventListener('change',e=>{ state.lobby[key]=e.target.checked; scheduleSave(); }));
-}
-
 function renderSheet(){
   const app=document.getElementById('app');
   app.innerHTML = `
     <div class="app-shell sheet-shell">
       <div class="mini-logo">Sonhos do Alvorecer</div>
       <div class="sheet-header" id="sheetHeader"></div>
-      ${IS_MASTER_SHEET ? buildCapangasPanel() : ''}
-      ${buildLobbyPrivacyPanel()}
       <div class="tab-bar" id="tabBar">
         <button type="button" class="tab-btn" data-tab="base">📜 Ficha Base</button>
         <button type="button" class="tab-btn" data-tab="poderes">🔥 Poderes</button>
@@ -1108,8 +830,6 @@ function renderSheet(){
       </div>
     </div>`;
   renderSheetHeader();
-  if(IS_MASTER_SHEET) bindCapangasPanel();
-  bindLobbyPrivacyPanel();
   bindTabs();
   switchTab(state.activeTab||'base');
   document.getElementById('btnReset').onclick = confirmReset;
@@ -1338,7 +1058,7 @@ function bindTabBase(){
   document.querySelectorAll('#tabContent .attr-valor, #tabContent .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
-      state.attrs[key][field]=field === 'valor' ? Math.max(0, Number(e.target.value)||0) : (Number(e.target.value)||0);
+      state.attrs[key][field]=Number(e.target.value)||0;
       updateResourceDisplays();
       scheduleSave();
     });
@@ -1382,13 +1102,12 @@ function fillTabPoderes(){
   document.getElementById('poderesTextarea').value=state.poderes;
 }
 function bindTabPoderes(){
-  bindHakiAdvancedGuards();
-  document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=e.target.checked; scheduleSave();});
+  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=e.target.checked; scheduleSave();});
+  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=e.target.checked; scheduleSave();});
   bindFrutasStep();
   document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
 }
@@ -1525,363 +1244,30 @@ function createNewCharacter(){
   if(shareBtn) shareBtn.remove();
   renderWizard();
 }
-/* ===== Lobby ===== */
 
-function lobbyVisibleValue(visible, value){
-  return visible ? value : '???';
-}
-
-function buildLobbyCard(character){
-  const isAdmin = !!LOBBY_ADMIN_TOKEN;
-  const lobby = character.lobby || {};
-  const pub = character.public_data || {};
-  const nome = (isAdmin || lobby.mostrarNome) ? (pub.nome || 'Personagem sem nome') : '???';
-  const foto = (isAdmin || lobby.mostrarFoto) && pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : '<span>👤</span>';
-  const vida = lobbyVisibleValue(isAdmin || lobby.mostrarVida, Number(pub.vida)||0);
-  const energia = lobbyVisibleValue(isAdmin || lobby.mostrarEnergia, Number(pub.energia)||0);
-  const mental = lobbyVisibleValue(isAdmin || lobby.mostrarMental, Number(pub.mental)||0);
-
-  return `
-    <div class="lobby-card" data-character-id="${character.id}" aria-label="Personagem em cena — ficha privada">
-      <div class="lobby-portrait">${foto}</div>
-      <div class="lobby-info">
-        <div class="lobby-name">${escapeHtml(nome)}</div>
-        ${(isAdmin || lobby.mostrarNome) && pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
-        ${(pub.profissao || pub.raca) ? `<div class="lobby-resource"><span>${escapeHtml([pub.profissao,pub.raca].filter(Boolean).join(' • '))}</span></div>` : ''}
-        <div class="lobby-resource"><span>❤️ Vida</span><strong>${vida}</strong></div>
-        <div class="lobby-resource"><span>⚡ Energia</span><strong>${energia}</strong></div>
-        <div class="lobby-resource"><span>🧠 Mental</span><strong>${mental}</strong></div>
-      </div>
-      ${LOBBY_ADMIN_TOKEN ? `<div class="lobby-admin-actions"><button type="button" class="lobby-edit" data-edit-lobby="${character.id}">Editar</button><button type="button" class="lobby-remove" data-remove-lobby="${character.id}">×</button></div>` : ''}
-    </div>`;
-}
-
-function escapeHtml(value){
-  return String(value ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-}
-
-async function loadLobbyCharacters(){
-  const {data: lobbyRows, error:lobbyError} = await supabaseClient
-    .from('lobby_characters')
-    .select('id,character_id,active,show_name,show_photo,show_health,show_energy,show_mental,public_data')
-    .eq('active',true)
-    .order('created_at',{ascending:true});
-  if(lobbyError) throw lobbyError;
-
-  const result=await Promise.all((lobbyRows||[]).map(async row=>{
-    const pub=row.public_data||{};
-    let fichaLobby={};
-    try{
-      const {data:fullState}=await supabaseClient.rpc('get_character_state',{p_id:row.character_id});
-      fichaLobby=fullState?.lobby||{};
-    }catch(e){}
-    const privacy={...(pub.lobby||{}),...fichaLobby};
-    return {
-      id:row.character_id,
-      public_data:pub,
-      lobby:{
-        mostrarNome:privacy.mostrarNome===true,
-        mostrarFoto:privacy.mostrarFoto===true,
-        mostrarVida:privacy.mostrarVida===true,
-        mostrarEnergia:privacy.mostrarEnergia===true,
-        mostrarMental:privacy.mostrarMental===true
-      }
-    };
-  }));
-  renderLobby(result);
-}
-
-function normalizeLobbyCapanga(c){
-  const quantidade=Math.max(1,Number(c?.quantidade)||1);
-  const vida=Math.max(0,Number(c?.vida)||0);
-  const energia=Math.max(0,Number(c?.energia)||0);
-  let membros=Array.isArray(c?.membros)?c.membros.map((m,i)=>({
-    id:m.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),
-    nome:String(m.nome||`${c?.nome||'Capanga'} ${i+1}`),
-    vida:Math.max(0,Number(m.vida ?? vida)||0),
-    energia:Math.max(0,Number(m.energia ?? energia)||0)
-  })) : [];
-  while(membros.length<quantidade) membros.push({id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome:`${c?.nome||'Capanga'} ${membros.length+1}`,vida,energia});
-  if(membros.length>quantidade) membros=membros.slice(0,quantidade);
-  return {id:c?.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),nome:String(c?.nome||'Capangas'),vida,energia,quantidade,membros,visivel:c?.visivel===true,mostrarNome:c?.mostrarNome===true,mostrarVida:c?.mostrarVida===true,mostrarEnergia:c?.mostrarEnergia===true};
-}
-function normalizeLobbyCapangas(groups){ return (Array.isArray(groups)?groups:[]).map(normalizeLobbyCapanga); }
-function getLobbyCapangas(){
-  try{return normalizeLobbyCapangas(JSON.parse(localStorage.getItem(CAPANGAS_STORAGE_KEY)||'[]'));}catch(e){return [];}
-}
-function saveLobbyCapangas(groups){
-  const normalized=normalizeLobbyCapangas(groups);
-  try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(normalized));}catch(e){}
-  broadcastLobbyCapangas(normalized);
-}
-let lobbyCapangaChannel=null;
-let lobbyCapangaReady=false;
-function broadcastLobbyCapangas(groups){
-  if(!LOBBY_ADMIN_TOKEN || !lobbyCapangaChannel || !lobbyCapangaReady) return;
-  lobbyCapangaChannel.send({type:'broadcast',event:'capangas_state',payload:{groups:normalizeLobbyCapangas(groups)}}).catch(()=>{});
-}
-function buildLobbyCapangaMember(m,isAdmin,c){
-  const nome = c.mostrarNome ? m.nome : '???';
-  const vida = c.mostrarVida ? Number(m.vida)||0 : '???';
-  const energia = c.mostrarEnergia ? Number(m.energia)||0 : '???';
-  return `<div class="lobby-capanga-member">
-    <div class="lobby-capanga-member-name">${escapeHtml(nome)}</div>
-    ${isAdmin?`<label>❤️ <input type="number" min="0" value="${Number(m.vida)||0}" data-capanga-member-vida="${escapeHtml(m.id)}"></label><label>⚡ <input type="number" min="0" value="${Number(m.energia)||0}" data-capanga-member-energia="${escapeHtml(m.id)}"></label>`:`<div>❤️ <strong>${vida}</strong></div><div>⚡ <strong>${energia}</strong></div>`}
-  </div>`;
-}
-function buildLobbyCapangaCard(c,isAdmin){
-  const members=Array.isArray(c.membros)?c.membros:[];
-  if(!isAdmin && c.visivel!==true) return '';
-  return `<div class="lobby-capanga-card">
-    <div class="lobby-capanga-title">⚔️ ${escapeHtml(c.mostrarNome ? (c.nome||'Capangas') : '???')} <span>(${members.length})</span></div>
-    <div class="lobby-capanga-stats"><div>❤️ Vida base<strong>${c.mostrarVida ? Number(c.vida)||0 : '???'}</strong></div><div>⚡ Energia base<strong>${c.mostrarEnergia ? Number(c.energia)||0 : '???'}</strong></div><div>👥 Quantidade<strong>${members.length}</strong></div></div>
-    ${isAdmin?`<div class="lobby-capanga-privacy"><label><input type="checkbox" ${c.visivel===true?'checked':''} data-toggle-capanga-visibility="${escapeHtml(c.id)}"> Mostrar grupo</label><label><input type="checkbox" ${c.mostrarNome===true?'checked':''} data-toggle-capanga-name="${escapeHtml(c.id)}"> Nome</label><label><input type="checkbox" ${c.mostrarVida===true?'checked':''} data-toggle-capanga-life="${escapeHtml(c.id)}"> Vida</label><label><input type="checkbox" ${c.mostrarEnergia===true?'checked':''} data-toggle-capanga-energy="${escapeHtml(c.id)}"> Energia</label></div>`:''}
-    <details ${isAdmin?'open':''} class="lobby-capanga-details"><summary>${isAdmin?'Ver e editar indivíduos':'Ver indivíduos'}</summary><div class="lobby-capanga-members">${members.map(m=>buildLobbyCapangaMember(m,isAdmin,c)).join('')}</div></details>
-    ${isAdmin?`<button type="button" class="lobby-capanga-remove" data-remove-lobby-capanga="${escapeHtml(c.id)}">Remover grupo</button>`:''}
-  </div>`;
-}
-function renderLobbyCapangas(groupsOverride=null){
-  const list=document.getElementById('lobbyCapangasList'); if(!list) return;
-  const groups=normalizeLobbyCapangas(groupsOverride??getLobbyCapangas());
-  const isAdmin=!!LOBBY_ADMIN_TOKEN;
-  const cards=groups.map(c=>buildLobbyCapangaCard(c,isAdmin)).filter(Boolean).join('');
-  list.innerHTML=cards||'<div class="empty-hint">Nenhum grupo de capangas disponível.</div>';
-  if(isAdmin){
-    list.querySelectorAll('[data-remove-lobby-capanga]').forEach(btn=>btn.onclick=()=>saveLobbyCapangas(groups.filter(c=>c.id!==btn.dataset.removeLobbyCapanga)));
-    list.querySelectorAll('[data-toggle-capanga-visibility],[data-toggle-capanga-name],[data-toggle-capanga-life],[data-toggle-capanga-energy]').forEach(cb=>cb.onchange=()=>{
-      const id=cb.dataset.toggleCapangaVisibility||cb.dataset.toggleCapangaName||cb.dataset.toggleCapangaLife||cb.dataset.toggleCapangaEnergy;
-      const key=cb.dataset.toggleCapangaVisibility?'visivel':cb.dataset.toggleCapangaName?'mostrarNome':cb.dataset.toggleCapangaLife?'mostrarVida':'mostrarEnergia';
-      const next=groups.map(c=>c.id===id?{...c,[key]:cb.checked}:c); saveLobbyCapangas(next); renderLobbyCapangas(next);
-    });
-    list.querySelectorAll('[data-capanga-member-vida],[data-capanga-member-energia]').forEach(inp=>inp.onchange=()=>{
-      const id=inp.dataset.capangaMemberVida||inp.dataset.capangaMemberEnergia;
-      const field=inp.dataset.capangaMemberVida?'vida':'energia';
-      const next=groups.map(c=>({...c,membros:c.membros.map(m=>m.id===id?{...m,[field]:Math.max(0,Number(inp.value)||0)}:m)}));
-      saveLobbyCapangas(next); renderLobbyCapangas(next);
-    });
-  }
-}
-function addLobbyCapanga(){
-  if(!LOBBY_ADMIN_TOKEN) return;
-  const nome=document.getElementById('lobbyCapangaNome')?.value.trim(); if(!nome) return alert('Digite um nome para o grupo.');
-  const vida=Math.max(0,Number(document.getElementById('lobbyCapangaVida')?.value)||0);
-  const energia=Math.max(0,Number(document.getElementById('lobbyCapangaEnergia')?.value)||0);
-  const quantidade=Math.max(1,Number(document.getElementById('lobbyCapangaQuantidade')?.value)||1);
-  const membros=Array.from({length:quantidade},(_,i)=>({id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome:`${nome} ${i+1}`,vida,energia}));
-  saveLobbyCapangas([...getLobbyCapangas(),{id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome,vida,energia,quantidade,membros,visivel:false,mostrarNome:false,mostrarVida:false,mostrarEnergia:false}]);
-  document.getElementById('lobbyCapangaNome').value=''; renderLobbyCapangas();
-}
-function subscribeLobbyCapangas(){
-  if(lobbyCapangaChannel) supabaseClient.removeChannel(lobbyCapangaChannel);
-  lobbyCapangaReady=false;
-  lobbyCapangaChannel=supabaseClient.channel('sonhos-lobby-capangas');
-  lobbyCapangaChannel.on('broadcast',{event:'capangas_state'},({payload})=>{
-    const groups=normalizeLobbyCapangas(payload?.groups||[]);
-    try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(groups));}catch(e){}
-    renderLobbyCapangas(groups);
-  });
-  lobbyCapangaChannel.on('broadcast',{event:'capangas_request'},()=>{if(LOBBY_ADMIN_TOKEN) broadcastLobbyCapangas(getLobbyCapangas());});
-  lobbyCapangaChannel.subscribe(status=>{
-    if(status==='SUBSCRIBED'){
-      lobbyCapangaReady=true;
-      if(LOBBY_ADMIN_TOKEN) broadcastLobbyCapangas(getLobbyCapangas());
-      else lobbyCapangaChannel.send({type:'broadcast',event:'capangas_request',payload:{}}).catch(()=>{});
-    }
-  });
-}
-
-function renderLobby(characters){
-  const app=document.getElementById('app');
-  const isAdmin=!!LOBBY_ADMIN_TOKEN;
-  app.innerHTML=`
-    <div class="app-shell">
-      <div class="mini-logo">Sonhos do Alvorecer</div>
-
-      <div class="lobby-header">
-        <h1>Personagens em Cena</h1>
-        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa.'}</p>
-        ${isAdmin ? `
-        <div class="lobby-add">
-          <input type="text" id="lobbyLinkInput" placeholder="Cole aqui o link da ficha...">
-          <button type="button" id="lobbyAddButton" class="btn btn-primary">Adicionar à cena</button>
-        </div>` : ''}
-      </div>
-
-      <div class="lobby-capangas">
-        <h2>⚔️ Capangas</h2>
-        <p class="hint-text">${isAdmin ? 'Somente o mestre pode adicionar, editar, remover e decidir quais grupos os jogadores podem ver.' : 'Capangas liberados pelo mestre para os jogadores.'}</p>
-        ${isAdmin?`<div class="lobby-capangas-form">
-          <div class="field"><label>Grupo</label><input id="lobbyCapangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
-          <div class="field"><label>Vida</label><input id="lobbyCapangaVida" type="number" min="0" value="10"></div>
-          <div class="field"><label>Energia</label><input id="lobbyCapangaEnergia" type="number" min="0" value="5"></div>
-          <div class="field"><label>Quantidade</label><input id="lobbyCapangaQuantidade" type="number" min="1" value="1"></div>
-          <button type="button" class="btn btn-primary" id="addLobbyCapangaBtn">Adicionar</button>
-        </div>`:''}
-        <div class="lobby-capangas-list" id="lobbyCapangasList"></div>
-      </div>
-
-      <div id="lobbyCharacters" class="lobby-grid">
-        ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty">Nenhum personagem está em cena.</div>`}
-      </div>
-    </div>`;
-
-  renderLobbyCapangas();
-  if(isAdmin){
-    document.getElementById('addLobbyCapangaBtn')?.addEventListener('click',addLobbyCapanga);
-    document.getElementById('lobbyCapangaNome')?.addEventListener('keydown',e=>{if(e.key==='Enter') addLobbyCapanga();});
-    document.getElementById('lobbyAddButton').addEventListener('click',addCharacterToLobby);
-    document.getElementById('lobbyLinkInput').addEventListener('keydown',e=>{if(e.key==='Enter') addCharacterToLobby();});
-    document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby)));
-    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1&admin='+encodeURIComponent(LOBBY_ADMIN_TOKEN); }));
-  } else {
-    document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.remove());
-  }
-}
-function getLobbyCharacterIdFromUrl(value){
-  try{
-    const u=new URL(value,location.href);
-    const id=u.searchParams.get('ficha');
-    return id && /^[0-9a-fA-F-]{36}$/.test(id) ? id : null;
-  }catch(e){ return null; }
-}
-
-async function addCharacterToLobby(){
-  if(!LOBBY_ADMIN_TOKEN){ alert('Somente o link de controle da mesa pode adicionar personagens.'); return; }
-  const input=document.getElementById('lobbyLinkInput');
-  const value=input.value.trim();
-  const characterId=getLobbyCharacterIdFromUrl(value);
-  if(!characterId){ alert('Esse link não parece ser um link válido de ficha.'); return; }
-
-  const {data,error}=await supabaseClient.rpc('add_character_to_lobby',{p_character_id:characterId});
-  if(error){ console.error(error); alert('Não consegui colocar a ficha no lobby. Verifique o link e o acesso de mestre.'); return; }
-  input.value='';
-  await loadLobbyCharacters();
-}
-
-async function removeCharacterFromLobby(characterId){
-  if(!LOBBY_ADMIN_TOKEN) return;
-  const {error}=await supabaseClient.rpc('remove_character_from_lobby',{p_character_id:characterId});
-  if(error){ console.error(error); alert('Não consegui retirar a ficha do lobby.'); return; }
-  await loadLobbyCharacters();
-}
-
-let lobbyRealtimeChannel=null;
-
-function subscribeLobbyRealtime(){
-  if(lobbyRealtimeChannel)
-    supabaseClient.removeChannel(lobbyRealtimeChannel);
-
-  lobbyRealtimeChannel=supabaseClient
-    .channel('sonhos-lobby')
-    .on(
-      'postgres_changes',
-      {
-        event:'*',
-        schema:'public',
-        table:'lobby_characters'
-      },
-      ()=>loadLobbyCharacters()
-    )
-    .on(
-      'postgres_changes',
-      {
-        event:'UPDATE',
-        schema:'public',
-        table:'characters'
-      },
-      ()=>loadLobbyCharacters()
-    )
-    .subscribe();
-}
-
-if(!window.__sonhosCapangasStorageBound){
-  window.__sonhosCapangasStorageBound=true;
-  window.addEventListener('storage',e=>{ if(e.key===CAPANGAS_STORAGE_KEY) renderLobbyCapangas(); });
-}
-
-async function initLobby(){
-  if(!ONLINE_ENABLED){
-    document.getElementById('app').innerHTML=
-      '<div class="loading-screen">Supabase não configurado.</div>';
-    return;
-  }
-
-  try{
-    supabaseClient=window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
-    );
-
-    await loadLobbyCharacters();
-    subscribeLobbyRealtime();
-    subscribeLobbyCapangas();
-  }catch(e){
-    console.error(e);
-
-    document.getElementById('app').innerHTML=`
-      <div class="loading-screen">
-        Não foi possível carregar o lobby.
-      </div>`;
-  }
-}
 /* ===== Boot ===== */
 async function init(){
-  document.getElementById('app').innerHTML =
-    '<div class="loading-screen">⚓ Erguendo velas...</div>';
-
-  if(IS_LOBBY){
-    await initLobby();
-    return;
-  }
-
-  try{
+  document.getElementById('app').innerHTML = '<div class="loading-screen">⚓ Erguendo velas...</div>';
+  try {
     await loadState();
-    if(IS_MASTER_SHEET){
-      const masterCapangas=loadMasterCapangas();
-      if(masterCapangas.length || !Array.isArray(state.capangas) || state.capangas.length===0) state.capangas=masterCapangas;
-    }
-
-    if(state.wizardDone){
-      renderSheet();
-    }else{
-      renderWizard();
-    }
-
-    if(ONLINE_ENABLED && state.wizardDone && !characterId){
-      try{
-        await createOnlineCharacter();
-      }catch(e){
-        console.warn('Não foi possível criar a ficha online:',e);
-      }
-    }
-
-    if(ONLINE_ENABLED) addOnlineControls();
-  }catch(e){
-    console.error('Erro ao abrir a ficha:',e);
+  } catch(e) {
+    console.warn('Não foi possível carregar a ficha online. Continuando em modo local.', e);
+  }
+  try {
+    if (state.wizardDone) renderSheet(); else renderWizard();
+  } catch(e) {
+    console.error('Erro ao abrir a ficha:', e);
     state = defaultState();
     renderWizard();
   }
+  if (ONLINE_ENABLED && state.wizardDone && !characterId) {
+    try { await createOnlineCharacter(); } catch(e) { console.warn('Não foi possível criar a ficha online:', e); }
+  }
+  if (ONLINE_ENABLED) addOnlineControls();
 }
-function setSheetReadOnly(flag){
-  readOnlySheet=flag;
-  const root=document.getElementById('app');
-  if(!root) return;
-  root.classList.toggle('sheet-read-only',flag);
-  root.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=flag);
-  root.querySelectorAll('button').forEach(btn=>{
-    if(btn.classList.contains('tab-btn')) return;
-    if(btn.id==='onlineShareBtn') return;
-    btn.disabled=flag;
-  });
-}
-
 function addOnlineControls(){
   if(document.getElementById('onlineShareBtn')) return;
-  const b=document.createElement('button');
-  b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
+  const b=document.createElement('button'); b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
   b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
   b.onclick=copyShareLink; document.body.appendChild(b);
 }
