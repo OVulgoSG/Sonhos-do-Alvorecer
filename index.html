@@ -510,7 +510,7 @@ function mergeState(loaded) {
   merged.attrs = {};
   Object.keys(base.attrs).forEach(k=>{
     merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{});
-    if(Number(merged.attrs[k].valor) < 1) merged.attrs[k].valor = 1;
+    if(Number(merged.attrs[k].valor) < 0) merged.attrs[k].valor = 0;
   });
   merged.haki = Object.assign({}, base.haki, loaded?.haki||{});
   // Haki avançado nunca pode existir sem o Haki normal correspondente.
@@ -806,20 +806,26 @@ function bindHakiStep(){
   document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=!!e.target.checked && !!state.haki.observacao; updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=!!e.target.checked && !!state.haki.armamento; updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=!!e.target.checked && !!state.haki.conquistador; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); scheduleSave();});
 }
 function updateHakiAdvancedAvailability(prefix){
-  const pairs=[['Observacao',!!state.haki.observacao],['Armamento',!!state.haki.armamento],['Conquistador',!!state.haki.conquistador]];
-  pairs.forEach(([name,ok])=>{
+  const pairs=[
+    ['Observacao','observacao','observacaoAvancada'],
+    ['Armamento','armamento','armamentoAvancado'],
+    ['Conquistador','conquistador','conquistadorAvancado']
+  ];
+  pairs.forEach(([name,normalKey,advancedKey])=>{
     const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
     const el=document.getElementById(id);
     if(!el) return;
-    // Haki Avançado só pode ser liberado depois que o Haki normal estiver ativo.
+    const ok=!!state.haki[normalKey];
+    if(!ok) state.haki[advancedKey]=false;
+    el.checked=!!state.haki[advancedKey];
     el.disabled=!ok;
     el.title = ok ? 'Haki Avançado liberado' : 'Libere o Haki normal primeiro';
-    if(!ok) el.checked=false;
+    el.closest('.sub-toggle')?.classList.toggle('locked',!ok);
   });
 }
 function updateHakiHints(prefix){
@@ -955,48 +961,15 @@ function wireNav(idx, key){
 async function finalizeCharacter(){
   const t=totals();
 
-  // Para uma ficha nova, a senha é definida antes da criação online.
-  // A senha nunca entra no state da ficha: ela é enviada somente para a
-  // função segura set_character_edit_password(), que armazena o hash no banco.
-  let newCharacterPassword = null;
-  if(ONLINE_ENABLED && !characterId){
-    const p1 = prompt('Crie uma senha de edição para esta ficha (mínimo 6 caracteres):');
-    if(p1 === null) return;
-    if(p1.length < 6){
-      alert('Use uma senha com pelo menos 6 caracteres.');
-      return;
-    }
-    const p2 = prompt('Digite a senha novamente para confirmar:');
-    if(p2 === null) return;
-    if(p1 !== p2){
-      alert('As senhas não conferem. A ficha não foi finalizada.');
-      return;
-    }
-    newCharacterPassword = p1;
-  }
-
   state.recursos.vida.atual=computeVidaFinal(t);
   state.recursos.energia.atual=computeEnergiaFinal(t);
   state.recursos.mental.atual=computeMente(t);
   state.wizardDone=true;
 
-  // A ficha nova ainda não tem characterId nem um cliente Supabase criado.
-  // Criamos primeiro a ficha para obter o UUID/token e, em seguida,
-  // cadastramos a senha de edição separadamente.
   if(ONLINE_ENABLED && !characterId){
     try{
       ensureSupabaseClient();
       await createOnlineCharacter();
-
-      if(newCharacterPassword){
-        const {error}=await supabaseClient.rpc('set_character_edit_password',{
-          p_id:characterId,
-          p_token:editToken,
-          p_password:newCharacterPassword
-        });
-        if(error) throw error;
-        alert('Ficha criada e senha de edição definida. Guarde essa senha com segurança.');
-      }
     }catch(e){
       console.error('Não foi possível criar/configurar a ficha online:',e);
       alert('A ficha foi finalizada, mas ocorreu um erro ao criar ou configurar a ficha online. Você ainda pode usar o botão "🔐 Senha de edição" para definir a senha.');
@@ -1015,11 +988,11 @@ function loadMasterCapangas(){
   try{
     const raw=localStorage.getItem(CAPANGAS_STORAGE_KEY);
     const parsed=JSON.parse(raw||'[]');
-    return Array.isArray(parsed) ? parsed : [];
+    return typeof normalizeLobbyCapangas==='function' ? normalizeLobbyCapangas(parsed) : (Array.isArray(parsed) ? parsed : []);
   }catch(e){ return []; }
 }
 function saveMasterCapangas(){
-  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(state.capangas||[])); }catch(e){}
+  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(typeof normalizeLobbyCapangas==='function' ? normalizeLobbyCapangas(state.capangas||[]) : (state.capangas||[]))); }catch(e){}
 }
 function buildCapangasPanel(){
   const groups=Array.isArray(state.capangas)?state.capangas:[];
@@ -1367,9 +1340,9 @@ function bindTabPoderes(){
   document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=!!e.target.checked && !!state.haki.observacao; updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=!!e.target.checked && !!state.haki.armamento; updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=!!e.target.checked && !!state.haki.conquistador; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); scheduleSave();});
+  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); scheduleSave();});
   bindFrutasStep();
   document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
 }
@@ -1566,52 +1539,100 @@ async function loadLobbyCharacters(){
   renderLobby(result);
 }
 
+function normalizeLobbyCapanga(c){
+  const quantidade=Math.max(1,Number(c?.quantidade)||1);
+  const vida=Math.max(0,Number(c?.vida)||0);
+  const energia=Math.max(0,Number(c?.energia)||0);
+  let membros=Array.isArray(c?.membros)?c.membros.map((m,i)=>({
+    id:m.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),
+    nome:String(m.nome||`${c?.nome||'Capanga'} ${i+1}`),
+    vida:Math.max(0,Number(m.vida ?? vida)||0),
+    energia:Math.max(0,Number(m.energia ?? energia)||0)
+  })) : [];
+  while(membros.length<quantidade) membros.push({id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome:`${c?.nome||'Capanga'} ${membros.length+1}`,vida,energia});
+  if(membros.length>quantidade) membros=membros.slice(0,quantidade);
+  return {id:c?.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),nome:String(c?.nome||'Capangas'),vida,energia,quantidade,membros,visivel: c?.visivel!==false};
+}
+function normalizeLobbyCapangas(groups){ return (Array.isArray(groups)?groups:[]).map(normalizeLobbyCapanga); }
 function getLobbyCapangas(){
-  try{
-    const parsed=JSON.parse(localStorage.getItem(CAPANGAS_STORAGE_KEY)||'[]');
-    return Array.isArray(parsed)?parsed:[];
-  }catch(e){ return []; }
+  try{return normalizeLobbyCapangas(JSON.parse(localStorage.getItem(CAPANGAS_STORAGE_KEY)||'[]'));}catch(e){return [];}
 }
 function saveLobbyCapangas(groups){
-  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(groups)); }catch(e){}
+  const normalized=normalizeLobbyCapangas(groups);
+  try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(normalized));}catch(e){}
+  broadcastLobbyCapangas(normalized);
+}
+let lobbyCapangaChannel=null;
+let lobbyCapangaReady=false;
+function broadcastLobbyCapangas(groups){
+  if(!LOBBY_ADMIN_TOKEN || !lobbyCapangaChannel || !lobbyCapangaReady) return;
+  lobbyCapangaChannel.send({type:'broadcast',event:'capangas_state',payload:{groups:normalizeLobbyCapangas(groups)}}).catch(()=>{});
+}
+function buildLobbyCapangaMember(m,isAdmin){
+  return `<div class="lobby-capanga-member">
+    <div class="lobby-capanga-member-name">${escapeHtml(m.nome)}</div>
+    ${isAdmin?`<label>❤️ <input type="number" min="0" value="${Number(m.vida)||0}" data-capanga-member-vida="${escapeHtml(m.id)}"></label><label>⚡ <input type="number" min="0" value="${Number(m.energia)||0}" data-capanga-member-energia="${escapeHtml(m.id)}"></label>`:`<div>❤️ <strong>${Number(m.vida)||0}</strong></div><div>⚡ <strong>${Number(m.energia)||0}</strong></div>`}
+  </div>`;
 }
 function buildLobbyCapangaCard(c,isAdmin){
+  const members=Array.isArray(c.membros)?c.membros:[];
+  if(!isAdmin && c.visivel===false) return '';
   return `<div class="lobby-capanga-card">
-    <div class="lobby-capanga-title">⚔️ ${escapeHtml(c.nome||'Capangas')}</div>
-    <div class="lobby-capanga-stats">
-      <div>❤️ Vida<strong>${Number(c.vida)||0}</strong></div>
-      <div>⚡ Energia<strong>${Number(c.energia)||0}</strong></div>
-      <div>👥 Quantidade<strong>${Number(c.quantidade)||1}</strong></div>
-    </div>
+    <div class="lobby-capanga-title">⚔️ ${escapeHtml(c.nome||'Capangas')} <span>(${members.length})</span></div>
+    <div class="lobby-capanga-stats"><div>❤️ Vida base<strong>${Number(c.vida)||0}</strong></div><div>⚡ Energia base<strong>${Number(c.energia)||0}</strong></div><div>👥 Quantidade<strong>${members.length}</strong></div></div>
+    ${isAdmin?`<label class="lobby-capanga-visibility"><input type="checkbox" ${c.visivel!==false?'checked':''} data-toggle-capanga-visibility="${escapeHtml(c.id)}"> Mostrar para jogadores</label>`:''}
+    <details ${isAdmin?'open':''} class="lobby-capanga-details"><summary>${isAdmin?'Ver e editar indivíduos':'Ver indivíduos'}</summary><div class="lobby-capanga-members">${members.map(m=>buildLobbyCapangaMember(m,isAdmin)).join('')}</div></details>
     ${isAdmin?`<button type="button" class="lobby-capanga-remove" data-remove-lobby-capanga="${escapeHtml(c.id)}">Remover grupo</button>`:''}
   </div>`;
 }
-function renderLobbyCapangas(){
-  const list=document.getElementById('lobbyCapangasList');
-  if(!list) return;
-  const groups=getLobbyCapangas();
+function renderLobbyCapangas(groupsOverride=null){
+  const list=document.getElementById('lobbyCapangasList'); if(!list) return;
+  const groups=normalizeLobbyCapangas(groupsOverride??getLobbyCapangas());
   const isAdmin=!!LOBBY_ADMIN_TOKEN;
-  list.innerHTML=groups.length?groups.map(c=>buildLobbyCapangaCard(c,isAdmin)).join(''):'<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>';
+  const cards=groups.map(c=>buildLobbyCapangaCard(c,isAdmin)).filter(Boolean).join('');
+  list.innerHTML=cards||'<div class="empty-hint">Nenhum grupo de capangas disponível.</div>';
   if(isAdmin){
-    list.querySelectorAll('[data-remove-lobby-capanga]').forEach(btn=>btn.onclick=()=>{
-      saveLobbyCapangas(getLobbyCapangas().filter(c=>c.id!==btn.dataset.removeLobbyCapanga));
-      renderLobbyCapangas();
+    list.querySelectorAll('[data-remove-lobby-capanga]').forEach(btn=>btn.onclick=()=>saveLobbyCapangas(groups.filter(c=>c.id!==btn.dataset.removeLobbyCapanga)));
+    list.querySelectorAll('[data-toggle-capanga-visibility]').forEach(cb=>cb.onchange=()=>{
+      const next=groups.map(c=>c.id===cb.dataset.toggleCapangaVisibility?{...c,visivel:cb.checked}:c); saveLobbyCapangas(next); renderLobbyCapangas(next);
+    });
+    list.querySelectorAll('[data-capanga-member-vida],[data-capanga-member-energia]').forEach(inp=>inp.onchange=()=>{
+      const id=inp.dataset.capangaMemberVida||inp.dataset.capangaMemberEnergia;
+      const field=inp.dataset.capangaMemberVida?'vida':'energia';
+      const next=groups.map(c=>({...c,membros:c.membros.map(m=>m.id===id?{...m,[field]:Math.max(0,Number(inp.value)||0)}:m)}));
+      saveLobbyCapangas(next); renderLobbyCapangas(next);
     });
   }
 }
 function addLobbyCapanga(){
   if(!LOBBY_ADMIN_TOKEN) return;
-  const nome=document.getElementById('lobbyCapangaNome')?.value.trim();
-  if(!nome) return alert('Digite um nome para o grupo.');
+  const nome=document.getElementById('lobbyCapangaNome')?.value.trim(); if(!nome) return alert('Digite um nome para o grupo.');
   const vida=Math.max(0,Number(document.getElementById('lobbyCapangaVida')?.value)||0);
   const energia=Math.max(0,Number(document.getElementById('lobbyCapangaEnergia')?.value)||0);
   const quantidade=Math.max(1,Number(document.getElementById('lobbyCapangaQuantidade')?.value)||1);
-  const groups=getLobbyCapangas();
-  groups.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),nome,vida,energia,quantidade});
-  saveLobbyCapangas(groups);
-  document.getElementById('lobbyCapangaNome').value='';
-  renderLobbyCapangas();
+  const membros=Array.from({length:quantidade},(_,i)=>({id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome:`${nome} ${i+1}`,vida,energia}));
+  saveLobbyCapangas([...getLobbyCapangas(),{id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome,vida,energia,quantidade,membros,visivel:true}]);
+  document.getElementById('lobbyCapangaNome').value=''; renderLobbyCapangas();
 }
+function subscribeLobbyCapangas(){
+  if(lobbyCapangaChannel) supabaseClient.removeChannel(lobbyCapangaChannel);
+  lobbyCapangaReady=false;
+  lobbyCapangaChannel=supabaseClient.channel('sonhos-lobby-capangas');
+  lobbyCapangaChannel.on('broadcast',{event:'capangas_state'},({payload})=>{
+    const groups=normalizeLobbyCapangas(payload?.groups||[]);
+    try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(groups));}catch(e){}
+    renderLobbyCapangas(groups);
+  });
+  lobbyCapangaChannel.on('broadcast',{event:'capangas_request'},()=>{if(LOBBY_ADMIN_TOKEN) broadcastLobbyCapangas(getLobbyCapangas());});
+  lobbyCapangaChannel.subscribe(status=>{
+    if(status==='SUBSCRIBED'){
+      lobbyCapangaReady=true;
+      if(LOBBY_ADMIN_TOKEN) broadcastLobbyCapangas(getLobbyCapangas());
+      else lobbyCapangaChannel.send({type:'broadcast',event:'capangas_request',payload:{}}).catch(()=>{});
+    }
+  });
+}
+
 function renderLobby(characters){
   const app=document.getElementById('app');
   const isAdmin=!!LOBBY_ADMIN_TOKEN;
@@ -1631,7 +1652,7 @@ function renderLobby(characters){
 
       <div class="lobby-capangas">
         <h2>⚔️ Capangas</h2>
-        <p class="hint-text">${isAdmin ? 'Somente o mestre pode adicionar ou remover grupos.' : 'Grupos de capangas da cena atual.'}</p>
+        <p class="hint-text">${isAdmin ? 'Somente o mestre pode adicionar, editar, remover e decidir quais grupos os jogadores podem ver.' : 'Capangas liberados pelo mestre para os jogadores.'}</p>
         ${isAdmin?`<div class="lobby-capangas-form">
           <div class="field"><label>Grupo</label><input id="lobbyCapangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
           <div class="field"><label>Vida</label><input id="lobbyCapangaVida" type="number" min="0" value="10"></div>
@@ -1737,6 +1758,7 @@ async function initLobby(){
 
     await loadLobbyCharacters();
     subscribeLobbyRealtime();
+    subscribeLobbyCapangas();
   }catch(e){
     console.error(e);
 
@@ -1784,37 +1806,6 @@ async function init(){
     renderWizard();
   }
 }
-async function setEditPassword(){
-  if(!characterId || !editToken) return alert('Você precisa desbloquear a ficha primeiro.');
-  const p1=prompt('Crie uma senha para editar esta ficha em outro dispositivo:');
-  if(p1===null) return;
-  if(p1.length < 6) return alert('Use uma senha com pelo menos 6 caracteres.');
-  const p2=prompt('Digite a senha novamente:');
-  if(p1!==p2) return alert('As senhas não conferem.');
-  try{
-    const {error}=await supabaseClient.rpc('set_character_edit_password',{p_id:characterId,p_token:editToken,p_password:p1});
-    if(error) throw error;
-    alert('Senha de edição definida. Guarde-a com segurança.');
-  }catch(e){ console.error(e); alert('Não foi possível definir a senha de edição.'); }
-}
-
-async function unlockSheet(){
-  if(!characterId) return;
-  const password=prompt('Digite a senha de edição desta ficha:');
-  if(password===null) return;
-  try{
-    const {data,error}=await supabaseClient.rpc('unlock_character',{p_id:characterId,p_password:password});
-    if(error) throw error;
-    editToken=data;
-    localStorage.setItem('sonhos_ficha_id',characterId);
-    localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
-    readOnlySheet=false;
-    setSheetReadOnly(false);
-    document.getElementById('unlockSheetBtn')?.remove();
-    alert('Ficha desbloqueada.');
-  }catch(e){ console.error(e); alert('Senha incorreta ou ficha sem senha de edição.'); }
-}
-
 function setSheetReadOnly(flag){
   readOnlySheet=flag;
   const root=document.getElementById('app');
@@ -1823,28 +1814,17 @@ function setSheetReadOnly(flag){
   root.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=flag);
   root.querySelectorAll('button').forEach(btn=>{
     if(btn.classList.contains('tab-btn')) return;
-    if(btn.id==='unlockSheetBtn' || btn.id==='onlineShareBtn' || btn.id==='editPasswordBtn') return;
+    if(btn.id==='onlineShareBtn') return;
     btn.disabled=flag;
   });
 }
 
 function addOnlineControls(){
   if(document.getElementById('onlineShareBtn')) return;
-  const b=document.createElement('button'); b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
+  const b=document.createElement('button');
+  b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
   b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
   b.onclick=copyShareLink; document.body.appendChild(b);
-  if(characterId && !IS_MASTER_SHEET){
-    const p=document.createElement('button'); p.id='editPasswordBtn'; p.type='button'; p.className='btn btn-ghost'; p.textContent='🔐 Senha de edição';
-    p.style.cssText='position:fixed;right:18px;bottom:64px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
-    p.onclick=setEditPassword; document.body.appendChild(p);
-    if(!editToken && !IS_MASTER_SHEET){
-      const u=document.createElement('button'); u.id='unlockSheetBtn'; u.type='button'; u.className='btn btn-primary'; u.textContent='🔓 Editar ficha';
-      u.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:10000;box-shadow:0 8px 24px rgba(0,0,0,.35);';
-      u.onclick=unlockSheet; document.body.appendChild(u);
-      readOnlySheet=true;
-      setSheetReadOnly(true);
-    }
-  }
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
