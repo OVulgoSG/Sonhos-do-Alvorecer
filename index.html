@@ -765,7 +765,7 @@ function mostrarAvisoEasterEgg(mensagem){
   window.__easterEggAvisoTimer=setTimeout(()=>el.remove(),4500);
 }
 function verificarEasterEggNome(){
-  const nome=normalizarNomeEasterEgg(state.identidade.nome);
+  const nome=normalizarNomeEasterEgg(state.identidade.jogador);
   const idade=Number(String(state.identidade.idade||'').replace(/[^0-9.-]/g,''));
 
   if(nome.startsWith('andr')) return {mensagem:'Você já ganha buff em trair.', bloqueado:false};
