@@ -464,15 +464,14 @@ function syncCombatenteRecursos(profissaoAnterior){
   const ehCombatente = state.identidade.profissao === 'Combatente (não tem Profissão)';
   if (eraCombatente === ehCombatente) return;
 
-  const t=totals();
-  const vidaAnterior=computeVidaFinal(t) + (eraCombatente ? 0 : 15);
-  const menteAnterior=computeMente(t) + (eraCombatente ? 0 : -10);
-  const vidaNova=computeVidaFinal(t);
-  const menteNova=computeMente(t);
+  // A troca de profissão altera diretamente os recursos atuais, além do máximo.
+  // Entrando em Combatente: Vida +15 / Mente -10.
+  // Saindo de Combatente: desfaz exatamente esses modificadores.
+  const deltaVida = ehCombatente ? 15 : -15;
+  const deltaMente = ehCombatente ? -10 : 10;
 
-  // Se o recurso estava cheio, mantém-no cheio após a troca.
-  if ((Number(state.recursos.vida.atual)||0) >= vidaAnterior) state.recursos.vida.atual=vidaNova;
-  if ((Number(state.recursos.mental.atual)||0) >= menteAnterior) state.recursos.mental.atual=menteNova;
+  state.recursos.vida.atual = Math.max(0, (Number(state.recursos.vida.atual)||0) + deltaVida);
+  state.recursos.mental.atual = Math.max(0, (Number(state.recursos.mental.atual)||0) + deltaMente);
 }
 function validaRaca(v){ return true; }
 
@@ -822,7 +821,19 @@ function bindId2(){
   document.getElementById('inpIdade').addEventListener('input', e=>{state.identidade.idade=e.target.value; scheduleSave();});
   document.getElementById('inpExpectativa').addEventListener('input', e=>{state.identidade.expectativa=e.target.value; scheduleSave();});
   document.getElementById('inpRaca').addEventListener('input', e=>{state.identidade.raca=e.target.value; scheduleSave();});
-  document.getElementById('inpProfissao').addEventListener('change', e=>{ const anterior=state.identidade.profissao; state.identidade.profissao=e.target.value; syncCombatenteRecursos(anterior); syncFocoMaximo(); renderFocoPips(); updateResourceDisplays(); scheduleSave(); });
+  document.getElementById('inpProfissao').addEventListener('change', e=>{
+    const anterior=state.identidade.profissao;
+    state.identidade.profissao=e.target.value;
+    syncCombatenteRecursos(anterior);
+    syncFocoMaximo();
+    renderFocoPips();
+    updateResourceDisplays();
+    const vidaAtual=document.getElementById('vidaAtual');
+    const mentalAtual=document.getElementById('mentalAtual');
+    if (vidaAtual) vidaAtual.value=state.recursos.vida.atual;
+    if (mentalAtual) mentalAtual.value=state.recursos.mental.atual;
+    scheduleSave();
+  });
 }
 
 function buildId3() {
@@ -1312,8 +1323,19 @@ function renderSheetHeader(){
   ['Nome','Jogador','Idade','Expectativa','Raca','Profissao','Talento','Sonho'].forEach(field=>{
     const stateKey = field.charAt(0).toLowerCase()+field.slice(1);
     document.getElementById('hdr'+field).addEventListener('input', e=>{
+      if (field==='Profissao') {
+        const anterior=state.identidade.profissao;
+        state.identidade.profissao=e.target.value;
+        syncCombatenteRecursos(anterior);
+        syncFocoMaximo();
+        renderFocoPips();
+        updateResourceDisplays();
+        document.getElementById('vidaAtual').value=state.recursos.vida.atual;
+        document.getElementById('mentalAtual').value=state.recursos.mental.atual;
+        scheduleSave();
+        return;
+      }
       state.identidade[stateKey]=e.target.value;
-      if (field==='Profissao') { const anterior=state.identidade.profissao; state.identidade.profissao=e.target.value; syncCombatenteRecursos(anterior); syncFocoMaximo(); renderFocoPips(); updateResourceDisplays(); return; }
       scheduleSave();
     });
   });
