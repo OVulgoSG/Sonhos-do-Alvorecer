@@ -300,6 +300,16 @@ textarea { resize:vertical; line-height:1.6; }
     flex-direction:column;
   }
 }
+
+.capangas-panel{background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;margin-bottom:18px;box-shadow:var(--shadow-lg);}
+.capangas-panel h3{color:var(--gold-bright);font-size:1.05rem;margin-bottom:6px;}
+.capangas-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:14px;}
+.capangas-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.capanga-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:9px;}
+.capanga-row .capanga-count{font-weight:700;text-align:center;}
+.capanga-remove{background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;height:36px;padding:0 10px;}
+.capanga-remove:hover{border-color:var(--danger);}
+@media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -360,7 +370,7 @@ const STEP_DEFS = [
 /* ===== Estado ===== */
 function defaultState() {
   const attrs = {};
-  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:0, mod:0});
+  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:1, mod:0});
   return {
     wizardStep:0, wizardDone:false, activeTab:'base',
     identidade:{nome:'',jogador:'',idade:'',expectativa:'',raca:'',profissao:'Combatente (não tem Profissão)',talento:'',sonho:''},
@@ -390,7 +400,8 @@ notas:'',
     poderes:'',
     iniciativaBonus:0,
     formulaConfig: defaultFormulaConfig(),
-    pontoSonho:false
+    pontoSonho:false,
+    capangas:[]
   };
 }
 
@@ -486,8 +497,15 @@ function mergeState(loaded) {
   const merged = Object.assign({}, base, loaded || {});
   merged.identidade = Object.assign({}, base.identidade, loaded?.identidade||{});
   merged.attrs = {};
-  Object.keys(base.attrs).forEach(k=>{ merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{}); });
+  Object.keys(base.attrs).forEach(k=>{
+    merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{});
+    if(Number(merged.attrs[k].valor) < 1) merged.attrs[k].valor = 1;
+  });
   merged.haki = Object.assign({}, base.haki, loaded?.haki||{});
+  // Haki avançado nunca pode existir sem o Haki normal correspondente.
+  if(!merged.haki.observacao) merged.haki.observacaoAvancada=false;
+  if(!merged.haki.armamento) merged.haki.armamentoAvancado=false;
+  if(!merged.haki.conquistador) merged.haki.conquistadorAvancado=false;
   merged.frutas = base.frutas.map((f,i)=> Object.assign({}, f, (loaded?.frutas&&loaded.frutas[i])||{}));
   merged.recursos = {
     vida:Object.assign({},base.recursos.vida,loaded?.recursos?.vida||{}),
@@ -503,6 +521,7 @@ function mergeState(loaded) {
   loaded?.lobby||{}
 );
   merged.itens=loaded?.itens||[];
+  merged.capangas=Array.isArray(loaded?.capangas) ? loaded.capangas.map(c=>({id:c.id||crypto.randomUUID?.()||String(Date.now()+Math.random()),nome:String(c.nome||'Capangas'),vida:Math.max(0,Number(c.vida)||0),energia:Math.max(0,Number(c.energia)||0),quantidade:Math.max(1,Number(c.quantidade)||1)})) : [];
   return merged;
 }
 
@@ -730,7 +749,7 @@ function buildAttrStep(group){
   const rows = items.map(([k,v])=>`
     <div class="attr-row" data-attr="${k}">
       <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
-      <input type="number" class="attr-valor" data-attr="${k}" min="0">
+      <input type="number" class="attr-valor" data-attr="${k}" min="1">
       <input type="number" class="attr-mod" data-attr="${k}">
     </div>`).join('');
   return `
@@ -776,9 +795,9 @@ function bindHakiStep(){
   document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=e.target.checked; scheduleSave();});
-  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=e.target.checked; scheduleSave();});
-  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=e.target.checked; scheduleSave();});
+  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=!!e.target.checked && !!state.haki.observacao; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=!!e.target.checked && !!state.haki.armamento; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=!!e.target.checked && !!state.haki.conquistador; updateHakiAdvancedAvailability(''); scheduleSave();});
 }
 function updateHakiAdvancedAvailability(prefix){
   const pairs=[['Observacao',!!state.haki.observacao],['Armamento',!!state.haki.armamento],['Conquistador',!!state.haki.conquistador]];
@@ -977,12 +996,72 @@ async function finalizeCharacter(){
 }
 
 /* ===== Ficha final ===== */
+
+const CAPANGAS_STORAGE_KEY='sonhos_capangas_mestre';
+function loadMasterCapangas(){
+  try{
+    const raw=localStorage.getItem(CAPANGAS_STORAGE_KEY);
+    const parsed=JSON.parse(raw||'[]');
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(e){ return []; }
+}
+function saveMasterCapangas(){
+  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(state.capangas||[])); }catch(e){}
+}
+function buildCapangasPanel(){
+  const groups=Array.isArray(state.capangas)?state.capangas:[];
+  return `<div class="capangas-panel" id="capangasPanel">
+    <h3>⚔️ Capangas</h3>
+    <p class="hint-text">Ferramenta do mestre. Os grupos ficam salvos neste navegador e não exigem nenhuma alteração na estrutura do Supabase.</p>
+    <div class="capangas-form">
+      <div class="field"><label>Grupo</label><input id="capangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
+      <div class="field"><label>Vida</label><input id="capangaVida" type="number" min="0" value="10"></div>
+      <div class="field"><label>Energia</label><input id="capangaEnergia" type="number" min="0" value="5"></div>
+      <div class="field"><label>Quantidade</label><input id="capangaQuantidade" type="number" min="1" value="1"></div>
+      <button type="button" class="btn btn-primary" id="addCapangaBtn">Adicionar</button>
+    </div>
+    <div class="capangas-list" id="capangasList">${groups.length?groups.map(buildCapangaRow).join(''):'<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>'}</div>
+  </div>`;
+}
+function buildCapangaRow(c){
+  return `<div class="capanga-row" data-capanga-id="${escapeHtml(c.id)}">
+    <div class="capanga-name"><strong>${escapeHtml(c.nome||'Capangas')}</strong></div>
+    <div>❤️ Vida <strong>${Number(c.vida)||0}</strong></div>
+    <div>⚡ Energia <strong>${Number(c.energia)||0}</strong></div>
+    <div>👥 <span class="capanga-count">${Number(c.quantidade)||1}</span></div>
+    <button type="button" class="capanga-remove" data-remove-capanga="${escapeHtml(c.id)}">Remover</button>
+  </div>`;
+}
+function renderCapangasPanel(){
+  const list=document.getElementById('capangasList'); if(!list) return;
+  list.innerHTML=(state.capangas||[]).length ? state.capangas.map(buildCapangaRow).join('') : '<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>';
+  list.querySelectorAll('[data-remove-capanga]').forEach(btn=>btn.onclick=()=>{
+    state.capangas=state.capangas.filter(c=>c.id!==btn.dataset.removeCapanga);
+    saveMasterCapangas(); renderCapangasPanel();
+  });
+}
+function bindCapangasPanel(){
+  const btn=document.getElementById('addCapangaBtn'); if(!btn) return;
+  btn.onclick=()=>{
+    const nome=document.getElementById('capangaNome').value.trim();
+    if(!nome) return alert('Digite um nome para o grupo.');
+    const vida=Math.max(0,Number(document.getElementById('capangaVida').value)||0);
+    const energia=Math.max(0,Number(document.getElementById('capangaEnergia').value)||0);
+    const quantidade=Math.max(1,Number(document.getElementById('capangaQuantidade').value)||1);
+    state.capangas.push({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())),nome,vida,energia,quantidade});
+    saveMasterCapangas(); renderCapangasPanel();
+    document.getElementById('capangaNome').value='';
+  };
+  renderCapangasPanel();
+}
+
 function renderSheet(){
   const app=document.getElementById('app');
   app.innerHTML = `
     <div class="app-shell sheet-shell">
       <div class="mini-logo">Sonhos do Alvorecer</div>
       <div class="sheet-header" id="sheetHeader"></div>
+      ${IS_MASTER_SHEET ? buildCapangasPanel() : ''}
       <div class="tab-bar" id="tabBar">
         <button type="button" class="tab-btn" data-tab="base">📜 Ficha Base</button>
         <button type="button" class="tab-btn" data-tab="poderes">🔥 Poderes</button>
@@ -999,6 +1078,7 @@ function renderSheet(){
       </div>
     </div>`;
   renderSheetHeader();
+  if(IS_MASTER_SHEET) bindCapangasPanel();
   bindTabs();
   switchTab(state.activeTab||'base');
   document.getElementById('btnReset').onclick = confirmReset;
@@ -1093,7 +1173,7 @@ function buildTabBase(){
   const attrRows=(group)=>Object.entries(ATTR_META).filter(([k,v])=>v.group===group).map(([k,v])=>`
     <div class="attr-row" data-attr="${k}">
       <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
-      <input type="number" class="attr-valor" data-attr="${k}" min="0">
+      <input type="number" class="attr-valor" data-attr="${k}" min="1">
       <input type="number" class="attr-mod" data-attr="${k}">
     </div>`).join('');
   return `
@@ -1274,9 +1354,9 @@ function bindTabPoderes(){
   document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=e.target.checked; scheduleSave();});
-  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=e.target.checked; scheduleSave();});
-  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=e.target.checked; scheduleSave();});
+  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{state.haki.observacaoAvancada=!!e.target.checked && !!state.haki.observacao; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{state.haki.armamentoAvancado=!!e.target.checked && !!state.haki.armamento; updateHakiAdvancedAvailability(''); scheduleSave();});
+  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{state.haki.conquistadorAvancado=!!e.target.checked && !!state.haki.conquistador; updateHakiAdvancedAvailability(''); scheduleSave();});
   bindFrutasStep();
   document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
 }
@@ -1598,6 +1678,10 @@ async function init(){
 
   try{
     await loadState();
+    if(IS_MASTER_SHEET){
+      const masterCapangas=loadMasterCapangas();
+      if(masterCapangas.length || !Array.isArray(state.capangas) || state.capangas.length===0) state.capangas=masterCapangas;
+    }
 
     if(state.wizardDone){
       renderSheet();
