@@ -326,6 +326,8 @@ textarea { resize:vertical; line-height:1.6; }
 .lobby-privacy-grid label{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:10px;border-radius:var(--radius-md);}
 @media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
 @media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
+
+.sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed}.sub-toggle.locked span{color:#888}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -808,6 +810,7 @@ function fillHakiStep(){
   updateHakiHints('');
 }
 function bindHakiStep(){
+  bindHakiAdvancedGuards();
   document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
   document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
@@ -822,17 +825,33 @@ function updateHakiAdvancedAvailability(prefix){
     ['Conquistador','conquistador','conquistadorAvancado']
   ];
   pairs.forEach(([name,normalKey,advancedKey])=>{
-    const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
+    const id = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancado';
     const el=document.getElementById(id);
     if(!el) return;
-    const ok=!!state.haki[normalKey];
+    const ok=state.haki[normalKey]===true;
     if(!ok) state.haki[advancedKey]=false;
-    el.checked=!!state.haki[advancedKey];
+    el.checked=ok && state.haki[advancedKey]===true;
     el.disabled=!ok;
-    el.title = ok ? 'Haki Avançado liberado' : 'Libere o Haki normal primeiro';
-    el.closest('.sub-toggle')?.classList.toggle('locked',!ok);
+    el.setAttribute('aria-disabled',String(!ok));
+    el.title=ok?'Haki Avançado liberado':'Libere o Haki normal primeiro';
+    const row=el.closest('.sub-toggle');
+    if(row){ row.classList.toggle('locked',!ok); row.setAttribute('aria-disabled',String(!ok)); }
   });
 }
+function bindHakiAdvancedGuards(){
+  document.querySelectorAll('.sub-toggle input[type="checkbox"]').forEach(el=>{
+    const row=el.closest('.sub-toggle');
+    if(row && !row.dataset.guardBound){
+      row.dataset.guardBound='1';
+      row.addEventListener('click',e=>{
+        if(el.disabled){ e.preventDefault(); e.stopPropagation(); }
+      },true);
+    }
+  });
+  updateHakiAdvancedAvailability('');
+  updateHakiAdvancedAvailability('p');
+}
+
 function updateHakiHints(prefix){
   const t=totals();
   const items=[
@@ -1363,6 +1382,7 @@ function fillTabPoderes(){
   document.getElementById('poderesTextarea').value=state.poderes;
 }
 function bindTabPoderes(){
+  bindHakiAdvancedGuards();
   document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
@@ -1525,7 +1545,7 @@ function buildLobbyCard(character){
       <div class="lobby-portrait">${foto}</div>
       <div class="lobby-info">
         <div class="lobby-name">${escapeHtml(nome)}</div>
-        ${pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
+        ${lobby.mostrarNome && pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
         ${(pub.profissao || pub.raca) ? `<div class="lobby-resource"><span>${escapeHtml([pub.profissao,pub.raca].filter(Boolean).join(' • '))}</span></div>` : ''}
         <div class="lobby-resource"><span>❤️ Vida</span><strong>${vida}</strong></div>
         <div class="lobby-resource"><span>⚡ Energia</span><strong>${energia}</strong></div>
@@ -1547,25 +1567,28 @@ async function loadLobbyCharacters(){
     .select('id,character_id,active,show_name,show_photo,show_health,show_energy,show_mental,public_data')
     .eq('active',true)
     .order('created_at',{ascending:true});
-
   if(lobbyError) throw lobbyError;
 
-  const result=(lobbyRows||[]).map(row=>{
+  const result=await Promise.all((lobbyRows||[]).map(async row=>{
     const pub=row.public_data||{};
-    const privacy=pub.lobby||{};
+    let fichaLobby={};
+    try{
+      const {data:fullState}=await supabaseClient.rpc('get_character_state',{p_id:row.character_id});
+      fichaLobby=fullState?.lobby||{};
+    }catch(e){}
+    const privacy={...fichaLobby,...(pub.lobby||{})};
     return {
       id:row.character_id,
       public_data:pub,
       lobby:{
-        mostrarNome:privacy.mostrarNome ?? row.show_name ?? false,
-        mostrarFoto:privacy.mostrarFoto ?? row.show_photo ?? true,
-        mostrarVida:privacy.mostrarVida ?? row.show_health ?? false,
-        mostrarEnergia:privacy.mostrarEnergia ?? row.show_energy ?? false,
-        mostrarMental:privacy.mostrarMental ?? row.show_mental ?? false
+        mostrarNome:privacy.mostrarNome===true,
+        mostrarFoto:privacy.mostrarFoto===true,
+        mostrarVida:privacy.mostrarVida===true,
+        mostrarEnergia:privacy.mostrarEnergia===true,
+        mostrarMental:privacy.mostrarMental===true
       }
     };
-  });
-
+  }));
   renderLobby(result);
 }
 
