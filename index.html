@@ -330,7 +330,7 @@ textarea { resize:vertical; line-height:1.6; }
 @media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
 @media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
 
-.sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed}.sub-toggle.locked span{color:#888}
+.sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed;opacity:.45;filter:grayscale(1);pointer-events:none}.sub-toggle.locked span{color:#888}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -866,11 +866,12 @@ function syncHakiDependencies(){
   ];
 
   pairs.forEach(([name, normalKey, advancedKey])=>{
-    // O estado é a fonte de verdade. Se o normal não estiver marcado,
-    // o avançado SEMPRE é removido do estado.
-    if(state.haki[normalKey] !== true){
-      state.haki[normalKey]=false;
-      state.haki[advancedKey]=false;
+    const unlocked = state.haki[normalKey] === true;
+
+    // Haki avançado só pode existir quando o Haki normal estiver marcado.
+    if(!unlocked){
+      state.haki[normalKey] = false;
+      state.haki[advancedKey] = false;
     }
 
     ['', 'p'].forEach(prefix=>{
@@ -878,24 +879,24 @@ function syncHakiDependencies(){
       const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
       if(!normal || !adv) return;
 
-      const unlocked=state.haki[normalKey] === true;
-      normal.checked=unlocked;
-      adv.disabled=!unlocked;
-      adv.checked=unlocked && state.haki[advancedKey] === true;
+      normal.checked = unlocked;
+      adv.disabled = !unlocked;
+      adv.checked = unlocked && state.haki[advancedKey] === true;
       adv.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
-      adv.title=unlocked ? 'Haki Avançado liberado' : 'Marque o Haki normal primeiro';
+      adv.title = unlocked ? 'Haki Avançado liberado' : 'Marque o Haki normal primeiro';
 
       const row=adv.closest('.sub-toggle');
       if(row){
         row.classList.toggle('locked', !unlocked);
         row.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
-        row.style.opacity=unlocked ? '1' : '0.45';
-        row.style.filter=unlocked ? 'none' : 'grayscale(1)';
-        row.style.cursor=unlocked ? '' : 'not-allowed';
+        row.style.opacity = unlocked ? '1' : '.45';
+        row.style.filter = unlocked ? 'none' : 'grayscale(1)';
+        row.style.cursor = unlocked ? '' : 'not-allowed';
+
         const span=row.querySelector('span');
         if(span){
-          span.style.opacity=unlocked ? '1' : '0.42';
-          span.style.color=unlocked ? '' : '#888';
+          span.style.opacity = unlocked ? '1' : '.42';
+          span.style.color = unlocked ? '' : '#888';
         }
       }
     });
@@ -905,12 +906,9 @@ function syncHakiDependencies(){
 function bindHakiControls(){
   const pairs=[
     ['Observacao','observacao','observacaoAvancada'],
-    ['Armamento','armamento','armamentoAvancada'],
-    ['Conquistador','conquistador','conquistadorAvancada']
+    ['Armamento','armamento','armamentoAvancado'],
+    ['Conquistador','conquistador','conquistadorAvancado']
   ];
-  // Corrige a chave digitada acima sem depender de nomes diferentes.
-  pairs[1][2]='armamentoAvancado';
-  pairs[2][2]='conquistadorAvancado';
 
   ['', 'p'].forEach(prefix=>{
     pairs.forEach(([name,normalKey,advancedKey])=>{
@@ -919,29 +917,27 @@ function bindHakiControls(){
       if(!normal || !adv) return;
 
       normal.addEventListener('change',()=>{
-        state.haki[normalKey]=normal.checked===true;
-        if(!state.haki[normalKey]) state.haki[advancedKey]=false;
+        state.haki[normalKey] = normal.checked === true;
+        if(!state.haki[normalKey]) state.haki[advancedKey] = false;
         syncHakiDependencies();
         scheduleSave();
       });
 
       adv.addEventListener('change',()=>{
-        // Mesmo que algum navegador/label tente disparar o evento,
-        // nunca permita avançado sem o normal.
         if(!state.haki[normalKey]){
-          state.haki[advancedKey]=false;
+          state.haki[advancedKey] = false;
         }else{
-          state.haki[advancedKey]=adv.checked===true;
+          state.haki[advancedKey] = adv.checked === true;
         }
         syncHakiDependencies();
         scheduleSave();
       });
 
       adv.addEventListener('click',e=>{
-        if(!state.haki[normalKey]){
+        if(adv.disabled || !state.haki[normalKey]){
           e.preventDefault();
           e.stopPropagation();
-          state.haki[advancedKey]=false;
+          state.haki[advancedKey] = false;
           syncHakiDependencies();
         }
       });
@@ -962,6 +958,7 @@ function updateHakiAdvancedAvailability(prefix){
 function bindHakiAdvancedGuards(){
   syncHakiDependencies();
 }
+
 
 function updateHakiHints(prefix){
   const t=totals();
@@ -1516,15 +1513,14 @@ function fillTabPoderes(){
   document.getElementById('poderesTextarea').value=state.poderes;
 }
 function bindTabPoderes(){
+  // O controle de dependência do Haki fica centralizado em bindHakiControls().
+  // Evita listeners duplicados que poderiam alterar o estado dos avançados.
   bindHakiControls();
-  document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
-  document.getElementById('pChkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   bindFrutasStep();
-  document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
+  document.getElementById('poderesTextarea').addEventListener('input', e=>{
+    state.poderes=e.target.value;
+    scheduleSave();
+  });
 }
 
 function buildTabNotas(){ return `<div class="panel"><h3>Notas de História/Personagem</h3><textarea id="notasTextarea" rows="14" placeholder="${LOREM_IPSUM}"></textarea></div>`; }
