@@ -844,9 +844,9 @@ function bindAttrStep(){
 
 function buildHakiStep(){
   return `
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="chkObservacaoAvancada"><span>Haki Avançado</span></label></div>
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="chkArmamentoAvancado"><span>Haki Avançado</span></label></div>
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="chkConquistadorAvancado"><span>Haki Avançado</span></label></div>`;
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="chkObservacaoAvancada" disabled><span>Haki Avançado</span></label></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="chkArmamentoAvancado" disabled><span>Haki Avançado</span></label></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="chkConquistadorAvancado" disabled><span>Haki Avançado</span></label></div>`;
 }
 function fillHakiStep(){
   document.getElementById('chkObservacao').checked=state.haki.observacao;
@@ -858,110 +858,109 @@ function fillHakiStep(){
   updateHakiAdvancedAvailability('');
   updateHakiHints('');
 }
-function bindHakiStep(){
-  bindHakiAdvancedGuards();
-  document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkObservacaoAvancada').addEventListener('change', e=>{if(!state.haki.observacao){e.target.checked=false; state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.observacaoAvancada=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkArmamentoAvancado').addEventListener('change', e=>{if(!state.haki.armamento){e.target.checked=false; state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.armamentoAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-  document.getElementById('chkConquistadorAvancado').addEventListener('change', e=>{if(!state.haki.conquistador){e.target.checked=false; state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); return;} state.haki.conquistadorAvancado=!!e.target.checked; updateHakiAdvancedAvailability(''); updateHakiAdvancedAvailability('p'); scheduleSave();});
-}
-function updateHakiAdvancedAvailability(prefix){
+function syncHakiDependencies(){
   const pairs=[
     ['Observacao','observacao','observacaoAvancada'],
     ['Armamento','armamento','armamentoAvancado'],
     ['Conquistador','conquistador','conquistadorAvancado']
   ];
-  pairs.forEach(([name,normalKey,advancedKey])=>{
-    const advId = prefix ? prefix+'Chk'+name+'Avancada' : 'chk'+name+'Avancada';
-    const normalId = prefix ? prefix+'Chk'+name : 'chk'+name;
-    const adv=document.getElementById(advId);
-    const normal=document.getElementById(normalId);
-    if(!adv || !normal) return;
 
-    const unlocked = normal.checked === true;
-
-    // Regra única para os TRÊS Hakis:
-    // sem o Haki normal, o Avançado obrigatoriamente fica desmarcado e desativado.
-    if(!unlocked){
-      adv.checked=false;
+  pairs.forEach(([name, normalKey, advancedKey])=>{
+    // O estado é a fonte de verdade. Se o normal não estiver marcado,
+    // o avançado SEMPRE é removido do estado.
+    if(state.haki[normalKey] !== true){
+      state.haki[normalKey]=false;
       state.haki[advancedKey]=false;
-    }else{
-      adv.checked=state.haki[advancedKey]===true;
     }
 
-    adv.disabled=!unlocked;
-    adv.setAttribute('aria-disabled', String(!unlocked));
-    adv.title=unlocked ? 'Haki Avançado liberado' : 'Marque o Haki normal primeiro';
-
-    const row=adv.closest('.sub-toggle');
-    if(row){
-      row.classList.toggle('locked', !unlocked);
-      row.setAttribute('aria-disabled', String(!unlocked));
-      row.style.opacity=unlocked ? '1' : '0.45';
-      row.style.filter=unlocked ? 'none' : 'grayscale(1)';
-      row.style.pointerEvents=unlocked ? '' : 'none';
-      row.querySelectorAll('span').forEach(span=>{
-        span.style.opacity=unlocked ? '1' : '0.42';
-        span.style.color=unlocked ? '' : '#888';
-      });
-    }
-  });
-}
-
-function bindHakiAdvancedGuards(){
-  const pairs=[
-    ['Observacao','observacao','observacaoAvancada'],
-    ['Armamento','armamento','armamentoAvancado'],
-    ['Conquistador','conquistador','conquistadorAvancado']
-  ];
-
-  pairs.forEach(([name,normalKey,advancedKey])=>{
-    ['','p'].forEach(prefix=>{
-      const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
+    ['', 'p'].forEach(prefix=>{
       const normal=document.getElementById(prefix+'Chk'+name);
-      if(!adv || !normal) return;
+      const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
+      if(!normal || !adv) return;
 
-      const sync=()=>updateHakiAdvancedAvailability(prefix);
+      const unlocked=state.haki[normalKey] === true;
+      normal.checked=unlocked;
+      adv.disabled=!unlocked;
+      adv.checked=unlocked && state.haki[advancedKey] === true;
+      adv.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
+      adv.title=unlocked ? 'Haki Avançado liberado' : 'Marque o Haki normal primeiro';
 
-      // Protege o Avançado contra qualquer tentativa de marcar sem o normal.
-      adv.onchange=()=>{
-        if(!normal.checked){
-          adv.checked=false;
-          state.haki[advancedKey]=false;
-        }else{
-          state.haki[advancedKey]=adv.checked;
-        }
-        sync();
-        scheduleSave();
-      };
-
-      normal.onchange=()=>{
-        state.haki[normalKey]=normal.checked;
-        if(!normal.checked) state.haki[advancedKey]=false;
-        sync();
-        updateHakiAdvancedAvailability(prefix ? '' : 'p');
-        scheduleSave();
-      };
-
-      // Bloqueia também o clique no container/label quando estiver travado.
       const row=adv.closest('.sub-toggle');
       if(row){
-        row.onclick=(e)=>{
-          if(adv.disabled || !normal.checked){
-            e.preventDefault();
-            e.stopPropagation();
-            adv.checked=false;
-            state.haki[advancedKey]=false;
-            sync();
-          }
-        };
+        row.classList.toggle('locked', !unlocked);
+        row.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
+        row.style.opacity=unlocked ? '1' : '0.45';
+        row.style.filter=unlocked ? 'none' : 'grayscale(1)';
+        row.style.cursor=unlocked ? '' : 'not-allowed';
+        const span=row.querySelector('span');
+        if(span){
+          span.style.opacity=unlocked ? '1' : '0.42';
+          span.style.color=unlocked ? '' : '#888';
+        }
       }
-
-      sync();
     });
   });
+}
+
+function bindHakiControls(){
+  const pairs=[
+    ['Observacao','observacao','observacaoAvancada'],
+    ['Armamento','armamento','armamentoAvancada'],
+    ['Conquistador','conquistador','conquistadorAvancada']
+  ];
+  // Corrige a chave digitada acima sem depender de nomes diferentes.
+  pairs[1][2]='armamentoAvancado';
+  pairs[2][2]='conquistadorAvancado';
+
+  ['', 'p'].forEach(prefix=>{
+    pairs.forEach(([name,normalKey,advancedKey])=>{
+      const normal=document.getElementById(prefix+'Chk'+name);
+      const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
+      if(!normal || !adv) return;
+
+      normal.addEventListener('change',()=>{
+        state.haki[normalKey]=normal.checked===true;
+        if(!state.haki[normalKey]) state.haki[advancedKey]=false;
+        syncHakiDependencies();
+        scheduleSave();
+      });
+
+      adv.addEventListener('change',()=>{
+        // Mesmo que algum navegador/label tente disparar o evento,
+        // nunca permita avançado sem o normal.
+        if(!state.haki[normalKey]){
+          state.haki[advancedKey]=false;
+        }else{
+          state.haki[advancedKey]=adv.checked===true;
+        }
+        syncHakiDependencies();
+        scheduleSave();
+      });
+
+      adv.addEventListener('click',e=>{
+        if(!state.haki[normalKey]){
+          e.preventDefault();
+          e.stopPropagation();
+          state.haki[advancedKey]=false;
+          syncHakiDependencies();
+        }
+      });
+    });
+  });
+
+  syncHakiDependencies();
+}
+
+function bindHakiStep(){ bindHakiControls(); }
+
+// Mantido por compatibilidade com as chamadas existentes.
+function updateHakiAdvancedAvailability(prefix){
+  syncHakiDependencies();
+}
+
+// Mantido por compatibilidade com versões anteriores do código.
+function bindHakiAdvancedGuards(){
+  syncHakiDependencies();
 }
 
 function updateHakiHints(prefix){
@@ -1494,9 +1493,9 @@ function buildTabPoderes(){
   return `
     <div class="panel">
       <h3>Haki</h3>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="pHintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="pChkObservacaoAvancada"><span>Haki Avançado</span></label></div>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancado"><span>Haki Avançado</span></label></div>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancado"><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="pHintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="pChkObservacaoAvancada" disabled><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancado" disabled><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancado" disabled><span>Haki Avançado</span></label></div>
     </div>
     <div class="panel"><h3>Akuma no Mi</h3>${buildFrutasStep()}</div>
     <div class="panel">
@@ -1517,7 +1516,7 @@ function fillTabPoderes(){
   document.getElementById('poderesTextarea').value=state.poderes;
 }
 function bindTabPoderes(){
-  bindHakiAdvancedGuards();
+  bindHakiControls();
   document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; if(!e.target.checked) state.haki.observacaoAvancada=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; if(!e.target.checked) state.haki.armamentoAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
   document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; if(!e.target.checked) state.haki.conquistadorAvancado=false; updateHakiAdvancedAvailability('p'); updateHakiAdvancedAvailability(''); scheduleSave();});
