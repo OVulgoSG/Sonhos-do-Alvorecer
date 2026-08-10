@@ -885,14 +885,42 @@ function updateHakiAdvancedAvailability(prefix){
   });
 }
 function bindHakiAdvancedGuards(){
-  document.querySelectorAll('.sub-toggle input[type="checkbox"]').forEach(el=>{
-    const row=el.closest('.sub-toggle');
-    if(row && !row.dataset.guardBound){
-      row.dataset.guardBound='1';
-      row.addEventListener('click',e=>{
-        if(el.disabled){ e.preventDefault(); e.stopPropagation(); }
-      },true);
-    }
+  // Proteção extra: o Avançado só pode existir enquanto o Haki normal estiver ativo.
+  const pairs=[
+    ['Observacao','observacao','observacaoAvancada'],
+    ['Armamento','armamento','armamentoAvancado'],
+    ['Conquistador','conquistador','conquistadorAvancada']
+  ];
+  pairs.forEach(([name,normalKey,advancedKeyRaw])=>{
+    const advancedKey = advancedKeyRaw==='conquistadorAvancada' ? 'conquistadorAvancado' : advancedKeyRaw;
+    ['','p'].forEach(prefix=>{
+      const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
+      const normal=document.getElementById(prefix+'Chk'+name);
+      if(!adv || !normal) return;
+      const enforce=()=>{
+        const ok=!!normal.checked;
+        if(!ok){
+          adv.checked=false;
+          state.haki[advancedKey]=false;
+        }
+        adv.disabled=!ok;
+        const row=adv.closest('.sub-toggle');
+        if(row) row.classList.toggle('locked',!ok);
+      };
+      if(!adv.dataset.guardBound){
+        adv.dataset.guardBound='1';
+        adv.addEventListener('click',e=>{
+          if(!normal.checked){
+            e.preventDefault(); e.stopPropagation();
+            adv.checked=false;
+            state.haki[advancedKey]=false;
+            enforce();
+            return;
+          }
+        },true);
+      }
+      enforce();
+    });
   });
   updateHakiAdvancedAvailability('');
   updateHakiAdvancedAvailability('p');
