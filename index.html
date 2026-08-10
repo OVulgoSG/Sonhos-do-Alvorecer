@@ -506,6 +506,23 @@ function mergeState(loaded) {
   return merged;
 }
 
+function renderLockedSheet(){
+  const app=document.getElementById('app');
+  if(!app) return;
+  app.innerHTML=`
+    <div class="app-shell">
+      <div class="mini-logo">Sonhos do Alvorecer</div>
+      <div class="loading-screen" style="min-height:70vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;">
+        <div style="font-size:3rem;">🔒</div>
+        <h1>Ficha protegida</h1>
+        <p style="max-width:520px;">Esta ficha é privada. Para abrir e editar este personagem, informe a senha de edição.</p>
+        <button type="button" id="unlockSheetBtn" class="btn btn-primary">🔓 Desbloquear ficha</button>
+        <a href="?lobby" class="btn btn-ghost">← Voltar ao lobby</a>
+      </div>
+    </div>`;
+  document.getElementById('unlockSheetBtn')?.addEventListener('click',unlockSheet);
+}
+
 async function loadState(){
   // Sem ?ficha=... estamos na página inicial: nunca recuperar a ficha anterior.
   if(!characterId){
@@ -1429,7 +1446,7 @@ function buildLobbyCard(character){
   const mental = lobbyVisibleValue(lobby.mostrarMental, Number(pub.mental)||0);
 
   return `
-    <div class="lobby-card" data-character-id="${character.id}">
+    <div class="lobby-card" data-character-id="${character.id}" role="article" aria-label="Personagem em cena">
       <div class="lobby-portrait">${foto}</div>
       <div class="lobby-info">
         <div class="lobby-name">${escapeHtml(nome)}</div>
@@ -1482,7 +1499,7 @@ function renderLobby(characters){
 
       <div class="lobby-header">
         <h1>Personagens em Cena</h1>
-        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa.'}</p>
+        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa. As fichas são privadas e não podem ser abertas pelo lobby.'}</p>
         ${isAdmin ? `
         <div class="lobby-add">
           <input type="text" id="lobbyLinkInput" placeholder="Cole aqui o link da ficha...">
@@ -1502,6 +1519,13 @@ function renderLobby(characters){
     document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1'; }));
   } else {
     document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.remove());
+    document.querySelectorAll('.lobby-card').forEach(card=>{
+      card.addEventListener('click',e=>{
+        if(e.target.closest('button,a,input,textarea,select')) return;
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
   }
 }
 function getLobbyCharacterIdFromUrl(value){
@@ -1600,6 +1624,13 @@ async function init(){
   }
 
   try{
+    // Uma ficha compartilhada sem token local ou acesso de mestre é privada.
+    // O conteúdo completo só é carregado depois que a senha for validada.
+    if(IS_SHARED_SHEET && !editToken && !IS_MASTER_SHEET){
+      renderLockedSheet();
+      return;
+    }
+
     await loadState();
 
     if(state.wizardDone){
@@ -1642,16 +1673,28 @@ async function unlockSheet(){
   const password=prompt('Digite a senha de edição desta ficha:');
   if(password===null) return;
   try{
+    ensureSupabaseClient();
     const {data,error}=await supabaseClient.rpc('unlock_character',{p_id:characterId,p_password:password});
     if(error) throw error;
+    if(!data) throw new Error('A ficha não retornou um token de edição.');
+
     editToken=data;
     localStorage.setItem('sonhos_ficha_id',characterId);
     localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
+
+    // Só agora buscamos o conteúdo completo da ficha.
+    const loaded=await supabaseClient.rpc('get_character_state',{p_id:characterId});
+    if(loaded.error) throw loaded.error;
+    state=mergeState(loaded.data);
     readOnlySheet=false;
-    setSheetReadOnly(false);
-    document.getElementById('unlockSheetBtn')?.remove();
+    renderSheet();
+    subscribeRealtime();
+    addOnlineControls();
     alert('Ficha desbloqueada.');
-  }catch(e){ console.error(e); alert('Senha incorreta ou ficha sem senha de edição.'); }
+  }catch(e){
+    console.error(e);
+    alert('Senha incorreta ou ficha sem senha de edição.');
+  }
 }
 
 function setSheetReadOnly(flag){
