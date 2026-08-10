@@ -568,8 +568,22 @@ if(!window.__sonhosBlurBound){
   window.__sonhosBlurBound=true;
   document.addEventListener('focusout',()=>setTimeout(applyPendingRemoteState,0));
 }
+function ensureSupabaseClient(){
+  if(!ONLINE_ENABLED) throw new Error('Supabase não configurado.');
+  if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
+  if(!supabaseClient){
+    supabaseClient=window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
+    );
+  }
+  return supabaseClient;
+}
+
 async function createOnlineCharacter(){
-  if(!ONLINE_ENABLED || !supabaseClient) return null;
+  if(!ONLINE_ENABLED) return null;
+  ensureSupabaseClient();
   const {data,error}=await supabaseClient.rpc('create_character',{p_state:state});
   if(error) throw error;
   characterId=data.id; editToken=data.edit_token;
@@ -912,9 +926,23 @@ async function finalizeCharacter(){
   state.recursos.energia.atual=computeEnergiaFinal(t);
   state.recursos.mental.atual=computeMente(t);
   state.wizardDone=true;
+
+  // A ficha nova ainda não tem characterId nem um cliente Supabase criado.
+  // O cliente agora é inicializado aqui para que a ficha seja criada online
+  // imediatamente ao finalizar, permitindo gerar o link compartilhável.
+  if(ONLINE_ENABLED && !characterId){
+    try{
+      ensureSupabaseClient();
+      await createOnlineCharacter();
+    }catch(e){
+      console.error('Não foi possível criar a ficha online:',e);
+      alert('A ficha foi finalizada, mas não consegui criar o link online. Verifique a conexão com o Supabase e tente novamente.');
+    }
+  }
+
   scheduleSave();
   renderSheet();
-  if(ONLINE_ENABLED && supabaseClient && !characterId){ try{ await createOnlineCharacter(); addOnlineControls(); }catch(e){ console.warn('Não foi possível criar a ficha online:',e); } }
+  if(ONLINE_ENABLED && characterId) addOnlineControls();
 }
 
 /* ===== Ficha final ===== */
