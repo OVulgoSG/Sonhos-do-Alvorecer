@@ -308,6 +308,18 @@ let editToken = URL_PARAMS.get('token') || null;
 const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
 let onlineSaveTimer = null;
+let pendingRemoteState = null;
+let localSaveInFlight = false;
+function stateSignature(v){ try{return JSON.stringify(v);}catch(e){return "";} }
+function userIsEditing(){ const el=document.activeElement; return !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName); }
+function applyPendingRemoteState(){
+  if(!pendingRemoteState || userIsEditing()) return;
+  const next=pendingRemoteState; pendingRemoteState=null;
+  if(stateSignature(next)!==stateSignature(state)){
+    state=mergeState(next);
+    if(state.wizardDone) renderSheet(); else renderWizard();
+  }
+}
 
 function mergeState(loaded) {
   const base = defaultState();
@@ -364,10 +376,11 @@ async function saveState(){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
   if(!ONLINE_ENABLED || !supabaseClient || !characterId || !editToken) return;
   clearTimeout(onlineSaveTimer);
+  localSaveInFlight=true;
   onlineSaveTimer=setTimeout(async()=>{
-    try{
-      await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
-    }catch(e){console.warn('Falha ao sincronizar:',e);}
+    try{ await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state}); }
+    catch(e){ console.warn('Falha ao sincronizar:',e); }
+    finally{ setTimeout(()=>{ localSaveInFlight=false; applyPendingRemoteState(); },250); }
   },150);
 }
 function subscribeRealtime(){
@@ -375,10 +388,18 @@ function subscribeRealtime(){
   if(realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
   realtimeChannel=supabaseClient.channel('character-'+characterId)
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'characters',filter:'id=eq.'+characterId},payload=>{
-      if(payload.new?.state){ state=mergeState(payload.new.state); if(state.wizardDone) renderSheet(); else renderWizard(); }
+      if(!payload.new?.state) return;
+      const incoming=payload.new.state;
+      if(stateSignature(incoming)===stateSignature(state)) return;
+      if(localSaveInFlight || userIsEditing()){ pendingRemoteState=incoming; return; }
+      state=mergeState(incoming);
+      if(state.wizardDone) renderSheet(); else renderWizard();
     }).subscribe();
 }
-
+if(!window.__sonhosBlurBound){
+  window.__sonhosBlurBound=true;
+  document.addEventListener('focusout',()=>setTimeout(applyPendingRemoteState,0));
+}
 async function createOnlineCharacter(){
   if(!ONLINE_ENABLED || !supabaseClient) return null;
   const token=crypto.randomUUID()+crypto.randomUUID();
@@ -391,6 +412,12 @@ async function createOnlineCharacter(){
   history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken));
   return characterId;
 }
+
+window.addEventListener('popstate',()=>{
+  if(characterId && location.search.indexOf('ficha=')===-1){
+    history.pushState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||''));
+  }
+});
 
 function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken||'')) : ''; }
 function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); navigator.clipboard?.writeText(url).then(()=>alert('Link da ficha copiado!')).catch(()=>prompt('Copie este link:',url)); }
@@ -696,11 +723,15 @@ function renderWizard(){
   bindSecretTrigger(document.querySelector('.logo-title'));
 }
 function wireNav(idx, key){
-  const back=document.getElementById('btnBack'); if(back) back.onclick=()=>{ state.wizardStep=idx-1; renderWizard(); };
-  const start=document.getElementById('btnStart'); if(start) start.onclick=()=>{ state.wizardStep=idx+1; renderWizard(); };
-  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
-    state.wizardStep=idx+1; renderWizard(); scheduleSave();
+  const go=(target)=>{
+    clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
+    saveState();
+    state.wizardStep=target;
+    renderWizard();
   };
+  const back=document.getElementById('btnBack'); if(back) back.onclick=()=>go(idx-1);
+  const start=document.getElementById('btnStart'); if(start) start.onclick=()=>go(idx+1);
+  const next=document.getElementById('btnNext'); if(next) next.onclick=()=>go(idx+1);
   const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
 }
 async function finalizeCharacter(){
