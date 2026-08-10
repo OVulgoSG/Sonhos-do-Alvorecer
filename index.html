@@ -437,7 +437,7 @@ function frutaBonusVidaPercent(){
   state.frutas.forEach(f=>{
     if(!f.possui) return;
     if (f.tipo==='Zoan') pct += f.despertada?0.75:0.50;
-    else if (f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
+    else if (f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
   });
   return pct;
 }
@@ -449,8 +449,10 @@ function frutaBonusEnergiaPercent(){
   });
   return pct;
 }
-function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())); }
+function isCombatente(){ return state.identidade.profissao === 'Combatente (não tem Profissão)'; }
+function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())) + (isCombatente()?15:0); }
 function computeEnergiaFinal(t){ return Math.ceil(computeEnergia(t) * (1+frutaBonusEnergiaPercent())); }
+function computeMenteFinal(t){ return Math.max(0, computeMente(t) - (isCombatente()?10:0)); }
 function validaRaca(v){ return true; }
 
 /* ===== Persistência online =====
@@ -478,6 +480,7 @@ let realtimeChannel = null;
 let onlineSaveTimer = null;
 let pendingRemoteState = null;
 let localSaveInFlight = false;
+let lastLocalSaveAt = 0;
 let lastSheetInteraction = 0;
 function stateSignature(v){ try{return JSON.stringify(v);}catch(e){return "";} }
 function userIsEditing(){ const el=document.activeElement; return !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName); }
@@ -576,6 +579,7 @@ function scheduleSave(){
   saveTimer=setTimeout(saveState,350);
 }
 async function saveState(){
+  lastLocalSaveAt=Date.now();
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
   if(!ONLINE_ENABLED || !supabaseClient || !characterId || (!editToken && !IS_MASTER_SHEET)) return;
   clearTimeout(onlineSaveTimer);
@@ -597,7 +601,7 @@ function subscribeRealtime(){
       if(!payload.new?.state) return;
       const incoming=payload.new.state;
       if(stateSignature(incoming)===stateSignature(state)) return;
-      if(localSaveInFlight || sheetIsBusy()){ pendingRemoteState=incoming; return; }
+      if(localSaveInFlight || sheetIsBusy() || (Date.now()-lastLocalSaveAt < 1500)){ pendingRemoteState=incoming; return; }
       const currentTab=state.activeTab||'base';
       state=mergeState(incoming);
       state.activeTab=currentTab;
@@ -983,12 +987,8 @@ function buildFrutasStep(){
         <input type="text" class="fruta-nome" data-idx="${i}" placeholder="Nome da fruta">
         <select class="fruta-tipo" data-idx="${i}">
           <option value="">Tipo...</option>
-          <option value="Paramecia">Paramecia</option>
           <option value="Zoan">Zoan</option>
-          <option value="Zoan (Ancestral/Primordial)">Zoan (Ancestral/Primordial)</option>
-          <option value="Zoan Mítica">Zoan Mítica</option>
-          <option value="Logia">Logia</option>
-          <option value="Desconhecido">Desconhecido</option>
+          <option value="Zoan Mítica/Ancestral">Zoan Mítica/Ancestral</option>
         </select>
         <label class="switch-row small"><input type="checkbox" class="fruta-desperta" data-idx="${i}"><span>Despertada</span></label>
       </div>
@@ -1118,7 +1118,7 @@ async function finalizeCharacter(){
 
   state.recursos.vida.atual=computeVidaFinal(t);
   state.recursos.energia.atual=computeEnergiaFinal(t);
-  state.recursos.mental.atual=computeMente(t);
+  state.recursos.mental.atual=computeMenteFinal(t);
   state.wizardDone=true;
 
   if(ONLINE_ENABLED && !characterId){
@@ -1410,7 +1410,7 @@ function fillTabBase(){
 }
 function updateResourceDisplays(){
   const t=totals();
-  const maxes={ vida:computeVidaFinal(t), energia:computeEnergiaFinal(t), mental:computeMente(t) };
+  const maxes={ vida:computeVidaFinal(t), energia:computeEnergiaFinal(t), mental:computeMenteFinal(t) };
   ['vida','energia','mental'].forEach(key=>{
     const baseMax=maxes[key]; const extra=Number(state.recursos[key].extra)||0; const atual=Number(state.recursos[key].atual)||0;
     const chip=document.getElementById(`${key}MaxChip`);
