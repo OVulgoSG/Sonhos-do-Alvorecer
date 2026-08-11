@@ -511,8 +511,7 @@ const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
 let characterId = URL_PARAMS.get('ficha') || null;
 const IS_MASTER_SHEET = URL_PARAMS.has('master') && !!LOBBY_ADMIN_TOKEN;
 const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-// A permissão de edição pode vir do link compartilhado ou do navegador.
-let editToken = IS_MASTER_SHEET ? null : (URL_PARAMS.get('editar') || localStorage.get(TOKEN_STORAGE_KEY) || null);
+let editToken = IS_MASTER_SHEET ? null : null;
 let readOnlySheet = false;
 const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
@@ -611,7 +610,6 @@ async function loadState(){
       const {data,error}=await supabaseClient.rpc('get_character_state',{p_id:characterId});
       if(error) throw error;
       localStorage.setItem('sonhos_ficha_id',characterId);
-      if(editToken) localStorage.setItem(TOKEN_STORAGE_KEY,editToken);
       state=mergeState(data);
       subscribeRealtime();
     }
@@ -690,13 +688,7 @@ window.addEventListener('popstate',()=>{
   }
 });
 
-function fichaShareUrl(){
-  if(!characterId || location.origin === 'null') return '';
-  const params=new URLSearchParams();
-  params.set('ficha',characterId);
-  if(editToken) params.set('editar',editToken);
-  return location.origin+location.pathname+'?'+params.toString();
-}
+function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
 function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
 function copyTextOrPrompt(text,message){
   if(!text) return;
