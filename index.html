@@ -832,6 +832,9 @@ function getPlayerRule(){
   if(nome.includes('maozinh')) return {mensagem:'Não vai passar daqui.', bloqueado:true};
   if(nome.startsWith('vin')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
   if(nome.startsWith('nic')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
+  if(nome.startsWith('nicole')) return {mensagem:'Toma sequência de holly', bloqueado:false};
+  if(nome.startsWith('nick')) return {mensagem:'Toma sequência de holly', bloqueado:false};
+  if(nome.startsWith('bon')) return {mensagem:'Toma sequência de holly', bloqueado:false};
   if(nome.startsWith('wal')) return {mensagem:'O teu poder é o preto.', bloqueado:false};
   if(nome.startsWith('eduard')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
   return {mensagem:'', bloqueado:false};
