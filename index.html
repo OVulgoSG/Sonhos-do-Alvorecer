@@ -1186,7 +1186,7 @@ function renderFichaChooser(){
       <div class="ficha-chooser-actions">
         <button type="button" class="btn-link" data-action="abrir">Abrir</button>
         <button type="button" class="btn-link" data-action="duplicar">Duplicar</button>
-        <button type="button" class="btn-link" data-action="excluir">Excluir</button>
+        <button type="button" class="btn-link" data-action="remover">Remover</button>
       </div>
     </div>`;
   }).join('');
@@ -1214,7 +1214,7 @@ function renderFichaChooser(){
       try{ await duplicarFicha(id); }
       catch(err){ alert('Não foi possível duplicar a ficha: '+(err?.message||err)); btn.disabled=false; btn.textContent='Duplicar'; }
     });
-    item.querySelector('[data-action="excluir"]').addEventListener('click', ()=>{
+    item.querySelector('[data-action="remover"]').addEventListener('click', ()=>{
       if(!confirm(`Remover "${registro?.nome||'esta ficha'}" da sua lista?\n\nIsso só tira daqui do seu navegador — o link continua funcionando normalmente se você (ou outra pessoa) ainda tiver o endereço dele.`)) return;
       removerFichaConhecida(id);
       if(loadFichasConhecidas().length>0) renderFichaChooser(); else { state=defaultState(); renderWizard(); }
