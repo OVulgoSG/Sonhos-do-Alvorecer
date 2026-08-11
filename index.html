@@ -511,7 +511,15 @@ const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
 let characterId = URL_PARAMS.get('ficha') || null;
 const IS_MASTER_SHEET = URL_PARAMS.has('master') && !!LOBBY_ADMIN_TOKEN;
 const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-let editToken = IS_MASTER_SHEET ? null : null;
+// O token de edição pode chegar de duas formas: pelo link compartilhado (?token=...)
+// ou, se essa ficha já foi aberta neste navegador antes, do localStorage. Assim
+// qualquer pessoa que abra o link com o token consegue editar (e não só quem criou
+// a ficha, nem só a aba original — que antes perdia o token a cada F5).
+const URL_EDIT_TOKEN = URL_PARAMS.get('token') || '';
+let editToken = IS_MASTER_SHEET ? null : (URL_EDIT_TOKEN || (characterId ? (localStorage.getItem(TOKEN_STORAGE_KEY)||null) : null));
+if(characterId && URL_EDIT_TOKEN){
+  try{ localStorage.setItem(TOKEN_STORAGE_KEY, URL_EDIT_TOKEN); }catch(e){}
+}
 let readOnlySheet = false;
 const IS_SHARED_SHEET = !!characterId;
 let realtimeChannel = null;
@@ -678,7 +686,7 @@ async function createOnlineCharacter(){
   localStorage.setItem('sonhos_ficha_id',characterId);
   localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
   subscribeRealtime();
-  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
+  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId)+'&token='+encodeURIComponent(editToken));
   return characterId;
 }
 
@@ -688,7 +696,7 @@ window.addEventListener('popstate',()=>{
   }
 });
 
-function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
+function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)+(editToken?'&token='+encodeURIComponent(editToken):'')) : ''; }
 function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
 function copyTextOrPrompt(text,message){
   if(!text) return;
