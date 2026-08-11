@@ -511,8 +511,7 @@ const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
 let characterId = URL_PARAMS.get('ficha') || null;
 const IS_MASTER_SHEET = URL_PARAMS.has('master') && !!LOBBY_ADMIN_TOKEN;
 const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-// O link compartilhado pode carregar o token de edição. Assim, qualquer pessoa
-// com o link consegue editar e as alterações continuam após F5.
+// A permissão de edição pode vir do link compartilhado ou do navegador.
 let editToken = IS_MASTER_SHEET ? null : (URL_PARAMS.get('editar') || localStorage.get(TOKEN_STORAGE_KEY) || null);
 let readOnlySheet = false;
 const IS_SHARED_SHEET = !!characterId;
@@ -692,8 +691,7 @@ window.addEventListener('popstate',()=>{
 });
 
 function fichaShareUrl(){
-  if(!characterId) return '';
-  if(location.origin === 'null') return '';
+  if(!characterId || location.origin === 'null') return '';
   const params=new URLSearchParams();
   params.set('ficha',characterId);
   if(editToken) params.set('editar',editToken);
