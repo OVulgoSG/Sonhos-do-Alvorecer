@@ -882,9 +882,9 @@ function bindAttrStep(){
 
 function buildHakiStep(){
   return `
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="chkObservacaoAvancada"><span>Haki Avançado</span></label></div>
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="chkArmamentoAvancado"><span>Haki Avançado</span></label></div>
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="chkConquistadorAvancado"><span>Haki Avançado</span></label></div>`;
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="ChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="ChkObservacaoAvancada"><span>Haki Avançado</span></label></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="ChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="ChkArmamentoAvancada"><span>Haki Avançado</span></label></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="ChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="ChkConquistadorAvancada"><span>Haki Avançado</span></label></div>`;
 }
 
 function updateOneHakiControl(prefix,name,normalKey,advancedKey){
@@ -1518,8 +1518,8 @@ function buildTabPoderes(){
     <div class="panel">
       <h3>Haki</h3>
       <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="pHintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="pChkObservacaoAvancada"><span>Haki Avançado</span></label></div>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancado"><span>Haki Avançado</span></label></div>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancado"><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancada"><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancada"><span>Haki Avançado</span></label></div>
     </div>
     <div class="panel"><h3>Akuma no Mi</h3>${buildFrutasStep()}</div>
     <div class="panel">
@@ -1532,8 +1532,8 @@ function fillTabPoderes(){
   document.getElementById('pChkArmamento').checked=state.haki.armamento;
   document.getElementById('pChkConquistador').checked=state.haki.conquistador;
   document.getElementById('pChkObservacaoAvancada').checked=!!state.haki.observacaoAvancada;
-  document.getElementById('pChkArmamentoAvancado').checked=!!state.haki.armamentoAvancado;
-  document.getElementById('pChkConquistadorAvancado').checked=!!state.haki.conquistadorAvancado;
+  document.getElementById('pChkArmamentoAvancada').checked=!!state.haki.armamentoAvancado;
+  document.getElementById('pChkConquistadorAvancada').checked=!!state.haki.conquistadorAvancado;
   updateHakiAdvancedAvailability('p');
   updateHakiHints('p');
   fillFrutasStep();
