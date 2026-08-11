@@ -82,6 +82,13 @@ textarea { resize:vertical; line-height:1.6; }
 
 .warning-text { color:var(--danger); font-size:.82rem; }
 .hint-text { color:var(--text-muted); font-size:.78rem; min-height:1em; }
+.ficha-chooser-list { display:flex; flex-direction:column; gap:10px; margin:18px 0; }
+.ficha-chooser-item { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:var(--bg-void); border:1px solid var(--border-soft); border-radius:var(--radius-sm); padding:12px 16px; }
+.ficha-chooser-info { display:flex; flex-direction:column; }
+.ficha-chooser-nome { font-family:'Cinzel',serif; font-weight:600; color:var(--gold-bright); font-size:1rem; }
+.ficha-chooser-data { font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+.ficha-chooser-actions { display:flex; gap:12px; flex-wrap:wrap; }
+.ficha-chooser-or { text-align:center; color:var(--text-muted); font-size:.8rem; margin:22px 0 14px; text-transform:uppercase; letter-spacing:.06em; }
 
 .attr-grid { display:flex; flex-direction:column; gap:4px; }
 .attr-row { display:grid; grid-template-columns:1fr 64px 78px; gap:8px; align-items:center; }
@@ -617,6 +624,8 @@ async function loadState(){
       if(error) throw error;
       localStorage.setItem('sonhos_ficha_id',characterId);
       state=mergeState(data);
+      try{ editToken = localStorage.getItem('sonhos_ficha_token_'+characterId) || editToken; }catch(e){}
+      registrarFichaConhecida(characterId, state.identidade.nome, true);
       subscribeRealtime();
     }
   }catch(e){ console.warn('Modo online indisponível:',e); }
@@ -624,6 +633,33 @@ async function loadState(){
 function updateDocumentTitle(){
   const nome=String(state?.identidade?.nome||'').trim();
   document.title = nome ? `${nome} — Sonhos do Alvorecer` : 'Sonhos do Alvorecer — Ficha de Personagem';
+  if(characterId) registrarFichaConhecida(characterId, nome, false);
+}
+
+/* ===== Fichas conhecidas (histórico local no navegador) ===== */
+const FICHAS_CONHECIDAS_KEY='sonhos_fichas_conhecidas';
+function loadFichasConhecidas(){
+  try{ const l=JSON.parse(localStorage.getItem(FICHAS_CONHECIDAS_KEY)||'[]'); return Array.isArray(l)?l:[]; }catch(e){ return []; }
+}
+function saveFichasConhecidas(lista){
+  try{ localStorage.setItem(FICHAS_CONHECIDAS_KEY,JSON.stringify(lista)); }catch(e){}
+}
+function registrarFichaConhecida(id, nome, bumpAcesso){
+  if(!id) return;
+  const lista=loadFichasConhecidas();
+  const nomeFinal=String(nome||'').trim() || 'Personagem sem nome';
+  const idx=lista.findIndex(f=>f.id===id);
+  if(idx>=0){
+    lista[idx].nome=nomeFinal;
+    if(bumpAcesso) lista[idx].ultimoAcesso=Date.now();
+  }else{
+    lista.push({id, nome:nomeFinal, ultimoAcesso:Date.now()});
+  }
+  lista.sort((a,b)=>(b.ultimoAcesso||0)-(a.ultimoAcesso||0));
+  saveFichasConhecidas(lista.slice(0,24));
+}
+function removerFichaConhecida(id){
+  saveFichasConhecidas(loadFichasConhecidas().filter(f=>f.id!==id));
 }
 function shipDivider(){
   return `<svg class="ship-divider" viewBox="0 0 240 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -694,6 +730,7 @@ async function createOnlineCharacter(){
   characterId=data.id; editToken=data.edit_token;
   localStorage.setItem('sonhos_ficha_id',characterId);
   localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
+  registrarFichaConhecida(characterId, state.identidade.nome, true);
   subscribeRealtime();
   history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
   return characterId;
@@ -1132,6 +1169,69 @@ function renderWizard(){
   fillAndBindStep(def.key);
   wireNav(idx, def.key);
   bindSecretTrigger(document.querySelector('.logo-title'));
+}
+
+/* ===== Tela "Suas fichas" (mostrada ao abrir o site, se já houver fichas conhecidas) ===== */
+function renderFichaChooser(){
+  const app=document.getElementById('app');
+  const lista=loadFichasConhecidas();
+  const itensHtml=lista.map(f=>{
+    const d=new Date(f.ultimoAcesso||0);
+    const dataFmt=isNaN(d.getTime())?'':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    return `<div class="ficha-chooser-item" data-id="${escapeHtml(f.id)}">
+      <div class="ficha-chooser-info">
+        <span class="ficha-chooser-nome">${escapeHtml(f.nome||'Personagem sem nome')}</span>
+        ${dataFmt?`<span class="ficha-chooser-data">Último acesso: ${dataFmt}</span>`:''}
+      </div>
+      <div class="ficha-chooser-actions">
+        <button type="button" class="btn-link" data-action="abrir">Abrir</button>
+        <button type="button" class="btn-link" data-action="duplicar">Duplicar</button>
+        <button type="button" class="btn-link" data-action="excluir">Excluir</button>
+      </div>
+    </div>`;
+  }).join('');
+  app.innerHTML=`
+    <div class="app-shell">
+      <div class="logo-title">Sonhos do Alvorecer</div>
+      ${shipDivider()}
+      <div class="wizard-card">
+        <h2 class="step-title">Suas fichas</h2>
+        <p class="step-sub">Continue uma ficha que você já abriu neste navegador, ou comece uma nova.</p>
+        <div class="ficha-chooser-list">${itensHtml}</div>
+        <p class="ficha-chooser-or">ou</p>
+        <button type="button" class="btn btn-primary" id="btnChooserNovo" style="display:block;margin:0 auto;">✨ Criar novo personagem</button>
+      </div>
+    </div>`;
+  document.getElementById('btnChooserNovo').onclick=()=>{ state=defaultState(); renderWizard(); };
+  document.querySelectorAll('.ficha-chooser-item').forEach(item=>{
+    const id=item.dataset.id;
+    const registro=lista.find(f=>f.id===id);
+    item.querySelector('[data-action="abrir"]').addEventListener('click', ()=>{
+      location.href=location.pathname+'?ficha='+encodeURIComponent(id);
+    });
+    item.querySelector('[data-action="duplicar"]').addEventListener('click', async (e)=>{
+      const btn=e.currentTarget; btn.disabled=true; btn.textContent='Duplicando…';
+      try{ await duplicarFicha(id); }
+      catch(err){ alert('Não foi possível duplicar a ficha: '+(err?.message||err)); btn.disabled=false; btn.textContent='Duplicar'; }
+    });
+    item.querySelector('[data-action="excluir"]').addEventListener('click', ()=>{
+      if(!confirm(`Remover "${registro?.nome||'esta ficha'}" da sua lista?\n\nIsso só tira daqui do seu navegador — o link continua funcionando normalmente se você (ou outra pessoa) ainda tiver o endereço dele.`)) return;
+      removerFichaConhecida(id);
+      if(loadFichasConhecidas().length>0) renderFichaChooser(); else { state=defaultState(); renderWizard(); }
+    });
+  });
+}
+async function duplicarFicha(id){
+  ensureSupabaseClient();
+  const {data,error}=await supabaseClient.rpc('get_character_state',{p_id:id});
+  if(error) throw error;
+  const copia=mergeState(data);
+  copia.identidade.nome=(copia.identidade.nome||'Personagem')+' (cópia)';
+  const {data:novo,error:err2}=await supabaseClient.rpc('create_character',{p_state:copia});
+  if(err2) throw err2;
+  localStorage.setItem('sonhos_ficha_token_'+novo.id,novo.edit_token);
+  registrarFichaConhecida(novo.id, copia.identidade.nome, true);
+  location.href=location.pathname+'?ficha='+encodeURIComponent(novo.id);
 }
 function wireNav(idx, key){
   const go=(target)=>{
@@ -2086,6 +2186,8 @@ async function init(){
 
     if(state.wizardDone){
       renderSheet();
+    }else if(!characterId && loadFichasConhecidas().length>0){
+      renderFichaChooser();
     }else{
       renderWizard();
     }
