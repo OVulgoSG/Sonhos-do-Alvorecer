@@ -87,11 +87,6 @@ textarea { resize:vertical; line-height:1.6; }
 .switch-row input[type="checkbox"] { width:18px; height:18px; accent-color:var(--gold); cursor:pointer; }
 .haki-toggle { padding:10px 0; border-bottom:1px solid var(--border-soft); }
 .haki-toggle:last-child { border-bottom:none; }
-.sub-toggle { display:flex; align-items:center; gap:8px; margin:8px 0 2px 28px; font-size:.9rem; color:var(--text-soft); }
-.sub-toggle input:disabled + span, .sub-toggle.locked span { opacity:.42; color:var(--text-muted); }
-.sub-toggle.locked { opacity:.55; cursor:not-allowed; }
-.sub-toggle.locked input { opacity:.45; cursor:not-allowed; }
-.sub-toggle.locked label, .sub-toggle.locked span { cursor:not-allowed; }
 
 .fruta-block { padding:10px 0; border-bottom:1px solid var(--border-soft); }
 .fruta-block:last-child { border-bottom:none; }
@@ -181,158 +176,7 @@ textarea { resize:vertical; line-height:1.6; }
   body { background:#fff; color:#000; }
   .panel, .resource-card, .sheet-header, .wizard-card { border:1px solid #ccc; box-shadow:none; background:#fff; }
 }
-  .lobby-header{
-  background:var(--bg-panel);
-  border:1px solid var(--border-soft);
-  border-radius:var(--radius-lg);
-  padding:22px;
-  margin-bottom:18px;
-  box-shadow:var(--shadow-lg);
-  text-align:center;
-}
-
-.lobby-header h1{
-  color:var(--gold-bright);
-  font-size:1.4rem;
-}
-
-.lobby-header p{
-  color:var(--text-muted);
-  font-size:.9rem;
-  margin-bottom:18px;
-}
-
-.lobby-add{
-  display:flex;
-  gap:8px;
-}
-
-.lobby-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:14px;
-}
-
-.lobby-card{
-  position:relative;
-  display:flex;
-  gap:14px;
-  align-items:center;
-  background:var(--bg-panel);
-  border:1px solid var(--border-soft);
-  border-radius:var(--radius-lg);
-  padding:16px;
-  box-shadow:var(--shadow-lg);
-}
-
-.lobby-portrait{
-  width:78px;
-  height:78px;
-  flex-shrink:0;
-  border-radius:50%;
-  border:2px solid var(--gold);
-  background:var(--bg-void);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  font-size:2rem;
-}
-
-.lobby-portrait img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.lobby-info{
-  min-width:0;
-  flex:1;
-}
-
-.lobby-name{
-  font-family:'Cinzel',serif;
-  font-size:1.05rem;
-  color:var(--gold-bright);
-  margin-bottom:7px;
-}
-
-.lobby-resource{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  font-size:.82rem;
-  color:var(--text-muted);
-  padding:2px 0;
-}
-
-.lobby-resource strong{
-  color:var(--text-main);
-}
-
-.lobby-remove{
-  position:absolute;
-  top:7px;
-  right:8px;
-  border:0;
-  background:none;
-  color:var(--text-muted);
-  cursor:pointer;
-  font-size:1.2rem;
-}
-
-.lobby-admin-actions{display:flex;gap:6px;align-items:center;}
-.lobby-edit{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:inherit;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;}
-.lobby-edit:hover{background:rgba(255,255,255,.12);}
-.lobby-remove:hover{
-  color:var(--danger);
-}
-
-.lobby-empty{
-  grid-column:1/-1;
-  text-align:center;
-  color:var(--text-muted);
-  padding:50px 20px;
-  background:var(--bg-panel);
-  border:1px dashed var(--border-soft);
-  border-radius:var(--radius-lg);
-}
-
-@media(max-width:640px){
-  .lobby-add{
-    flex-direction:column;
-  }
-}
-
-.capangas-panel{background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;margin-bottom:18px;box-shadow:var(--shadow-lg);}
-.capangas-panel h3{color:var(--gold-bright);font-size:1.05rem;margin-bottom:6px;}
-.capangas-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:14px;}
-.capangas-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
-.capanga-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:9px;}
-.capanga-row .capanga-count{font-weight:700;text-align:center;}
-.capanga-remove{background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;height:36px;padding:0 10px;}
-.capanga-remove:hover{border-color:var(--danger);}
-.lobby-capangas{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
-.lobby-capangas h2{color:var(--gold-bright);font-size:1.1rem;margin-bottom:6px;}
-.lobby-capangas-form{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-top:14px;}
-.lobby-capangas-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-top:14px;}
-.lobby-capanga-card{background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px;position:relative;}
-.lobby-capanga-title{font-family:'Cinzel',serif;color:var(--gold-bright);font-weight:600;margin-bottom:7px;}
-.lobby-capanga-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;font-size:.82rem;color:var(--text-muted);}
-.lobby-capanga-stats strong{display:block;color:var(--text-main);font-size:1rem;margin-top:2px;}
-.lobby-capanga-remove{margin-top:10px;width:100%;background:none;border:1px solid var(--border-soft);color:var(--danger);border-radius:var(--radius-sm);cursor:pointer;padding:7px;}
-.lobby-capanga-remove:hover{border-color:var(--danger);}
-.lobby-capanga-privacy{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;font-size:.8rem;color:var(--text-soft);}
-.lobby-capanga-privacy label{display:flex;align-items:center;gap:5px;}
-.lobby-privacy-panel{background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:16px;margin-bottom:18px;}
-.lobby-privacy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px;}
-.lobby-privacy-grid label{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:10px;border-radius:var(--radius-md);}
-@media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
-@media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
-
-.sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed;opacity:.45;filter:grayscale(1);pointer-events:none}.sub-toggle.locked span{color:#888}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -340,6 +184,7 @@ textarea { resize:vertical; line-height:1.6; }
 /* ===== Configuração ===== */
 const STORAGE_KEY = 'personagem';
 const LOREM_IPSUM = "Lorem ipsum";
+const RACAS_PROIBIDAS = [/lunarian/i, /bucaneir/i, /gigant/i];
 const PROFISSAO_OPCOES = ['Artista','Médico','Cozinheiro','Navegador & Piloto','Cientista & Engenheiro','Historiador','Diplomata','Ladrão & Espião','Combatente (não tem Profissão)'];
 function profissaoOptionsHtml(){
   return PROFISSAO_OPCOES.map(o=>`<option value="${o}">${o.replace(/&/g,'&amp;')}</option>`).join('');
@@ -391,12 +236,12 @@ const STEP_DEFS = [
 /* ===== Estado ===== */
 function defaultState() {
   const attrs = {};
-  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:1, mod:0});
+  Object.keys(ATTR_META).forEach(k => attrs[k] = {valor:0, mod:0});
   return {
     wizardStep:0, wizardDone:false, activeTab:'base',
     identidade:{nome:'',jogador:'',idade:'',expectativa:'',raca:'',profissao:'Combatente (não tem Profissão)',talento:'',sonho:''},
     attrs,
-    haki:{armamento:false,armamentoAvancado:false,observacao:false,observacaoAvancada:false,conquistador:false,conquistadorAvancado:false},
+    haki:{armamento:false,observacao:false,conquistador:false},
     frutas:[0,1,2].map(()=>({possui:false,nome:'',tipo:'',despertada:false})),
     recursos:{
       vida:{atual:0,extra:0,temporario:0},
@@ -404,48 +249,30 @@ function defaultState() {
       mental:{atual:0,extra:0,temporario:0}
     },
     limites:{morrendo:0,exaustao:0,enlouquecendo:0},
-    foco:{emUso:0,maximo:3},
+    foco:{emUso:0,maximo:4},
     imagem:null,
-
-lobby:{
-  mostrarNome:false,
-  mostrarFoto:true,
-  mostrarVida:false,
-  mostrarEnergia:false,
-  mostrarMental:false
-},
-
-notas:'',
+    notas: '',
     dinheiro:'B$10000000',
     itens:[],
     poderes:'',
     iniciativaBonus:0,
     formulaConfig: defaultFormulaConfig(),
-    pontoSonho:false,
-    capangas:[]
+    pontoSonho:false
   };
 }
 
 function total(key) { const a = state.attrs[key]; return (Number(a.valor)||0) + (Number(a.mod)||0); }
 function totals() { const t={}; Object.keys(ATTR_META).forEach(k=>t[k]=total(k)); return t; }
-function computeVida(t){
-  const c=state.formulaConfig;
-  const base=(c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0);
-  return base + (state.identidade.profissao === 'Combatente (não tem Profissão)' ? 15 : 0);
-}
+function computeVida(t){ const c=state.formulaConfig; return (c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0); }
 function computeEnergia(t){ const c=state.formulaConfig; return (c.energiaBase + t.vontade*c.energiaVontade + t.combate*c.energiaCombate + t.poder*c.energiaPoder + t.vigor*c.energiaVigor - t.raciocinio*c.energiaRaciocinio) * (Number(c.energiaMultiplicador)||1) + (Number(c.energiaAjuste)||0); }
-function computeMente(t){
-  const c=state.formulaConfig;
-  const base=Math.ceil((c.mentalBase + t.vontade*c.mentalVontade - t.raciocinio*c.mentalRaciocinio + t.poder*c.mentalPoder - t.percepcao*c.mentalPercepcao) * (Number(c.mentalMultiplicador)||1) + (Number(c.mentalAjuste)||0));
-  return base + (state.identidade.profissao === 'Combatente (não tem Profissão)' ? -10 : 0);
-}
+function computeMente(t){ const c=state.formulaConfig; return Math.ceil((c.mentalBase + t.vontade*c.mentalVontade - t.raciocinio*c.mentalRaciocinio + t.poder*c.mentalPoder - t.percepcao*c.mentalPercepcao) * (Number(c.mentalMultiplicador)||1) + (Number(c.mentalAjuste)||0)); }
 function computeIniciativa(t){ const c=state.formulaConfig; return t.rapidez + t.percepcao + Math.floor(t.combate/c.iniciativaCombateDiv) + (Number(state.iniciativaBonus)||0); }
 function frutaBonusVidaPercent(){
   let pct=0;
   state.frutas.forEach(f=>{
     if(!f.possui) return;
     if (f.tipo==='Zoan') pct += f.despertada?0.75:0.50;
-    else if (f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
+    else if (f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
   });
   return pct;
 }
@@ -459,220 +286,43 @@ function frutaBonusEnergiaPercent(){
 }
 function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())); }
 function computeEnergiaFinal(t){ return Math.ceil(computeEnergia(t) * (1+frutaBonusEnergiaPercent())); }
-function syncCombatenteRecursos(profissaoAnterior){
-  const eraCombatente = profissaoAnterior === 'Combatente (não tem Profissão)';
-  const ehCombatente = state.identidade.profissao === 'Combatente (não tem Profissão)';
-  if (eraCombatente === ehCombatente) return;
+function validaRaca(v){ if(!v) return true; return !RACAS_PROIBIDAS.some(rx=>rx.test(v)); }
 
-  // A troca de profissão altera diretamente os recursos atuais, além do máximo.
-  // Entrando em Combatente: Vida +15 / Mente -10.
-  // Saindo de Combatente: desfaz exatamente esses modificadores.
-  const deltaVida = ehCombatente ? 15 : -15;
-  const deltaMente = ehCombatente ? -10 : 10;
-
-  state.recursos.vida.atual = Math.max(0, (Number(state.recursos.vida.atual)||0) + deltaVida);
-  state.recursos.mental.atual = Math.max(0, (Number(state.recursos.mental.atual)||0) + deltaMente);
-}
-function validaRaca(v){ return true; }
-
-/* ===== Persistência online =====
-   Configure SUPABASE_URL e SUPABASE_ANON_KEY no bloco abaixo.
-   O restante da ficha continua igual.
-*/
-const SUPABASE_URL = 'https://ttxiiwmwiewkwhrtfexk.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_F_35YV-JNu02UCx0ND5MTQ_ORn2PzM0';
-const ONLINE_ENABLED = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('COLE_AQUI') && !SUPABASE_ANON_KEY.includes('COLE_AQUI');
-let state = defaultState();
-let saveTimer = null;
-let supabaseClient = null;
-const URL_PARAMS = new URLSearchParams(location.search);
-  const IS_LOBBY = URL_PARAMS.has('lobby');
-const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
-// A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
-// carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
-let characterId = URL_PARAMS.get('ficha') || null;
-const IS_MASTER_SHEET = URL_PARAMS.has('master') && !!LOBBY_ADMIN_TOKEN;
-const TOKEN_STORAGE_KEY = characterId ? 'sonhos_ficha_token_'+characterId : 'sonhos_ficha_token';
-let editToken = IS_MASTER_SHEET ? null : null;
-let readOnlySheet = false;
-const IS_SHARED_SHEET = !!characterId;
-let realtimeChannel = null;
-let onlineSaveTimer = null;
-let pendingRemoteState = null;
-let localSaveInFlight = false;
-let lastSheetInteraction = 0;
-function stateSignature(v){ try{return JSON.stringify(v);}catch(e){return "";} }
-function userIsEditing(){ const el=document.activeElement; return !!el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName); }
-function markSheetInteraction(){ lastSheetInteraction=Date.now(); }
-function sheetIsBusy(){ return userIsEditing() || (Date.now()-lastSheetInteraction < 900); }
-function applyPendingRemoteState(){
-  if(!pendingRemoteState || sheetIsBusy()) return;
-  const next=pendingRemoteState; pendingRemoteState=null;
-  if(stateSignature(next)!==stateSignature(state)){
-    const currentTab=state.activeTab||'base';
-    state=mergeState(next);
-    // A sincronização nunca deve trocar a aba que o usuário está vendo.
-    state.activeTab=currentTab;
-    if(state.wizardDone) refreshCurrentSheetTab(); else renderWizard();
-  }
-}
-function refreshCurrentSheetTab(){
-  const tab=state.activeTab||'base';
-  const content=document.getElementById('tabContent');
-  if(!content) return;
-  if(tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
-  else if(tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
-  else if(tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
-  else if(tab==='inventario'){ content.innerHTML=buildTabInventario(); fillTabInventario(); bindTabInventario(); }
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
-  initTooltipTaps();
-}
-if(!window.__sonhosInteractionGuard){
-  window.__sonhosInteractionGuard=true;
-  document.addEventListener('pointerdown', markSheetInteraction, true);
-  document.addEventListener('keydown', markSheetInteraction, true);
-  document.addEventListener('input', markSheetInteraction, true);
-  document.addEventListener('change', markSheetInteraction, true);
-}
-
+/* ===== Persistência ===== */
 function mergeState(loaded) {
   const base = defaultState();
-  const merged = Object.assign({}, base, loaded || {});
-  merged.identidade = Object.assign({}, base.identidade, loaded?.identidade||{});
+  const merged = Object.assign({}, base, loaded);
+  merged.identidade = Object.assign({}, base.identidade, loaded.identidade||{});
   merged.attrs = {};
-  Object.keys(base.attrs).forEach(k=>{
-    merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded?.attrs&&loaded.attrs[k])||{});
-    if(Number(merged.attrs[k].valor) < 0) merged.attrs[k].valor = 0;
-  });
-  merged.haki = Object.assign({}, base.haki, loaded?.haki||{});
-  // Haki avançado nunca pode existir sem o Haki normal correspondente.
-  if(!merged.haki.observacao) merged.haki.observacaoAvancada=false;
-  if(!merged.haki.armamento) merged.haki.armamentoAvancado=false;
-  if(!merged.haki.conquistador) merged.haki.conquistadorAvancado=false;
-  merged.frutas = base.frutas.map((f,i)=>{
-    const fruta = Object.assign({}, f, (loaded?.frutas&&loaded.frutas[i])||{});
-    if(fruta.tipo==='Zoan Mítica' || fruta.tipo==='Zoan (Ancestral/Primordial)') fruta.tipo='Zoan Mítica/Ancestral';
-    return fruta;
-  });
+  Object.keys(base.attrs).forEach(k=>{ merged.attrs[k] = Object.assign({}, base.attrs[k], (loaded.attrs&&loaded.attrs[k])||{}); });
+  merged.haki = Object.assign({}, base.haki, loaded.haki||{});
+  merged.frutas = base.frutas.map((f,i)=> Object.assign({}, f, (loaded.frutas&&loaded.frutas[i])||{}));
   merged.recursos = {
-    vida:Object.assign({},base.recursos.vida,loaded?.recursos?.vida||{}),
-    energia:Object.assign({},base.recursos.energia,loaded?.recursos?.energia||{}),
-    mental:Object.assign({},base.recursos.mental,loaded?.recursos?.mental||{})
+    vida: Object.assign({}, base.recursos.vida, (loaded.recursos&&loaded.recursos.vida)||{}),
+    energia: Object.assign({}, base.recursos.energia, (loaded.recursos&&loaded.recursos.energia)||{}),
+    mental: Object.assign({}, base.recursos.mental, (loaded.recursos&&loaded.recursos.mental)||{})
   };
-  merged.limites=Object.assign({},base.limites,loaded?.limites||{});
-  merged.foco=Object.assign({},base.foco,loaded?.foco||{});
-  merged.formulaConfig=Object.assign({},base.formulaConfig,loaded?.formulaConfig||{});
-  merged.lobby=Object.assign(
-  {},
-  base.lobby,
-  loaded?.lobby||{}
-);
-  merged.itens=loaded?.itens||[];
-  merged.capangas=Array.isArray(loaded?.capangas) ? loaded.capangas.map(c=>({id:c.id||crypto.randomUUID?.()||String(Date.now()+Math.random()),nome:String(c.nome||'Capangas'),vida:Math.max(0,Number(c.vida)||0),energia:Math.max(0,Number(c.energia)||0),quantidade:Math.max(1,Number(c.quantidade)||1)})) : [];
+  merged.limites = Object.assign({}, base.limites, loaded.limites||{});
+  merged.foco = Object.assign({}, base.foco, loaded.foco||{});
+  merged.formulaConfig = Object.assign({}, base.formulaConfig, loaded.formulaConfig||{});
+  merged.itens = loaded.itens || [];
   return merged;
 }
 
-async function loadState(){
-  // Sem ?ficha=... estamos na página inicial: nunca recuperar a ficha anterior.
-  if(!characterId){
-    state = defaultState();
-    try{
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('sonhos_ficha_id');
-      localStorage.removeItem('sonhos_ficha_token');
-    }catch(e){}
-  }
-  if(!ONLINE_ENABLED){
-    return;
-  }
-  try{
-    if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY, LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined);
-    if(characterId){
-      const {data,error}=await supabaseClient.rpc('get_character_state',{p_id:characterId});
-      if(error) throw error;
-      localStorage.setItem('sonhos_ficha_id',characterId);
-      state=mergeState(data);
-      subscribeRealtime();
-    }
-  }catch(e){ console.warn('Modo online indisponível:',e); }
-}
-function scheduleSave(){
-  clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
-  saveTimer=setTimeout(saveState,350);
-}
-async function saveState(){
-  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
-  if(!ONLINE_ENABLED || !supabaseClient || !characterId || (!editToken && !IS_MASTER_SHEET)) return;
-  clearTimeout(onlineSaveTimer);
-  localSaveInFlight=true;
-  onlineSaveTimer=setTimeout(async()=>{
-    try{
-      if(IS_MASTER_SHEET) await supabaseClient.rpc('update_character_by_admin',{p_id:characterId,p_state:state});
-      else await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
-    }
-    catch(e){ console.warn('Falha ao sincronizar:',e); }
-    finally{ setTimeout(()=>{ localSaveInFlight=false; applyPendingRemoteState(); },250); }
-  },150);
-}
-function subscribeRealtime(){
-  if(!supabaseClient || !characterId) return;
-  if(realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
-  realtimeChannel=supabaseClient.channel('character-'+characterId)
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'characters',filter:'id=eq.'+characterId},payload=>{
-      if(!payload.new?.state) return;
-      const incoming=payload.new.state;
-      if(stateSignature(incoming)===stateSignature(state)) return;
-      if(localSaveInFlight || sheetIsBusy()){ pendingRemoteState=incoming; return; }
-      const currentTab=state.activeTab||'base';
-      state=mergeState(incoming);
-      state.activeTab=currentTab;
-      if(state.wizardDone) refreshCurrentSheetTab(); else renderWizard();
-    }).subscribe();
-}
-if(!window.__sonhosBlurBound){
-  window.__sonhosBlurBound=true;
-  document.addEventListener('focusout',()=>setTimeout(applyPendingRemoteState,0));
-}
-function ensureSupabaseClient(){
-  if(!ONLINE_ENABLED) throw new Error('Supabase não configurado.');
-  if(!window.supabase) throw new Error('Biblioteca Supabase não carregada.');
-  if(!supabaseClient){
-    supabaseClient=window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
-    );
-  }
-  return supabaseClient;
-}
+let state = defaultState();
+let saveTimer = null;
 
-async function createOnlineCharacter(){
-  if(!ONLINE_ENABLED) return null;
-  ensureSupabaseClient();
-  const {data,error}=await supabaseClient.rpc('create_character',{p_state:state});
-  if(error) throw error;
-  characterId=data.id; editToken=data.edit_token;
-  localStorage.setItem('sonhos_ficha_id',characterId);
-  localStorage.setItem('sonhos_ficha_token_'+characterId,editToken);
-  subscribeRealtime();
-  history.replaceState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
-  return characterId;
+async function loadState() {
+  try {
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if (res && res.value) state = mergeState(JSON.parse(res.value));
+  } catch(e) { /* nada salvo ainda */ }
 }
-
-window.addEventListener('popstate',()=>{
-  if(characterId && location.search.indexOf('ficha=')===-1){
-    history.pushState({},'',location.pathname+'?ficha='+encodeURIComponent(characterId));
-  }
-});
-
-function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
-function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
-function copyTextOrPrompt(text,message){
-  if(!text) return;
-  navigator.clipboard?.writeText(text).then(()=>alert(message)).catch(()=>prompt('Copie este link:',text));
+function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 350); }
+async function saveState() {
+  try { await window.storage.set(STORAGE_KEY, JSON.stringify(state), false); }
+  catch(e) { console.error('Erro ao salvar', e); }
 }
-function copyShareLink(){ const url=fichaShareUrl(); if(!characterId) return alert('Finalize a criação da ficha primeiro.'); if(!url) return alert('A ficha está conectada ao banco, mas você precisa hospedá-la em um endereço web para gerar um link compartilhável.'); copyTextOrPrompt(url,'Link da ficha copiado!'); }
 
 /* ===== Utilidades de UI ===== */
 function infoIcon(text) { return `<span class="info-icon" tabindex="0" data-tooltip="${text.replace(/"/g,'&quot;')}">ⓘ</span>`; }
@@ -738,7 +388,7 @@ function openFormulaSettings(){
 
 /* ===== Wizard: telas ===== */
 function buildWelcome() {
-  return `<p class="welcome-text">Uma nova lenda está prestes a nascer nos mares. Vamos construir sua ficha juntos, passo a passo. No fim, ela estará pronta para a mesa.</p>
+  return `<p class="welcome-text">Uma nova lenda está prestes a nascer nos mares. Vamos construir sua ficha juntos, passo a passo — no fim, ela estará pronta para a mesa.</p>
   <p style="text-align:center;"><button type="button" id="btnImportWelcome" class="btn-link">📂 Já tenho uma ficha salva (.json)</button><input type="file" id="importFileInputWelcome" accept="application/json" hidden></p>`;
 }
 function buildId1() {
@@ -746,54 +396,8 @@ function buildId1() {
     <div class="field"><label>Nome do Personagem ${infoIcon('Nome d@ Personagem')}</label>
       <input type="text" id="inpNome" placeholder="Ex: Monkey D. ..."></div>
     <div class="field"><label>Jogador(a) ${infoIcon('Nome d@ Jogador(a)')}</label>
-      <input type="text" id="inpJogador" placeholder="Seu nome"></div>
-    <div id="playerRuleMessage" class="hint-text" style="margin-top:8px;min-height:1.4em"></div>`;
+      <input type="text" id="inpJogador" placeholder="Seu nome"></div>`;
 }
-function getPlayerRule(){
-  const nome=String(state.identidade.jogador||'').trim().toLowerCase();
-  const idade=Number.parseInt(String(state.identidade.idade||''),10);
-  if(nome.startsWith('andr')) return {mensagem:'Você já ganha buff em trair.', bloqueado:false};
-  if(nome.includes('maozinh')) return {mensagem:'Não vai passar daqui.', bloqueado:true};
-  if(nome.startsWith('vin')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
-  if(nome.startsWith('nic')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
-  if(nome.startsWith('wal')) return {mensagem:'O teu poder é o preto.', bloqueado:false};
-  if(nome.startsWith('eduard')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
-  return {mensagem:'', bloqueado:false};
-}
-function showPlayerRule(){
-  const rule=getPlayerRule();
-  const old=document.getElementById('playerRuleToast');
-  if(old) old.remove();
-  clearTimeout(window.__playerRuleTimer);
-  if(!rule.mensagem) return;
-
-  const toast=document.createElement('div');
-  toast.id='playerRuleToast';
-  toast.textContent=rule.mensagem;
-  toast.style.cssText=`
-    position:fixed;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    z-index:99999;
-    max-width:min(90vw,520px);
-    padding:18px 24px;
-    border-radius:14px;
-    background:var(--panel,#151922);
-    color:${rule.bloqueado?'#ff6b6b':'#fff'};
-    border:2px solid ${rule.bloqueado?'#b42318':'var(--accent,#d4af37)'};
-    box-shadow:0 12px 40px rgba(0,0,0,.55);
-    font-size:1rem;
-    font-weight:700;
-    text-align:center;
-    pointer-events:none;
-  `;
-  document.body.appendChild(toast);
-  window.__playerRuleTimer=setTimeout(()=>{
-    if(toast.isConnected) toast.remove();
-  },3000);
-}
-
 function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; }
 function bindId1(){
   document.getElementById('inpNome').addEventListener('input', e=>{state.identidade.nome=e.target.value; scheduleSave();});
@@ -821,19 +425,7 @@ function bindId2(){
   document.getElementById('inpIdade').addEventListener('input', e=>{state.identidade.idade=e.target.value; scheduleSave();});
   document.getElementById('inpExpectativa').addEventListener('input', e=>{state.identidade.expectativa=e.target.value; scheduleSave();});
   document.getElementById('inpRaca').addEventListener('input', e=>{state.identidade.raca=e.target.value; scheduleSave();});
-  document.getElementById('inpProfissao').addEventListener('change', e=>{
-    const anterior=state.identidade.profissao;
-    state.identidade.profissao=e.target.value;
-    syncCombatenteRecursos(anterior);
-    syncFocoMaximo();
-    renderFocoPips();
-    updateResourceDisplays();
-    const vidaAtual=document.getElementById('vidaAtual');
-    const mentalAtual=document.getElementById('mentalAtual');
-    if (vidaAtual) vidaAtual.value=state.recursos.vida.atual;
-    if (mentalAtual) mentalAtual.value=state.recursos.mental.atual;
-    scheduleSave();
-  });
+  document.getElementById('inpProfissao').addEventListener('input', e=>{state.identidade.profissao=e.target.value; syncFocoMaximo(); renderFocoPips(); scheduleSave();});
 }
 
 function buildId3() {
@@ -874,7 +466,7 @@ function bindAttrStep(){
   document.querySelectorAll('.attr-valor, .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
-      state.attrs[key][field] = field === 'valor' ? Math.max(0, Number(e.target.value)||0) : (Number(e.target.value)||0);
+      state.attrs[key][field] = Number(e.target.value)||0;
       scheduleSave();
     });
   });
@@ -882,122 +474,21 @@ function bindAttrStep(){
 
 function buildHakiStep(){
   return `
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="chkObservacaoAvancada" disabled><span>Haki Avançado</span></label></div>
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="chkArmamentoAvancado" disabled><span>Haki Avançado</span></label></div>
-    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="chkConquistadorAvancado" disabled><span>Haki Avançado</span></label></div>`;
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="HintObservacao"></p></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="HintArmamento"></p></div>
+    <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="chkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="HintConquistador"></p></div>`;
 }
 function fillHakiStep(){
   document.getElementById('chkObservacao').checked=state.haki.observacao;
   document.getElementById('chkArmamento').checked=state.haki.armamento;
   document.getElementById('chkConquistador').checked=state.haki.conquistador;
-  document.getElementById('chkObservacaoAvancada').checked=!!state.haki.observacaoAvancada;
-  document.getElementById('chkArmamentoAvancado').checked=!!state.haki.armamentoAvancado;
-  document.getElementById('chkConquistadorAvancado').checked=!!state.haki.conquistadorAvancado;
-  updateHakiAdvancedAvailability('');
   updateHakiHints('');
 }
-function syncHakiDependencies(){
-  const pairs=[
-    ['Observacao','observacao','observacaoAvancada'],
-    ['Armamento','armamento','armamentoAvancado'],
-    ['Conquistador','conquistador','conquistadorAvancado']
-  ];
-
-  pairs.forEach(([name, normalKey, advancedKey])=>{
-    const unlocked = state.haki[normalKey] === true;
-
-    // Haki avançado só pode existir quando o Haki normal estiver marcado.
-    if(!unlocked){
-      state.haki[normalKey] = false;
-      state.haki[advancedKey] = false;
-    }
-
-    ['', 'p'].forEach(prefix=>{
-      const normal=document.getElementById(prefix+'Chk'+name);
-      const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
-      if(!normal || !adv) return;
-
-      normal.checked = unlocked;
-      adv.disabled = !unlocked;
-      adv.checked = unlocked && state.haki[advancedKey] === true;
-      adv.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
-      adv.title = unlocked ? 'Haki Avançado liberado' : 'Marque o Haki normal primeiro';
-
-      const row=adv.closest('.sub-toggle');
-      if(row){
-        row.classList.toggle('locked', !unlocked);
-        row.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
-        row.style.opacity = unlocked ? '1' : '.45';
-        row.style.filter = unlocked ? 'none' : 'grayscale(1)';
-        row.style.cursor = unlocked ? '' : 'not-allowed';
-
-        const span=row.querySelector('span');
-        if(span){
-          span.style.opacity = unlocked ? '1' : '.42';
-          span.style.color = unlocked ? '' : '#888';
-        }
-      }
-    });
-  });
+function bindHakiStep(){
+  document.getElementById('chkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; scheduleSave();});
+  document.getElementById('chkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; scheduleSave();});
+  document.getElementById('chkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; scheduleSave();});
 }
-
-function bindHakiControls(){
-  const pairs=[
-    ['Observacao','observacao','observacaoAvancada'],
-    ['Armamento','armamento','armamentoAvancado'],
-    ['Conquistador','conquistador','conquistadorAvancado']
-  ];
-
-  ['', 'p'].forEach(prefix=>{
-    pairs.forEach(([name,normalKey,advancedKey])=>{
-      const normal=document.getElementById(prefix+'Chk'+name);
-      const adv=document.getElementById(prefix+'Chk'+name+'Avancada');
-      if(!normal || !adv) return;
-
-      normal.addEventListener('change',()=>{
-        state.haki[normalKey] = normal.checked === true;
-        if(!state.haki[normalKey]) state.haki[advancedKey] = false;
-        syncHakiDependencies();
-        scheduleSave();
-      });
-
-      adv.addEventListener('change',()=>{
-        if(!state.haki[normalKey]){
-          state.haki[advancedKey] = false;
-        }else{
-          state.haki[advancedKey] = adv.checked === true;
-        }
-        syncHakiDependencies();
-        scheduleSave();
-      });
-
-      adv.addEventListener('click',e=>{
-        if(adv.disabled || !state.haki[normalKey]){
-          e.preventDefault();
-          e.stopPropagation();
-          state.haki[advancedKey] = false;
-          syncHakiDependencies();
-        }
-      });
-    });
-  });
-
-  syncHakiDependencies();
-}
-
-function bindHakiStep(){ bindHakiControls(); }
-
-// Mantido por compatibilidade com as chamadas existentes.
-function updateHakiAdvancedAvailability(prefix){
-  syncHakiDependencies();
-}
-
-// Mantido por compatibilidade com versões anteriores do código.
-function bindHakiAdvancedGuards(){
-  syncHakiDependencies();
-}
-
-
 function updateHakiHints(prefix){
   const t=totals();
   const items=[
@@ -1023,7 +514,8 @@ function buildFrutasStep(){
           <option value="">Tipo...</option>
           <option value="Paramecia">Paramecia</option>
           <option value="Zoan">Zoan</option>
-          <option value="Zoan Mítica/Ancestral">Zoan Mítica/Ancestral</option>
+          <option value="Zoan (Ancestral/Primordial)">Zoan (Ancestral/Primordial)</option>
+          <option value="Zoan Mítica">Zoan Mítica</option>
           <option value="Logia">Logia</option>
           <option value="Desconhecido">Desconhecido</option>
         </select>
@@ -1106,7 +598,7 @@ function renderWizard(){
       </div>
       <div class="wizard-nav">
         ${idx>0?'<button id="btnBack" type="button" class="btn btn-ghost">← Voltar</button>':'<span></span>'}
-        ${def.key==='welcome' ? '<button id="btnStart" type="button" class="btn btn-primary">Continuar ⚓</button>' :
+        ${def.key==='welcome' ? '<button id="btnStart" type="button" class="btn btn-primary">Zarpar ⚓</button>' :
           def.key==='frutas' ? '<button id="btnFinish" type="button" class="btn btn-primary">Finalizar Ficha ⚓</button>' :
           '<button id="btnNext" type="button" class="btn btn-primary">Avançar →</button>'}
       </div>
@@ -1116,150 +608,30 @@ function renderWizard(){
   bindSecretTrigger(document.querySelector('.logo-title'));
 }
 function wireNav(idx, key){
-  const go=(target)=>{
-    clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
-    saveState();
-    state.wizardStep=target;
-    renderWizard();
-  };
-  const back=document.getElementById('btnBack'); if(back) back.onclick=()=>go(idx-1);
-  const start=document.getElementById('btnStart'); if(start) start.onclick=()=>go(idx+1);
+  const back=document.getElementById('btnBack'); if(back) back.onclick=()=>{ state.wizardStep=idx-1; renderWizard(); };
+  const start=document.getElementById('btnStart'); if(start) start.onclick=()=>{ state.wizardStep=idx+1; renderWizard(); };
   const next=document.getElementById('btnNext'); if(next) next.onclick=()=>{
-    // As regras do jogador são verificadas no PRIMEIRO Avançar,
-    // logo depois de preencher o nome do jogador (tela id1).
-    if(key==='id1'){
-      const rule=getPlayerRule();
-      if(rule.mensagem){
-        showPlayerRule();
-        if(rule.bloqueado) return;
-        setTimeout(()=>go(idx+1),3000);
-        return;
-      }
-    }
-    // Para Vin/Eduard, a idade ainda não existe na primeira tela.
-    // A mensagem já aparece no primeiro Avançar; a restrição de idade
-    // é aplicada quando a idade passa a estar disponível.
-    if(key==='id2'){
-      const rule=getPlayerRule();
-      if(rule.bloqueado){
-        showPlayerRule();
-        return;
-      }
-    }
-    go(idx+1);
+    state.wizardStep=idx+1; renderWizard(); scheduleSave();
   };
   const finish=document.getElementById('btnFinish'); if(finish) finish.onclick=finalizeCharacter;
 }
-async function finalizeCharacter(){
+function finalizeCharacter(){
   const t=totals();
-
   state.recursos.vida.atual=computeVidaFinal(t);
   state.recursos.energia.atual=computeEnergiaFinal(t);
   state.recursos.mental.atual=computeMente(t);
   state.wizardDone=true;
-
-  if(ONLINE_ENABLED && !characterId){
-    try{
-      ensureSupabaseClient();
-      await createOnlineCharacter();
-    }catch(e){
-      console.error('Não foi possível criar/configurar a ficha online:',e);
-      alert('A ficha foi finalizada, mas ocorreu um erro ao criar ou configurar a ficha online. Você ainda pode usar o botão "🔐 Senha de edição" para definir a senha.');
-    }
-  }
-
   scheduleSave();
   renderSheet();
-  if(ONLINE_ENABLED && characterId) addOnlineControls();
 }
 
 /* ===== Ficha final ===== */
-
-const CAPANGAS_STORAGE_KEY='sonhos_capangas_mestre';
-function loadMasterCapangas(){
-  try{
-    const raw=localStorage.getItem(CAPANGAS_STORAGE_KEY);
-    const parsed=JSON.parse(raw||'[]');
-    return typeof normalizeLobbyCapangas==='function' ? normalizeLobbyCapangas(parsed) : (Array.isArray(parsed) ? parsed : []);
-  }catch(e){ return []; }
-}
-function saveMasterCapangas(){
-  try{ localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(typeof normalizeLobbyCapangas==='function' ? normalizeLobbyCapangas(state.capangas||[]) : (state.capangas||[]))); }catch(e){}
-}
-function buildCapangasPanel(){
-  const groups=Array.isArray(state.capangas)?state.capangas:[];
-  return `<div class="capangas-panel" id="capangasPanel">
-    <h3>⚔️ Capangas</h3>
-    <p class="hint-text">Ferramenta do mestre. Os grupos ficam salvos neste navegador e não exigem nenhuma alteração na estrutura do Supabase.</p>
-    <div class="capangas-form">
-      <div class="field"><label>Grupo</label><input id="capangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
-      <div class="field"><label>Vida</label><input id="capangaVida" type="number" min="0" value="10"></div>
-      <div class="field"><label>Energia</label><input id="capangaEnergia" type="number" min="0" value="5"></div>
-      <div class="field"><label>Quantidade</label><input id="capangaQuantidade" type="number" min="1" value="1"></div>
-      <button type="button" class="btn btn-primary" id="addCapangaBtn">Adicionar</button>
-    </div>
-    <div class="capangas-list" id="capangasList">${groups.length?groups.map(buildCapangaRow).join(''):'<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>'}</div>
-  </div>`;
-}
-function buildCapangaRow(c){
-  return `<div class="capanga-row" data-capanga-id="${escapeHtml(c.id)}">
-    <div class="capanga-name"><strong>${escapeHtml(c.nome||'Capangas')}</strong></div>
-    <div>❤️ Vida <strong>${Number(c.vida)||0}</strong></div>
-    <div>⚡ Energia <strong>${Number(c.energia)||0}</strong></div>
-    <div>👥 <span class="capanga-count">${Number(c.quantidade)||1}</span></div>
-    <button type="button" class="capanga-remove" data-remove-capanga="${escapeHtml(c.id)}">Remover</button>
-  </div>`;
-}
-function renderCapangasPanel(){
-  const list=document.getElementById('capangasList'); if(!list) return;
-  list.innerHTML=(state.capangas||[]).length ? state.capangas.map(buildCapangaRow).join('') : '<div class="empty-hint">Nenhum grupo de capangas adicionado.</div>';
-  list.querySelectorAll('[data-remove-capanga]').forEach(btn=>btn.onclick=()=>{
-    state.capangas=state.capangas.filter(c=>c.id!==btn.dataset.removeCapanga);
-    saveMasterCapangas(); renderCapangasPanel();
-  });
-}
-function bindCapangasPanel(){
-  const btn=document.getElementById('addCapangaBtn'); if(!btn) return;
-  btn.onclick=()=>{
-    const nome=document.getElementById('capangaNome').value.trim();
-    if(!nome) return alert('Digite um nome para o grupo.');
-    const vida=Math.max(0,Number(document.getElementById('capangaVida').value)||0);
-    const energia=Math.max(0,Number(document.getElementById('capangaEnergia').value)||0);
-    const quantidade=Math.max(1,Number(document.getElementById('capangaQuantidade').value)||1);
-    state.capangas.push({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())),nome,vida,energia,quantidade});
-    saveMasterCapangas(); renderCapangasPanel();
-    document.getElementById('capangaNome').value='';
-  };
-  renderCapangasPanel();
-}
-
-function buildLobbyPrivacyPanel(){
-  if(!characterId) return '';
-  const l=state.lobby||{};
-  return `<div class="lobby-privacy-panel">
-    <h3>👁️ Privacidade no Lobby</h3>
-    <p class="hint-text">Escolha o que os outros jogadores poderão ver quando sua ficha estiver no lobby. O mestre continua podendo ver a ficha completa.</p>
-    <div class="lobby-privacy-grid">
-      <label><input type="checkbox" id="privacyNome" ${l.mostrarNome?'checked':''}> Nome visível</label>
-      <label><input type="checkbox" id="privacyVida" ${l.mostrarVida?'checked':''}> Vida visível</label>
-      <label><input type="checkbox" id="privacyEnergia" ${l.mostrarEnergia?'checked':''}> Energia visível</label>
-      <label><input type="checkbox" id="privacyMental" ${l.mostrarMental?'checked':''}> Mental visível</label>
-    </div>
-  </div>`;
-}
-function bindLobbyPrivacyPanel(){
-  const map=[['privacyNome','mostrarNome'],['privacyVida','mostrarVida'],['privacyEnergia','mostrarEnergia'],['privacyMental','mostrarMental']];
-  map.forEach(([id,key])=>document.getElementById(id)?.addEventListener('change',e=>{ state.lobby[key]=e.target.checked; scheduleSave(); }));
-}
-
 function renderSheet(){
   const app=document.getElementById('app');
   app.innerHTML = `
     <div class="app-shell sheet-shell">
       <div class="mini-logo">Sonhos do Alvorecer</div>
       <div class="sheet-header" id="sheetHeader"></div>
-      ${IS_MASTER_SHEET ? buildCapangasPanel() : ''}
-      ${buildLobbyPrivacyPanel()}
       <div class="tab-bar" id="tabBar">
         <button type="button" class="tab-btn" data-tab="base">📜 Ficha Base</button>
         <button type="button" class="tab-btn" data-tab="poderes">🔥 Poderes</button>
@@ -1272,16 +644,12 @@ function renderSheet(){
         <button id="btnImport" type="button" class="btn-link">📂 Carregar backup</button>
         <input type="file" id="importFileInput" accept="application/json" hidden>
         <button id="btnReset" type="button" class="btn-link">Reiniciar ficha</button>
-        <button id="btnNewCharacter" type="button" class="btn-link">✨ Criar novo personagem</button>
       </div>
     </div>`;
   renderSheetHeader();
-  if(IS_MASTER_SHEET) bindCapangasPanel();
-  bindLobbyPrivacyPanel();
   bindTabs();
   switchTab(state.activeTab||'base');
   document.getElementById('btnReset').onclick = confirmReset;
-  document.getElementById('btnNewCharacter').onclick = createNewCharacter;
   document.getElementById('btnExport').onclick = exportBackup;
   document.getElementById('btnImport').onclick = ()=>document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').addEventListener('change', importBackupFile);
@@ -1323,19 +691,8 @@ function renderSheetHeader(){
   ['Nome','Jogador','Idade','Expectativa','Raca','Profissao','Talento','Sonho'].forEach(field=>{
     const stateKey = field.charAt(0).toLowerCase()+field.slice(1);
     document.getElementById('hdr'+field).addEventListener('input', e=>{
-      if (field==='Profissao') {
-        const anterior=state.identidade.profissao;
-        state.identidade.profissao=e.target.value;
-        syncCombatenteRecursos(anterior);
-        syncFocoMaximo();
-        renderFocoPips();
-        updateResourceDisplays();
-        document.getElementById('vidaAtual').value=state.recursos.vida.atual;
-        document.getElementById('mentalAtual').value=state.recursos.mental.atual;
-        scheduleSave();
-        return;
-      }
       state.identidade[stateKey]=e.target.value;
+      if (field==='Profissao') { syncFocoMaximo(); renderFocoPips(); }
       scheduleSave();
     });
   });
@@ -1356,27 +713,17 @@ function handleImagemUpload(e){
   reader.readAsDataURL(file);
 }
 
-function bindTabs(){
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.preventDefault();
-      markSheetInteraction();
-      switchTab(btn.dataset.tab);
-    });
-  });
-}
+function bindTabs(){ document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.addEventListener('click', ()=>switchTab(btn.dataset.tab)); }); }
 function switchTab(tab){
-  // A aba é estado apenas da interface local, não deve ser sobrescrita por outra sessão.
   state.activeTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   const content=document.getElementById('tabContent');
   if (tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
   else if (tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
   else if (tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
   else if (tab==='inventario'){ content.innerHTML=buildTabInventario(); fillTabInventario(); bindTabInventario(); }
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   initTooltipTaps();
-  // Não sincroniza a aba como se fosse uma alteração da ficha.
-  markSheetInteraction();
+  scheduleSave();
 }
 
 function buildTabBase(){
@@ -1484,8 +831,7 @@ function fillLimitePips(key){
 function onLimitePipClick(key, idx){
   state.limites[key] = (state.limites[key]===idx+1) ? idx : idx+1;
   fillLimitePips(key);
-  // Limites são estados importantes da ficha: salva imediatamente.
-  saveState();
+  scheduleSave();
 }
 function syncFocoMaximo(){
   const max = state.identidade.profissao === 'Combatente (não tem Profissão)' ? 4 : 3;
@@ -1517,7 +863,7 @@ function bindTabBase(){
   document.querySelectorAll('#tabContent .attr-valor, #tabContent .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const key=e.target.dataset.attr; const field=e.target.classList.contains('attr-valor')?'valor':'mod';
-      state.attrs[key][field]=field === 'valor' ? Math.max(0, Number(e.target.value)||0) : (Number(e.target.value)||0);
+      state.attrs[key][field]=Number(e.target.value)||0;
       updateResourceDisplays();
       scheduleSave();
     });
@@ -1538,9 +884,9 @@ function buildTabPoderes(){
   return `
     <div class="panel">
       <h3>Haki</h3>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="pHintObservacao"></p><label class="sub-toggle"><input type="checkbox" id="pChkObservacaoAvancada" disabled><span>Haki Avançado</span></label></div>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancado" disabled><span>Haki Avançado</span></label></div>
-      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancado" disabled><span>Haki Avançado</span></label></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkObservacao"><span>Haki da Observação</span></label><p class="hint-text" id="pHintObservacao"></p></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p></div>
+      <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p></div>
     </div>
     <div class="panel"><h3>Akuma no Mi</h3>${buildFrutasStep()}</div>
     <div class="panel">
@@ -1552,23 +898,16 @@ function fillTabPoderes(){
   document.getElementById('pChkObservacao').checked=state.haki.observacao;
   document.getElementById('pChkArmamento').checked=state.haki.armamento;
   document.getElementById('pChkConquistador').checked=state.haki.conquistador;
-  document.getElementById('pChkObservacaoAvancada').checked=!!state.haki.observacaoAvancada;
-  document.getElementById('pChkArmamentoAvancado').checked=!!state.haki.armamentoAvancado;
-  document.getElementById('pChkConquistadorAvancado').checked=!!state.haki.conquistadorAvancado;
-  updateHakiAdvancedAvailability('p');
   updateHakiHints('p');
   fillFrutasStep();
   document.getElementById('poderesTextarea').value=state.poderes;
 }
 function bindTabPoderes(){
-  // O controle de dependência do Haki fica centralizado em bindHakiControls().
-  // Evita listeners duplicados que poderiam alterar o estado dos avançados.
-  bindHakiControls();
+  document.getElementById('pChkObservacao').addEventListener('change', e=>{state.haki.observacao=e.target.checked; scheduleSave();});
+  document.getElementById('pChkArmamento').addEventListener('change', e=>{state.haki.armamento=e.target.checked; scheduleSave();});
+  document.getElementById('pChkConquistador').addEventListener('change', e=>{state.haki.conquistador=e.target.checked; scheduleSave();});
   bindFrutasStep();
-  document.getElementById('poderesTextarea').addEventListener('input', e=>{
-    state.poderes=e.target.value;
-    scheduleSave();
-  });
+  document.getElementById('poderesTextarea').addEventListener('input', e=>{ state.poderes=e.target.value; scheduleSave(); });
 }
 
 function buildTabNotas(){ return `<div class="panel"><h3>Notas de História/Personagem</h3><textarea id="notasTextarea" rows="14" placeholder="${LOREM_IPSUM}"></textarea></div>`; }
@@ -1635,433 +974,31 @@ function exportBackup(){
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
-async function importBackupFile(e){
+function importBackupFile(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=async(ev)=>{
+  reader.onload=(ev)=>{
     try {
       const loaded = JSON.parse(ev.target.result);
-
-      // Um backup JSON representa uma nova cópia da ficha.
-      // Não reutilizamos o ID/token da ficha que estava aberta.
-      if(realtimeChannel && supabaseClient){
-        try{ supabaseClient.removeChannel(realtimeChannel); }catch(e){}
-      }
-      realtimeChannel = null;
-      characterId = null;
-      editToken = null;
-      try{
-        localStorage.removeItem('sonhos_ficha_id');
-        localStorage.removeItem('sonhos_ficha_token');
-      }catch(e){}
-
       state = mergeState(loaded);
       scheduleSave();
-
-      if (state.wizardDone) {
-        renderSheet();
-        if(ONLINE_ENABLED && supabaseClient){
-          try{
-            await createOnlineCharacter();
-            addOnlineControls();
-          }catch(err){
-            console.warn('Não foi possível criar a cópia online do backup:', err);
-          }
-        }
-      } else {
-        renderWizard();
-      }
-    } catch(err){
-      alert('Não consegui ler esse arquivo. Confira se é um backup válido da ficha.');
-    }
-    e.target.value='';
+      if (state.wizardDone) renderSheet(); else renderWizard();
+    } catch(err){ alert('Não consegui ler esse arquivo. Confira se é um backup válido da ficha.'); }
   };
   reader.readAsText(file);
 }
 function confirmReset(){
-  if (confirm('Tem certeza que quer reiniciar esta ficha? Os dados atuais serão apagados.')) {
+  if (confirm('Tem certeza que quer reiniciar a ficha? Todos os dados serão apagados.')) {
     state = defaultState();
-    scheduleSave();
+    saveState();
     renderWizard();
   }
 }
 
-function createNewCharacter(){
-  if(!confirm('Criar um novo personagem? A ficha atual continuará existindo no link que você já compartilhou.')) return;
-  if(realtimeChannel && supabaseClient){ try{ supabaseClient.removeChannel(realtimeChannel); }catch(e){} }
-  realtimeChannel = null;
-  characterId = null;
-  editToken = null;
-  try{
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('sonhos_ficha_id');
-    localStorage.removeItem('sonhos_ficha_token');
-  }catch(e){}
-  state = defaultState();
-  history.pushState({},'',location.pathname);
-  const shareBtn=document.getElementById('onlineShareBtn');
-  if(shareBtn) shareBtn.remove();
-  renderWizard();
-}
-/* ===== Lobby ===== */
-
-function lobbyVisibleValue(visible, value){
-  return visible ? value : '???';
-}
-
-function buildLobbyCard(character){
-  const isAdmin = !!LOBBY_ADMIN_TOKEN;
-  const lobby = character.lobby || {};
-  const pub = character.public_data || {};
-  const nome = (isAdmin || lobby.mostrarNome) ? (pub.nome || 'Personagem sem nome') : '???';
-  const foto = (isAdmin || lobby.mostrarFoto) && pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : '<span>👤</span>';
-  const vida = lobbyVisibleValue(isAdmin || lobby.mostrarVida, Number(pub.vida)||0);
-  const energia = lobbyVisibleValue(isAdmin || lobby.mostrarEnergia, Number(pub.energia)||0);
-  const mental = lobbyVisibleValue(isAdmin || lobby.mostrarMental, Number(pub.mental)||0);
-
-  return `
-    <div class="lobby-card" data-character-id="${character.id}" aria-label="Personagem em cena — ficha privada">
-      <div class="lobby-portrait">${foto}</div>
-      <div class="lobby-info">
-        <div class="lobby-name">${escapeHtml(nome)}</div>
-        ${(isAdmin || lobby.mostrarNome) && pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
-        ${(pub.profissao || pub.raca) ? `<div class="lobby-resource"><span>${escapeHtml([pub.profissao,pub.raca].filter(Boolean).join(' • '))}</span></div>` : ''}
-        <div class="lobby-resource"><span>❤️ Vida</span><strong>${vida}</strong></div>
-        <div class="lobby-resource"><span>⚡ Energia</span><strong>${energia}</strong></div>
-        <div class="lobby-resource"><span>🧠 Mental</span><strong>${mental}</strong></div>
-      </div>
-      ${LOBBY_ADMIN_TOKEN ? `<div class="lobby-admin-actions"><button type="button" class="lobby-edit" data-edit-lobby="${character.id}">Editar</button><button type="button" class="lobby-remove" data-remove-lobby="${character.id}">×</button></div>` : ''}
-    </div>`;
-}
-
-function escapeHtml(value){
-  return String(value ?? '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-}
-
-async function loadLobbyCharacters(){
-  const {data: lobbyRows, error:lobbyError} = await supabaseClient
-    .from('lobby_characters')
-    .select('id,character_id,active,show_name,show_photo,show_health,show_energy,show_mental,public_data')
-    .eq('active',true)
-    .order('created_at',{ascending:true});
-  if(lobbyError) throw lobbyError;
-
-  const result=await Promise.all((lobbyRows||[]).map(async row=>{
-    const pub=row.public_data||{};
-    let fichaLobby={};
-    try{
-      const {data:fullState}=await supabaseClient.rpc('get_character_state',{p_id:row.character_id});
-      fichaLobby=fullState?.lobby||{};
-    }catch(e){}
-    const privacy={...(pub.lobby||{}),...fichaLobby};
-    return {
-      id:row.character_id,
-      public_data:pub,
-      lobby:{
-        mostrarNome:privacy.mostrarNome===true,
-        mostrarFoto:privacy.mostrarFoto===true,
-        mostrarVida:privacy.mostrarVida===true,
-        mostrarEnergia:privacy.mostrarEnergia===true,
-        mostrarMental:privacy.mostrarMental===true
-      }
-    };
-  }));
-  renderLobby(result);
-}
-
-function normalizeLobbyCapanga(c){
-  const quantidade=Math.max(1,Number(c?.quantidade)||1);
-  const vida=Math.max(0,Number(c?.vida)||0);
-  const energia=Math.max(0,Number(c?.energia)||0);
-  let membros=Array.isArray(c?.membros)?c.membros.map((m,i)=>({
-    id:m.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),
-    nome:String(m.nome||`${c?.nome||'Capanga'} ${i+1}`),
-    vida:Math.max(0,Number(m.vida ?? vida)||0),
-    energia:Math.max(0,Number(m.energia ?? energia)||0)
-  })) : [];
-  while(membros.length<quantidade) membros.push({id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome:`${c?.nome||'Capanga'} ${membros.length+1}`,vida,energia});
-  if(membros.length>quantidade) membros=membros.slice(0,quantidade);
-  return {id:c?.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random())),nome:String(c?.nome||'Capangas'),vida,energia,quantidade,membros,visivel:c?.visivel===true,mostrarNome:c?.mostrarNome===true,mostrarVida:c?.mostrarVida===true,mostrarEnergia:c?.mostrarEnergia===true};
-}
-function normalizeLobbyCapangas(groups){ return (Array.isArray(groups)?groups:[]).map(normalizeLobbyCapanga); }
-function getLobbyCapangas(){
-  try{return normalizeLobbyCapangas(JSON.parse(localStorage.getItem(CAPANGAS_STORAGE_KEY)||'[]'));}catch(e){return [];}
-}
-function saveLobbyCapangas(groups){
-  const normalized=normalizeLobbyCapangas(groups);
-  try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(normalized));}catch(e){}
-  broadcastLobbyCapangas(normalized);
-}
-let lobbyCapangaChannel=null;
-let lobbyCapangaReady=false;
-function broadcastLobbyCapangas(groups){
-  if(!LOBBY_ADMIN_TOKEN || !lobbyCapangaChannel || !lobbyCapangaReady) return;
-  lobbyCapangaChannel.send({type:'broadcast',event:'capangas_state',payload:{groups:normalizeLobbyCapangas(groups)}}).catch(()=>{});
-}
-function buildLobbyCapangaMember(m,isAdmin,c){
-  const nome = c.mostrarNome ? m.nome : '???';
-  const vida = c.mostrarVida ? Number(m.vida)||0 : '???';
-  const energia = c.mostrarEnergia ? Number(m.energia)||0 : '???';
-  return `<div class="lobby-capanga-member">
-    <div class="lobby-capanga-member-name">${escapeHtml(nome)}</div>
-    ${isAdmin?`<label>❤️ <input type="number" min="0" value="${Number(m.vida)||0}" data-capanga-member-vida="${escapeHtml(m.id)}"></label><label>⚡ <input type="number" min="0" value="${Number(m.energia)||0}" data-capanga-member-energia="${escapeHtml(m.id)}"></label>`:`<div>❤️ <strong>${vida}</strong></div><div>⚡ <strong>${energia}</strong></div>`}
-  </div>`;
-}
-function buildLobbyCapangaCard(c,isAdmin){
-  const members=Array.isArray(c.membros)?c.membros:[];
-  if(!isAdmin && c.visivel!==true) return '';
-  return `<div class="lobby-capanga-card">
-    <div class="lobby-capanga-title">⚔️ ${escapeHtml(c.mostrarNome ? (c.nome||'Capangas') : '???')} <span>(${members.length})</span></div>
-    <div class="lobby-capanga-stats"><div>❤️ Vida base<strong>${c.mostrarVida ? Number(c.vida)||0 : '???'}</strong></div><div>⚡ Energia base<strong>${c.mostrarEnergia ? Number(c.energia)||0 : '???'}</strong></div><div>👥 Quantidade<strong>${members.length}</strong></div></div>
-    ${isAdmin?`<div class="lobby-capanga-privacy"><label><input type="checkbox" ${c.visivel===true?'checked':''} data-toggle-capanga-visibility="${escapeHtml(c.id)}"> Mostrar grupo</label><label><input type="checkbox" ${c.mostrarNome===true?'checked':''} data-toggle-capanga-name="${escapeHtml(c.id)}"> Nome</label><label><input type="checkbox" ${c.mostrarVida===true?'checked':''} data-toggle-capanga-life="${escapeHtml(c.id)}"> Vida</label><label><input type="checkbox" ${c.mostrarEnergia===true?'checked':''} data-toggle-capanga-energy="${escapeHtml(c.id)}"> Energia</label></div>`:''}
-    <details ${isAdmin?'open':''} class="lobby-capanga-details"><summary>${isAdmin?'Ver e editar indivíduos':'Ver indivíduos'}</summary><div class="lobby-capanga-members">${members.map(m=>buildLobbyCapangaMember(m,isAdmin,c)).join('')}</div></details>
-    ${isAdmin?`<button type="button" class="lobby-capanga-remove" data-remove-lobby-capanga="${escapeHtml(c.id)}">Remover grupo</button>`:''}
-  </div>`;
-}
-function renderLobbyCapangas(groupsOverride=null){
-  const list=document.getElementById('lobbyCapangasList'); if(!list) return;
-  const groups=normalizeLobbyCapangas(groupsOverride??getLobbyCapangas());
-  const isAdmin=!!LOBBY_ADMIN_TOKEN;
-  const cards=groups.map(c=>buildLobbyCapangaCard(c,isAdmin)).filter(Boolean).join('');
-  list.innerHTML=cards||'<div class="empty-hint">Nenhum grupo de capangas disponível.</div>';
-  if(isAdmin){
-    list.querySelectorAll('[data-remove-lobby-capanga]').forEach(btn=>btn.onclick=()=>saveLobbyCapangas(groups.filter(c=>c.id!==btn.dataset.removeLobbyCapanga)));
-    list.querySelectorAll('[data-toggle-capanga-visibility],[data-toggle-capanga-name],[data-toggle-capanga-life],[data-toggle-capanga-energy]').forEach(cb=>cb.onchange=()=>{
-      const id=cb.dataset.toggleCapangaVisibility||cb.dataset.toggleCapangaName||cb.dataset.toggleCapangaLife||cb.dataset.toggleCapangaEnergy;
-      const key=cb.dataset.toggleCapangaVisibility?'visivel':cb.dataset.toggleCapangaName?'mostrarNome':cb.dataset.toggleCapangaLife?'mostrarVida':'mostrarEnergia';
-      const next=groups.map(c=>c.id===id?{...c,[key]:cb.checked}:c); saveLobbyCapangas(next); renderLobbyCapangas(next);
-    });
-    list.querySelectorAll('[data-capanga-member-vida],[data-capanga-member-energia]').forEach(inp=>inp.onchange=()=>{
-      const id=inp.dataset.capangaMemberVida||inp.dataset.capangaMemberEnergia;
-      const field=inp.dataset.capangaMemberVida?'vida':'energia';
-      const next=groups.map(c=>({...c,membros:c.membros.map(m=>m.id===id?{...m,[field]:Math.max(0,Number(inp.value)||0)}:m)}));
-      saveLobbyCapangas(next); renderLobbyCapangas(next);
-    });
-  }
-}
-function addLobbyCapanga(){
-  if(!LOBBY_ADMIN_TOKEN) return;
-  const nome=document.getElementById('lobbyCapangaNome')?.value.trim(); if(!nome) return alert('Digite um nome para o grupo.');
-  const vida=Math.max(0,Number(document.getElementById('lobbyCapangaVida')?.value)||0);
-  const energia=Math.max(0,Number(document.getElementById('lobbyCapangaEnergia')?.value)||0);
-  const quantidade=Math.max(1,Number(document.getElementById('lobbyCapangaQuantidade')?.value)||1);
-  const membros=Array.from({length:quantidade},(_,i)=>({id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome:`${nome} ${i+1}`,vida,energia}));
-  saveLobbyCapangas([...getLobbyCapangas(),{id:(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random()),nome,vida,energia,quantidade,membros,visivel:false,mostrarNome:false,mostrarVida:false,mostrarEnergia:false}]);
-  document.getElementById('lobbyCapangaNome').value=''; renderLobbyCapangas();
-}
-function subscribeLobbyCapangas(){
-  if(lobbyCapangaChannel) supabaseClient.removeChannel(lobbyCapangaChannel);
-  lobbyCapangaReady=false;
-  lobbyCapangaChannel=supabaseClient.channel('sonhos-lobby-capangas');
-  lobbyCapangaChannel.on('broadcast',{event:'capangas_state'},({payload})=>{
-    const groups=normalizeLobbyCapangas(payload?.groups||[]);
-    try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(groups));}catch(e){}
-    renderLobbyCapangas(groups);
-  });
-  lobbyCapangaChannel.on('broadcast',{event:'capangas_request'},()=>{if(LOBBY_ADMIN_TOKEN) broadcastLobbyCapangas(getLobbyCapangas());});
-  lobbyCapangaChannel.subscribe(status=>{
-    if(status==='SUBSCRIBED'){
-      lobbyCapangaReady=true;
-      if(LOBBY_ADMIN_TOKEN) broadcastLobbyCapangas(getLobbyCapangas());
-      else lobbyCapangaChannel.send({type:'broadcast',event:'capangas_request',payload:{}}).catch(()=>{});
-    }
-  });
-}
-
-function renderLobby(characters){
-  const app=document.getElementById('app');
-  const isAdmin=!!LOBBY_ADMIN_TOKEN;
-  app.innerHTML=`
-    <div class="app-shell">
-      <div class="mini-logo">Sonhos do Alvorecer</div>
-
-      <div class="lobby-header">
-        <h1>Personagens em Cena</h1>
-        <p>${isAdmin ? 'Modo mestre: adicione ou retire personagens conforme as cenas.' : 'Acompanhe os personagens que estão em cena nesta mesa.'}</p>
-        ${isAdmin ? `
-        <div class="lobby-add">
-          <input type="text" id="lobbyLinkInput" placeholder="Cole aqui o link da ficha...">
-          <button type="button" id="lobbyAddButton" class="btn btn-primary">Adicionar à cena</button>
-        </div>` : ''}
-      </div>
-
-      <div class="lobby-capangas">
-        <h2>⚔️ Capangas</h2>
-        <p class="hint-text">${isAdmin ? 'Somente o mestre pode adicionar, editar, remover e decidir quais grupos os jogadores podem ver.' : 'Capangas liberados pelo mestre para os jogadores.'}</p>
-        ${isAdmin?`<div class="lobby-capangas-form">
-          <div class="field"><label>Grupo</label><input id="lobbyCapangaNome" type="text" placeholder="Ex.: Arqueiros"></div>
-          <div class="field"><label>Vida</label><input id="lobbyCapangaVida" type="number" min="0" value="10"></div>
-          <div class="field"><label>Energia</label><input id="lobbyCapangaEnergia" type="number" min="0" value="5"></div>
-          <div class="field"><label>Quantidade</label><input id="lobbyCapangaQuantidade" type="number" min="1" value="1"></div>
-          <button type="button" class="btn btn-primary" id="addLobbyCapangaBtn">Adicionar</button>
-        </div>`:''}
-        <div class="lobby-capangas-list" id="lobbyCapangasList"></div>
-      </div>
-
-      <div id="lobbyCharacters" class="lobby-grid">
-        ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty">Nenhum personagem está em cena.</div>`}
-      </div>
-    </div>`;
-
-  renderLobbyCapangas();
-  if(isAdmin){
-    document.getElementById('addLobbyCapangaBtn')?.addEventListener('click',addLobbyCapanga);
-    document.getElementById('lobbyCapangaNome')?.addEventListener('keydown',e=>{if(e.key==='Enter') addLobbyCapanga();});
-    document.getElementById('lobbyAddButton').addEventListener('click',addCharacterToLobby);
-    document.getElementById('lobbyLinkInput').addEventListener('keydown',e=>{if(e.key==='Enter') addCharacterToLobby();});
-    document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby)));
-    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1&admin='+encodeURIComponent(LOBBY_ADMIN_TOKEN); }));
-  } else {
-    document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.remove());
-  }
-}
-function getLobbyCharacterIdFromUrl(value){
-  try{
-    const u=new URL(value,location.href);
-    const id=u.searchParams.get('ficha');
-    return id && /^[0-9a-fA-F-]{36}$/.test(id) ? id : null;
-  }catch(e){ return null; }
-}
-
-async function addCharacterToLobby(){
-  if(!LOBBY_ADMIN_TOKEN){ alert('Somente o link de controle da mesa pode adicionar personagens.'); return; }
-  const input=document.getElementById('lobbyLinkInput');
-  const value=input.value.trim();
-  const characterId=getLobbyCharacterIdFromUrl(value);
-  if(!characterId){ alert('Esse link não parece ser um link válido de ficha.'); return; }
-
-  const {data,error}=await supabaseClient.rpc('add_character_to_lobby',{p_character_id:characterId});
-  if(error){ console.error(error); alert('Não consegui colocar a ficha no lobby. Verifique o link e o acesso de mestre.'); return; }
-  input.value='';
-  await loadLobbyCharacters();
-}
-
-async function removeCharacterFromLobby(characterId){
-  if(!LOBBY_ADMIN_TOKEN) return;
-  const {error}=await supabaseClient.rpc('remove_character_from_lobby',{p_character_id:characterId});
-  if(error){ console.error(error); alert('Não consegui retirar a ficha do lobby.'); return; }
-  await loadLobbyCharacters();
-}
-
-let lobbyRealtimeChannel=null;
-
-function subscribeLobbyRealtime(){
-  if(lobbyRealtimeChannel)
-    supabaseClient.removeChannel(lobbyRealtimeChannel);
-
-  lobbyRealtimeChannel=supabaseClient
-    .channel('sonhos-lobby')
-    .on(
-      'postgres_changes',
-      {
-        event:'*',
-        schema:'public',
-        table:'lobby_characters'
-      },
-      ()=>loadLobbyCharacters()
-    )
-    .on(
-      'postgres_changes',
-      {
-        event:'UPDATE',
-        schema:'public',
-        table:'characters'
-      },
-      ()=>loadLobbyCharacters()
-    )
-    .subscribe();
-}
-
-if(!window.__sonhosCapangasStorageBound){
-  window.__sonhosCapangasStorageBound=true;
-  window.addEventListener('storage',e=>{ if(e.key===CAPANGAS_STORAGE_KEY) renderLobbyCapangas(); });
-}
-
-async function initLobby(){
-  if(!ONLINE_ENABLED){
-    document.getElementById('app').innerHTML=
-      '<div class="loading-screen">Supabase não configurado.</div>';
-    return;
-  }
-
-  try{
-    supabaseClient=window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY,
-      LOBBY_ADMIN_TOKEN ? {global:{headers:{'x-lobby-admin-token':LOBBY_ADMIN_TOKEN}}} : undefined
-    );
-
-    await loadLobbyCharacters();
-    subscribeLobbyRealtime();
-    subscribeLobbyCapangas();
-  }catch(e){
-    console.error(e);
-
-    document.getElementById('app').innerHTML=`
-      <div class="loading-screen">
-        Não foi possível carregar o lobby.
-      </div>`;
-  }
-}
 /* ===== Boot ===== */
-async function init(){
-  document.getElementById('app').innerHTML =
-    '<div class="loading-screen">⚓ Erguendo velas...</div>';
-
-  if(IS_LOBBY){
-    await initLobby();
-    return;
-  }
-
-  try{
-    await loadState();
-    if(IS_MASTER_SHEET){
-      const masterCapangas=loadMasterCapangas();
-      if(masterCapangas.length || !Array.isArray(state.capangas) || state.capangas.length===0) state.capangas=masterCapangas;
-    }
-
-    if(state.wizardDone){
-      renderSheet();
-    }else{
-      renderWizard();
-    }
-
-    if(ONLINE_ENABLED && state.wizardDone && !characterId){
-      try{
-        await createOnlineCharacter();
-      }catch(e){
-        console.warn('Não foi possível criar a ficha online:',e);
-      }
-    }
-
-    if(ONLINE_ENABLED) addOnlineControls();
-  }catch(e){
-    console.error('Erro ao abrir a ficha:',e);
-    state = defaultState();
-    renderWizard();
-  }
-}
-function setSheetReadOnly(flag){
-  readOnlySheet=flag;
-  const root=document.getElementById('app');
-  if(!root) return;
-  root.classList.toggle('sheet-read-only',flag);
-  root.querySelectorAll('input,textarea,select').forEach(el=>el.disabled=flag);
-  root.querySelectorAll('button').forEach(btn=>{
-    if(btn.classList.contains('tab-btn')) return;
-    if(btn.id==='onlineShareBtn') return;
-    btn.disabled=flag;
-  });
-}
-
-function addOnlineControls(){
-  if(document.getElementById('onlineShareBtn')) return;
-  const b=document.createElement('button');
-  b.id='onlineShareBtn'; b.type='button'; b.className='btn btn-ghost'; b.textContent='🔗 Compartilhar ficha';
-  b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
-  b.onclick=copyShareLink; document.body.appendChild(b);
+function init(){
+  document.getElementById('app').innerHTML = '<div class="loading-screen">⚓ Erguendo velas...</div>';
+  loadState().then(()=>{ if (state.wizardDone) renderSheet(); else renderWizard(); });
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
