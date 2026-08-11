@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sonhos do Alvorecer — Ficha de Personagem</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyByeD0nMTQnIGZpbGw9JyMwZjFjMzgnLz48Y2lyY2xlIGN4PSczMicgY3k9JzM0JyByPScxMycgZmlsbD0nI2YyY2E2ZScvPjxyZWN0IHg9JzAnIHk9JzM0JyB3aWR0aD0nNjQnIGhlaWdodD0nMzAnIGZpbGw9JyMwZjFjMzgnLz48cmVjdCB4PSc2JyB5PSc0Micgd2lkdGg9JzUyJyBoZWlnaHQ9JzQnIHJ4PScyJyBmaWxsPScjZDRhOTQyJy8+PC9zdmc+">
+<meta property="og:title" content="Sonhos do Alvorecer — Ficha de Personagem">
+<meta property="og:description" content="Ficha de personagem do RPG de mesa Sonhos do Alvorecer.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sonhos do Alvorecer — Ficha de Personagem">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,7 +41,7 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; font-weight:600; letter-spacing:.02em;
 .dot.active { background:var(--gold-bright); box-shadow:0 0 8px var(--gold-bright); transform:scale(1.3); }
 .dot.done { background:var(--gold); }
 
-.wizard-card { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:28px 24px; box-shadow:var(--shadow-lg); }
+.wizard-card { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:28px 24px; box-shadow:var(--shadow-lg), inset 0 0 46px rgba(0,0,0,.22); }
 .step-title { color:var(--gold-bright); font-size:1.4rem; }
 .step-sub { color:var(--text-muted); margin-bottom:20px; font-size:.92rem; }
 .step-body { display:flex; flex-direction:column; gap:16px; }
@@ -99,7 +105,7 @@ textarea { resize:vertical; line-height:1.6; }
 .fruta-block.active .fruta-details { display:flex; }
 .fruta-details input, .fruta-details select { flex:1; min-width:120px; }
 
-.panel { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:20px; margin-bottom:18px; box-shadow:var(--shadow-lg); }
+.panel { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:20px; margin-bottom:18px; box-shadow:var(--shadow-lg), inset 0 0 46px rgba(0,0,0,.22); }
 .panel h3 { color:var(--gold-bright); font-size:1.05rem; margin-bottom:14px; }
 
 .sheet-header { display:flex; gap:18px; background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:18px; margin-bottom:16px; box-shadow:var(--shadow-lg); }
@@ -128,6 +134,10 @@ textarea { resize:vertical; line-height:1.6; }
 .resource-title { font-size:.88rem; font-weight:600; margin-bottom:8px; }
 .resource-bar { height:8px; background:var(--bg-void); border-radius:4px; overflow:hidden; margin-bottom:10px; }
 .resource-bar-fill { height:100%; width:0%; transition:width .3s ease; }
+.resource-bar-fill.flash-dano { animation:resourceFlashDano .6s ease-out; }
+.resource-bar-fill.flash-cura { animation:resourceFlashCura .6s ease-out; }
+@keyframes resourceFlashDano { 0%{ filter:brightness(1); } 25%{ filter:brightness(2) saturate(1.4); } 100%{ filter:brightness(1); } }
+@keyframes resourceFlashCura { 0%{ filter:brightness(1); } 25%{ filter:brightness(1.8); } 100%{ filter:brightness(1); } }
 .resource-vida .resource-bar-fill { background:linear-gradient(90deg,#7a1c1c,var(--vida)); }
 .resource-energia .resource-bar-fill { background:linear-gradient(90deg,#186f64,var(--energia)); }
 .resource-mental .resource-bar-fill { background:linear-gradient(90deg,#5c449e,var(--mental)); }
@@ -136,9 +146,17 @@ textarea { resize:vertical; line-height:1.6; }
 .resource-fields input { padding:5px 6px; font-size:.85rem; }
 .chip { display:inline-block; background:var(--bg-void); border:1px solid var(--border-soft); border-radius:var(--radius-sm); padding:5px 6px; font-size:.85rem; text-align:center; }
 
-.limite-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border-soft); }
+.limite-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border-soft); transition:.25s; }
 .limite-row:last-child { border-bottom:none; }
 .limite-label { font-size:.9rem; }
+.limite-warning { display:none; color:var(--danger); font-size:.78rem; font-weight:700; margin-left:6px; }
+.limite-row.limite-cheio { background:rgba(240,138,133,.07); border-radius:8px; padding-left:10px; padding-right:10px; margin:0 -10px; box-shadow:0 0 0 1px rgba(240,138,133,.35) inset; animation:limitePulseGlow 2.4s ease-in-out infinite; }
+.limite-row.limite-cheio .limite-label { color:var(--danger); font-weight:700; }
+.limite-row.limite-cheio .limite-warning { display:inline; }
+@keyframes limitePulseGlow {
+  0%, 100% { box-shadow:0 0 0 1px rgba(240,138,133,.3) inset, 0 0 8px rgba(240,138,133,.1); }
+  50% { box-shadow:0 0 0 1px rgba(240,138,133,.6) inset, 0 0 16px rgba(240,138,133,.3); }
+}
 .limite-pips { display:flex; gap:6px; }
 .pip { width:34px; height:34px; border-radius:50%; border:1px solid var(--border-soft); background:var(--bg-void); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; opacity:.4; transition:.15s; }
 .pip.active { opacity:1; border-color:var(--danger); background:rgba(240,138,133,.15); transform:scale(1.05); }
@@ -597,6 +615,10 @@ async function loadState(){
     }
   }catch(e){ console.warn('Modo online indisponível:',e); }
 }
+function updateDocumentTitle(){
+  const nome=String(state?.identidade?.nome||'').trim();
+  document.title = nome ? `${nome} — Sonhos do Alvorecer` : 'Sonhos do Alvorecer — Ficha de Personagem';
+}
 function scheduleSave(){
   clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
   saveTimer=setTimeout(saveState,350);
@@ -796,7 +818,7 @@ function showPlayerRule(){
 
 function fillId1(){ document.getElementById('inpNome').value=state.identidade.nome; document.getElementById('inpJogador').value=state.identidade.jogador; }
 function bindId1(){
-  document.getElementById('inpNome').addEventListener('input', e=>{state.identidade.nome=e.target.value; scheduleSave();});
+  document.getElementById('inpNome').addEventListener('input', e=>{state.identidade.nome=e.target.value; updateDocumentTitle(); scheduleSave();});
   document.getElementById('inpJogador').addEventListener('input', e=>{state.identidade.jogador=e.target.value; scheduleSave();});
 }
 
@@ -1314,6 +1336,7 @@ function renderSheetHeader(){
         return;
       }
       state.identidade[stateKey]=e.target.value;
+      if (field==='Nome') updateDocumentTitle();
       scheduleSave();
     });
   });
@@ -1323,13 +1346,34 @@ function renderSheetHeader(){
 }
 function handleImagemUpload(e){
   const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=(ev)=>{
-    state.imagem=ev.target.result;
+  const aplicarImagem=(dataUrl)=>{
+    state.imagem=dataUrl;
     document.getElementById('portraitImg').src=state.imagem;
     document.getElementById('portraitImg').hidden=false;
     document.getElementById('portraitPlaceholder').hidden=true;
     scheduleSave();
+  };
+  const reader=new FileReader();
+  reader.onload=(ev)=>{
+    const img=new Image();
+    img.onload=()=>{
+      // O retrato aparece só numa moldura pequena (círculo de ~96px), então não
+      // precisa guardar a foto original inteira — isso só infla o localStorage
+      // e a linha no Supabase. Redimensiona pro maior lado ficar em até 500px.
+      const MAX=500;
+      let w=img.naturalWidth, h=img.naturalHeight;
+      if(w>MAX || h>MAX){
+        if(w>=h){ h=Math.round(h*MAX/w); w=MAX; } else { w=Math.round(w*MAX/h); h=MAX; }
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      aplicarImagem(canvas.toDataURL('image/jpeg',0.85));
+    };
+    img.onerror=()=>aplicarImagem(ev.target.result);
+    img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -1417,7 +1461,7 @@ function buildResourceCard(key,label,icon){
 }
 function buildLimiteRow(key,label,icon){
   let pips=''; for(let i=0;i<3;i++) pips+=`<button type="button" class="pip" data-limite="${key}" data-idx="${i}">${icon}</button>`;
-  return `<div class="limite-row"><span class="limite-label">${label}</span><div class="limite-pips">${pips}</div></div>`;
+  return `<div class="limite-row" data-limite-row="${key}"><span class="limite-label">${label}<span class="limite-warning" data-limite-warning="${key}"> ⚠ Crítico</span></span><div class="limite-pips">${pips}</div></div>`;
 }
 function fillTabBase(){
   Object.keys(ATTR_META).forEach(k=>{
@@ -1454,11 +1498,20 @@ function updateIniciativaDisplay(){
   const el=document.getElementById('iniciativaMod');
   if (el) el.textContent=(mod>=0?'+':'')+mod;
 }
+function flashResourceBar(key, tipo){
+  const fill=document.getElementById(`${key}BarFill`);
+  if(!fill) return;
+  fill.classList.remove('flash-dano','flash-cura');
+  void fill.offsetWidth;
+  fill.classList.add(tipo==='dano' ? 'flash-dano' : 'flash-cura');
+}
 function fillLimitePips(key){
   const level=state.limites[key];
   document.querySelectorAll(`.pip[data-limite="${key}"]`).forEach(pip=>{
     pip.classList.toggle('active', Number(pip.dataset.idx)<level);
   });
+  const row=document.querySelector(`.limite-row[data-limite-row="${key}"]`);
+  if(row) row.classList.toggle('limite-cheio', level>=3);
 }
 function onLimitePipClick(key, idx){
   state.limites[key] = (state.limites[key]===idx+1) ? idx : idx+1;
@@ -1502,7 +1555,14 @@ function bindTabBase(){
     });
   });
   ['vida','energia','mental'].forEach(key=>{
-    document.getElementById(`${key}Atual`).addEventListener('input', e=>{ state.recursos[key].atual=Number(e.target.value)||0; updateResourceDisplays(); scheduleSave(); });
+    document.getElementById(`${key}Atual`).addEventListener('input', e=>{
+      const anterior=Number(state.recursos[key].atual)||0;
+      const novo=Number(e.target.value)||0;
+      state.recursos[key].atual=novo;
+      updateResourceDisplays();
+      if(novo!==anterior) flashResourceBar(key, novo<anterior?'dano':'cura');
+      scheduleSave();
+    });
     document.getElementById(`${key}Extra`).addEventListener('input', e=>{ state.recursos[key].extra=Number(e.target.value)||0; updateResourceDisplays(); scheduleSave(); });
     document.getElementById(`${key}Temp`).addEventListener('input', e=>{ state.recursos[key].temporario=Number(e.target.value)||0; scheduleSave(); });
   });
@@ -2006,6 +2066,7 @@ async function init(){
     }else{
       renderWizard();
     }
+    updateDocumentTitle();
 
     if(ONLINE_ENABLED && state.wizardDone && !characterId){
       try{
