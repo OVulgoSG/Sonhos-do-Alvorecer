@@ -468,6 +468,12 @@ textarea { resize:vertical; line-height:1.6; }
 .empty-icon{display:block;font-size:1.6rem;margin-bottom:6px;opacity:.7;}
 .lobby-card,.lobby-capanga-card{transition:transform .2s ease, box-shadow .2s ease;}
 .lobby-card:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(0,0,0,.4);}
+
+/* ===== Aviso discreto (só aparece se o salvamento realmente falhar) ===== */
+.sync-toast{position:fixed;left:18px;bottom:18px;z-index:9999;background:#1a0f0e;border:1px solid var(--danger);color:var(--text-main);padding:10px 14px;border-radius:var(--radius-md);box-shadow:var(--shadow-lg);font-size:.82rem;display:flex;align-items:center;gap:8px;max-width:280px;opacity:0;transform:translateY(8px);transition:opacity .3s ease, transform .3s ease;pointer-events:none;}
+.sync-toast.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+.sync-toast button{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;line-height:1;margin-left:4px;}
+.sync-toast button:hover{color:var(--text-main);}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -821,6 +827,32 @@ function scheduleSave(){
   clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
   saveTimer=setTimeout(saveState,350);
 }
+let syncFailStreak=0;
+let syncToastTimer=null;
+function ensureSyncToastEl(){
+  let el=document.getElementById('syncToast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='syncToast';
+    el.className='sync-toast';
+    el.innerHTML='<span>⚠️</span><span id="syncToastMsg"></span><button type="button" id="syncToastClose" aria-label="Fechar">×</button>';
+    document.body.appendChild(el);
+    el.querySelector('#syncToastClose').addEventListener('click', hideSyncToast);
+  }
+  return el;
+}
+function showSyncToast(msg){
+  const el=ensureSyncToastEl();
+  el.querySelector('#syncToastMsg').textContent=msg;
+  requestAnimationFrame(()=>el.classList.add('show'));
+  clearTimeout(syncToastTimer);
+  syncToastTimer=setTimeout(hideSyncToast, 7000);
+}
+function hideSyncToast(){
+  const el=document.getElementById('syncToast');
+  if(el) el.classList.remove('show');
+  clearTimeout(syncToastTimer);
+}
 async function saveState(){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
   if(!ONLINE_ENABLED || !supabaseClient || !characterId || (!editToken && !IS_MASTER_SHEET)) return;
@@ -830,8 +862,15 @@ async function saveState(){
     try{
       if(IS_MASTER_SHEET) await supabaseClient.rpc('update_character_by_admin',{p_id:characterId,p_state:state});
       else await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
+      if(syncFailStreak>0){ syncFailStreak=0; hideSyncToast(); }
     }
-    catch(e){ console.warn('Falha ao sincronizar:',e); }
+    catch(e){
+      console.warn('Falha ao sincronizar:',e);
+      syncFailStreak++;
+      // Só avisa depois de duas falhas seguidas — evita alarme falso por uma
+      // oscilação rápida de conexão que se resolve sozinha no próximo save.
+      if(syncFailStreak>=2) showSyncToast('Não foi possível salvar as últimas alterações. Verifique sua conexão.');
+    }
     finally{ setTimeout(()=>{ localSaveInFlight=false; applyPendingRemoteState(); },250); }
   },150);
 }
@@ -921,6 +960,19 @@ function bindSecretTrigger(el){
     clearTimeout(secretClickTimer);
     secretClickTimer = setTimeout(()=>{ secretClickCount=0; }, 900);
     if (secretClickCount>=5){ secretClickCount=0; openFormulaSettings(); }
+  };
+}
+let akumaClickCount = 0; let akumaClickTimer = null;
+function bindAkumaDocTrigger(el){
+  if(!el) return;
+  el.onclick = ()=>{
+    akumaClickCount++;
+    clearTimeout(akumaClickTimer);
+    akumaClickTimer = setTimeout(()=>{ akumaClickCount=0; }, 900);
+    if(akumaClickCount>=3){
+      akumaClickCount=0;
+      window.open('https://docs.google.com/document/d/1xbJW05ySr6O0m4RwfgmMKJUjDMxEaq5av7m4_eaBV2A/edit?tab=t.0#heading=h.8kl76z2lfwpw','_blank','noopener');
+    }
   };
 }
 function formulaFieldsHtml(){
@@ -2115,7 +2167,7 @@ function buildTabPoderes(){
       <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancada"><span>Haki Avançado</span></label></div>
       <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancada"><span>Haki Avançado</span></label></div>
     </div>
-    <div class="panel"><h3>Akuma no Mi</h3>${buildFrutasStep()}</div>
+    <div class="panel"><h3 id="akumaNoMiTitle">Akuma no Mi</h3>${buildFrutasStep()}</div>
     <div class="panel">
       <h3>Poderes / Habilidades / Capacidades / Notas "Mecânicas"</h3>
       <textarea id="poderesTextarea" rows="8" placeholder="Golpes, técnicas, habilidades especiais, anotações mecânicas..."></textarea>
@@ -2138,6 +2190,7 @@ function bindTabPoderes(){
   // Evita listeners duplicados que poderiam alterar o estado dos avançados.
   bindHakiControls();
   bindFrutasStep();
+  bindAkumaDocTrigger(document.getElementById('akumaNoMiTitle'));
   document.getElementById('poderesTextarea').addEventListener('input', e=>{
     state.poderes=e.target.value;
     scheduleSave();
