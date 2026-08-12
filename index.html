@@ -91,10 +91,41 @@ textarea { resize:vertical; line-height:1.6; }
 .ficha-chooser-or { text-align:center; color:var(--text-muted); font-size:.8rem; margin:22px 0 14px; text-transform:uppercase; letter-spacing:.06em; }
 
 .attr-grid { display:flex; flex-direction:column; gap:4px; }
-.attr-row { display:grid; grid-template-columns:1fr 64px 78px; gap:8px; align-items:center; }
+.attr-row { display:grid; grid-template-columns:1fr 64px 78px 38px; gap:8px; align-items:center; }
 .attr-head { color:var(--text-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; padding-bottom:4px; border-bottom:1px solid var(--border-soft); margin-bottom:4px; }
 .attr-label { font-size:.9rem; display:flex; align-items:center; gap:5px; }
 .attr-row input { padding:6px 7px; text-align:center; }
+.attr-roll-btn { background:transparent; border:none; border-radius:50%; color:var(--gold-bright); cursor:pointer; height:38px; width:100%; padding:0; display:flex; align-items:center; justify-content:center; position:relative; transition:transform .15s ease; }
+.attr-roll-btn:hover { transform:scale(1.14); }
+.attr-roll-btn:active { transform:scale(.92); }
+.attr-roll-btn:focus-visible { outline:1px solid var(--gold); outline-offset:3px; border-radius:50%; }
+.d20-icon { width:25px; height:25px; overflow:visible; filter:drop-shadow(0 0 3px rgba(212,169,66,.4)); transition:filter .25s ease; }
+.attr-roll-btn:hover .d20-icon { filter:drop-shadow(0 0 7px rgba(242,202,110,.8)); }
+.d20-face { stroke:rgba(4,7,13,.5); stroke-width:1.4; stroke-linejoin:round; }
+.d20-face-1 { fill:#f6d488; }
+.d20-face-2 { fill:#e3b95c; }
+.d20-face-3 { fill:#c99b3e; }
+.d20-face-4 { fill:#b3822f; }
+.d20-face-5 { fill:#d4a942; }
+.d20-face-6 { fill:#eec877; }
+.d20-outline { fill:none; stroke:var(--gold); stroke-width:2.5; }
+.attr-roll-btn.rolling .d20-icon { animation:diceTumble .7s cubic-bezier(.36,.07,.19,.97); }
+.attr-roll-btn.mostrando-resultado .d20-icon { filter:drop-shadow(0 0 9px rgba(242,202,110,.95)); }
+@keyframes diceTumble {
+  0%   { transform:rotate(0deg) scale(1); }
+  20%  { transform:rotate(150deg) scale(1.18); }
+  45%  { transform:rotate(255deg) scale(.88); }
+  70%  { transform:rotate(385deg) scale(1.12); }
+  100% { transform:rotate(360deg) scale(1); }
+}
+.attr-roll-result {
+  position:absolute; bottom:118%; left:50%; transform:translateX(-50%) translateY(4px);
+  background:#0a1630; border:1px solid var(--gold); color:var(--gold-bright);
+  font-size:.68rem; font-weight:700; padding:4px 8px; border-radius:6px; white-space:nowrap;
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  box-shadow:0 6px 16px rgba(0,0,0,.4); z-index:20;
+}
+.attr-roll-result.show { opacity:1; transform:translateX(-50%) translateY(0); }
 .attr-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
 
 .switch-row { display:flex; align-items:center; gap:10px; cursor:pointer; font-size:.95rem; }
@@ -136,7 +167,19 @@ textarea { resize:vertical; line-height:1.6; }
 .tab-btn:hover { color:var(--text-main); }
 
 .resource-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
-.resource-card { background:var(--bg-panel-alt); border-radius:var(--radius-md); padding:14px; border-top:3px solid var(--border-soft); }
+.resource-card { background:var(--bg-panel-alt); border-radius:var(--radius-md); padding:14px; border-top:3px solid var(--border-soft); transition:.25s; position:relative; overflow:hidden; }
+.resource-card::after {
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 92% 105%, var(--decay-c,transparent) 0%, transparent 60%),
+    radial-gradient(circle at 8% 100%, var(--decay-c,transparent) 0%, transparent 40%);
+  transition:opacity .5s ease;
+}
+.resource-card.resource-baixo { border-top-color:#e0a63e; }
+.resource-card.resource-baixo::after { opacity:.6; --decay-c:rgba(224,166,62,.5); }
+.resource-card.resource-critico { border-top-color:var(--danger); }
+.resource-card.resource-critico::after { opacity:.75; --decay-c:rgba(200,60,55,.55); animation:resourceDecayFlicker 3s ease-in-out infinite; }
+@keyframes resourceDecayFlicker { 0%,100%{ opacity:.6; } 50%{ opacity:.9; } }
 .resource-vida { border-top-color:var(--vida); }
 .resource-energia { border-top-color:var(--energia); }
 .resource-mental { border-top-color:var(--mental); }
@@ -170,7 +213,11 @@ textarea { resize:vertical; line-height:1.6; }
 .pip { width:34px; height:34px; border-radius:50%; border:1px solid var(--border-soft); background:var(--bg-void); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; opacity:.4; transition:.15s; }
 .pip.active { opacity:1; border-color:var(--danger); background:rgba(240,138,133,.15); transform:scale(1.05); }
 
-.foco-iniciativa-panel { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.foco-iniciativa-panel { display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; }
+.dado-personalizado-inputs { display:flex; gap:10px; margin-bottom:10px; }
+.dado-personalizado-inputs label { display:flex; flex-direction:column; gap:3px; font-size:.75rem; color:var(--text-muted); }
+.dado-personalizado-inputs input { width:64px; }
+.condicao-row { display:grid; grid-template-columns:1fr 1.4fr 100px 32px; gap:8px; margin-bottom:8px; align-items:center; }
 .foco-pips { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
 .foco-pip { width:32px; height:32px; border-radius:50%; border:1px solid var(--border-soft); background:var(--bg-void); cursor:pointer; opacity:.4; font-size:1rem; }
 .foco-pip.active { opacity:1; border-color:var(--gold); background:rgba(212,169,66,.18); }
@@ -203,12 +250,13 @@ textarea { resize:vertical; line-height:1.6; }
   .attr-columns { grid-template-columns:1fr; gap:18px; }
   .resource-cards { grid-template-columns:1fr; }
   .foco-iniciativa-panel { grid-template-columns:1fr; }
+  .condicao-row { grid-template-columns:1fr; }
   .sheet-header { flex-direction:column; align-items:center; text-align:center; }
   .item-row { grid-template-columns:1fr; }
   .portrait { width:80px; height:80px; }
 }
 @media print {
-  .wizard-nav, .tab-bar, .sheet-footer, .memorial-emblem, .info-icon, #btnRolarIniciativa, .item-remove, #addItemBtn { display:none !important; }
+  .wizard-nav, .tab-bar, .sheet-footer, .memorial-emblem, .info-icon, #btnRolarIniciativa, #btnRolarPersonalizado, .item-remove, #addItemBtn, #addCondicaoBtn { display:none !important; }
   body { background:#fff; color:#000; }
   .panel, .resource-card, .sheet-header, .wizard-card { border:1px solid #ccc; box-shadow:none; background:#fff; }
 }
@@ -366,6 +414,17 @@ textarea { resize:vertical; line-height:1.6; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+  <symbol id="d20Icon" viewBox="0 0 100 100">
+    <polygon points="50,4 90,27 50,50" class="d20-face d20-face-1"/>
+    <polygon points="90,27 90,73 50,50" class="d20-face d20-face-2"/>
+    <polygon points="90,73 50,96 50,50" class="d20-face d20-face-3"/>
+    <polygon points="50,96 10,73 50,50" class="d20-face d20-face-4"/>
+    <polygon points="10,73 10,27 50,50" class="d20-face d20-face-5"/>
+    <polygon points="10,27 50,4 50,50" class="d20-face d20-face-6"/>
+    <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" class="d20-outline"/>
+  </symbol>
+</svg>
 <div id="app"></div>
 <script>
 /* ===== Configuração ===== */
@@ -448,6 +507,7 @@ lobby:{
 
 notasHistoria:'',
     notasAparencia:'',
+    condicoes:[],
     dinheiro:'B$10000000',
     itens:[],
     poderes:'',
@@ -609,6 +669,7 @@ function mergeState(loaded) {
   merged.notasAparencia = (loaded && loaded.notasAparencia) || '';
   delete merged.notas;
   merged.itens=loaded?.itens||[];
+  merged.condicoes=Array.isArray(loaded?.condicoes) ? loaded.condicoes.map(c=>({nome:String(c?.nome||''),condicao:String(c?.condicao||''),duracao:String(c?.duracao||'')})) : [];
   merged.capangas=Array.isArray(loaded?.capangas) ? loaded.capangas.map(c=>({id:c.id||crypto.randomUUID?.()||String(Date.now()+Math.random()),nome:String(c.nome||'Capangas'),vida:Math.max(0,Number(c.vida)||0),energia:Math.max(0,Number(c.energia)||0),quantidade:Math.max(1,Number(c.quantidade)||1)})) : [];
   return merged;
 }
@@ -1541,13 +1602,17 @@ function buildTabBase(){
       <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
       <input type="number" class="attr-valor" data-attr="${k}" min="0">
       <input type="number" class="attr-mod" data-attr="${k}">
+      <button type="button" class="attr-roll-btn" data-attr="${k}" title="Rolar dados de ${v.label}">
+        <svg class="d20-icon" viewBox="0 0 100 100"><use href="#d20Icon"></use></svg>
+        <span class="attr-roll-result"></span>
+      </button>
     </div>`).join('');
   return `
     <div class="panel">
       <h3>Atributos</h3>
       <div class="attr-columns">
-        <div><h4>Físico</h4><div class="attr-grid"><div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div></div>${attrRows('fisico')}</div></div>
-        <div><h4>Mental</h4><div class="attr-grid"><div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div></div>${attrRows('mental')}</div></div>
+        <div><h4>Físico</h4><div class="attr-grid"><div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div><div></div></div>${attrRows('fisico')}</div></div>
+        <div><h4>Mental</h4><div class="attr-grid"><div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div><div></div></div>${attrRows('mental')}</div></div>
       </div>
     </div>
     <div class="panel">
@@ -1564,6 +1629,11 @@ function buildTabBase(){
       ${buildLimiteRow('exaustao','Exaustão','🌊')}
       ${buildLimiteRow('enlouquecendo','Enlouquecendo','🌀')}
     </div>
+    <div class="panel">
+      <h3>Condições</h3>
+      <div id="condicoesList"></div>
+      <button id="addCondicaoBtn" type="button" class="btn btn-ghost">+ Adicionar condição</button>
+    </div>
     <div class="panel foco-iniciativa-panel">
       <div class="foco-block">
         <h3>Foco 𓂀</h3>
@@ -1576,6 +1646,17 @@ function buildTabBase(){
         <label class="iniciativa-bonus-field">Bônus extra <input type="number" id="iniciativaBonusInput"></label>
         <button id="btnRolarIniciativa" type="button" class="btn btn-primary">🎲 Rolar</button>
         <p id="iniciativaResultado" class="iniciativa-resultado"></p>
+      </div>
+      <div class="dado-block">
+        <h3>Dado Personalizado</h3>
+        <div class="dado-personalizado-inputs">
+          <label>Qtd. <input type="number" id="dadoQtdInput" min="1" max="100" value="1"></label>
+          <label>Faces <input type="number" id="dadoFacesInput" min="2" max="1000" value="20"></label>
+        </div>
+        <button id="btnRolarPersonalizado" type="button" class="btn btn-primary">🎲 Rolar</button>
+        <p id="dadoPersonalizadoResultado" class="iniciativa-resultado"></p>
+      </div>
+    </div>
       </div>
     </div>`;
 }
@@ -1611,6 +1692,7 @@ function fillTabBase(){
   syncFocoMaximo();
   renderFocoPips();
   document.getElementById('iniciativaBonusInput').value=state.iniciativaBonus;
+  renderCondicoes();
 }
 function updateResourceDisplays(){
   const t=totals();
@@ -1623,6 +1705,11 @@ function updateResourceDisplays(){
     const pct=Math.max(0, Math.min(100, (atual/totalCap)*100));
     const fill=document.getElementById(`${key}BarFill`);
     if (fill) fill.style.width=pct+'%';
+    const card=document.querySelector(`.resource-${key}`);
+    if(card){
+      card.classList.toggle('resource-critico', pct<30);
+      card.classList.toggle('resource-baixo', pct>=30 && pct<60);
+    }
   });
   updateIniciativaDisplay();
 }
@@ -1678,6 +1765,66 @@ function rollIniciativa(){
   el.textContent = `🎲 ${d20} + ${mod} = ${totalRoll}`;
   el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
 }
+// Regra da rolagem de atributo: rola tantos d20 quanto for Valor+Mod e pega o
+// maior. Se Valor+Mod for 0 (ou negativo), rola 2d20 e pega o pior dos dois.
+function rollDicePool(n){
+  if(n<=0){
+    const a=Math.floor(Math.random()*20)+1, b=Math.floor(Math.random()*20)+1;
+    return {dados:[a,b], resultado:Math.min(a,b)};
+  }
+  const dados=[]; for(let i=0;i<n;i++) dados.push(Math.floor(Math.random()*20)+1);
+  return {dados, resultado:Math.max(...dados)};
+}
+function rollAttrDice(key){
+  const n=total(key);
+  const {dados,resultado}=rollDicePool(n);
+  const btn=document.querySelector(`.attr-roll-btn[data-attr="${key}"]`);
+  if(!btn) return;
+  if(btn._rollTimer) clearTimeout(btn._rollTimer);
+  const resultEl=btn.querySelector('.attr-roll-result');
+  btn.classList.remove('rolling'); void btn.offsetWidth; btn.classList.add('rolling');
+  if(resultEl){
+    resultEl.textContent = dados.length>1 ? `[${dados.join(',')}]→${resultado}` : `${resultado}`;
+    resultEl.classList.add('show');
+  }
+  btn.classList.add('mostrando-resultado');
+  btn._rollTimer=setTimeout(()=>{
+    btn.classList.remove('mostrando-resultado');
+    if(resultEl) resultEl.classList.remove('show');
+  }, 3200);
+}
+function rollDadoPersonalizado(){
+  const qtd=Math.max(1, Math.min(100, Number(document.getElementById('dadoQtdInput').value)||1));
+  const faces=Math.max(2, Math.min(1000, Number(document.getElementById('dadoFacesInput').value)||20));
+  const dados=[]; for(let i=0;i<qtd;i++) dados.push(Math.floor(Math.random()*faces)+1);
+  const soma=dados.reduce((a,b)=>a+b,0);
+  const el=document.getElementById('dadoPersonalizadoResultado');
+  el.textContent = dados.length>1 ? `🎲 [${dados.join(', ')}] = ${soma}` : `🎲 ${soma}`;
+  el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+}
+function renderCondicoes(){
+  const list=document.getElementById('condicoesList');
+  if(!list) return;
+  if(!Array.isArray(state.condicoes)) state.condicoes=[];
+  if(state.condicoes.length===0){ list.innerHTML='<p class="empty-hint">Nenhuma condição ativa.</p>'; return; }
+  list.innerHTML = state.condicoes.map(()=>`
+    <div class="condicao-row">
+      <input type="text" class="condicao-nome" placeholder="Nome">
+      <input type="text" class="condicao-efeito" placeholder="Condição">
+      <input type="text" class="condicao-duracao" placeholder="Duração">
+      <button type="button" class="item-remove" title="Remover">✕</button>
+    </div>`).join('');
+  state.condicoes.forEach((c,i)=>{
+    const row=list.children[i];
+    row.querySelector('.condicao-nome').value=c.nome||'';
+    row.querySelector('.condicao-efeito').value=c.condicao||'';
+    row.querySelector('.condicao-duracao').value=c.duracao||'';
+  });
+  list.querySelectorAll('.condicao-nome').forEach((inp,i)=> inp.addEventListener('input', e=>{ state.condicoes[i].nome=e.target.value; scheduleSave(); }));
+  list.querySelectorAll('.condicao-efeito').forEach((inp,i)=> inp.addEventListener('input', e=>{ state.condicoes[i].condicao=e.target.value; scheduleSave(); }));
+  list.querySelectorAll('.condicao-duracao').forEach((inp,i)=> inp.addEventListener('input', e=>{ state.condicoes[i].duracao=e.target.value; scheduleSave(); }));
+  list.querySelectorAll('.item-remove').forEach((btn,i)=> btn.addEventListener('click', ()=>{ state.condicoes.splice(i,1); renderCondicoes(); scheduleSave(); }));
+}
 function bindTabBase(){
   document.querySelectorAll('#tabContent .attr-valor, #tabContent .attr-mod').forEach(inp=>{
     inp.addEventListener('input', e=>{
@@ -1704,6 +1851,16 @@ function bindTabBase(){
   });
   document.getElementById('btnRolarIniciativa').addEventListener('click', rollIniciativa);
   document.getElementById('iniciativaBonusInput').addEventListener('input', e=>{ state.iniciativaBonus=Number(e.target.value)||0; updateIniciativaDisplay(); scheduleSave(); });
+  document.querySelectorAll('.attr-roll-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> rollAttrDice(btn.dataset.attr));
+  });
+  document.getElementById('btnRolarPersonalizado').addEventListener('click', rollDadoPersonalizado);
+  document.getElementById('addCondicaoBtn').addEventListener('click', ()=>{
+    state.condicoes.push({nome:'',condicao:'',duracao:''});
+    renderCondicoes(); scheduleSave();
+    const rows=document.querySelectorAll('#condicoesList .condicao-row'); const last=rows[rows.length-1];
+    if(last) last.querySelector('.condicao-nome').focus();
+  });
 }
 
 function buildTabPoderes(){
