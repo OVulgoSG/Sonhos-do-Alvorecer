@@ -426,6 +426,7 @@ textarea { resize:vertical; line-height:1.6; }
 
 /* ===== Recorte/zoom de foto antes de enviar ===== */
 .crop-modal-overlay{position:fixed;inset:0;background:rgba(4,7,13,.82);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
+.crop-modal-overlay[hidden]{display:none;}
 .crop-modal{background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-lg);max-width:340px;width:100%;text-align:center;}
 .crop-modal h3{color:var(--gold-bright);font-size:1.05rem;margin-bottom:4px;}
 .crop-stage{width:240px;height:240px;border-radius:50%;overflow:hidden;margin:14px auto 0;position:relative;border:3px solid var(--gold);background:var(--bg-void);cursor:grab;touch-action:none;box-shadow:0 0 0 4px rgba(212,169,66,.15), var(--shadow-lg);}
