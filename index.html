@@ -409,6 +409,19 @@ textarea { resize:vertical; line-height:1.6; }
 @media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
 @media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
 
+.lobby-rolls{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
+.lobby-rolls h2{color:var(--gold-bright);font-size:1.1rem;margin-bottom:6px;}
+.lobby-rolls-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:340px;overflow-y:auto;}
+.lobby-roll-entry{display:flex;align-items:center;gap:10px;background:var(--bg-panel-alt);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:8px 10px;transition:transform .3s ease, opacity .3s ease, background .8s ease;}
+.lobby-roll-entry.lobby-roll-in{opacity:0;transform:translateY(-8px);}
+.lobby-roll-icon{font-size:1.15rem;flex-shrink:0;filter:drop-shadow(0 0 4px rgba(212,169,66,.4));}
+.lobby-roll-body{flex:1;min-width:0;}
+.lobby-roll-line{font-size:.82rem;color:var(--text-muted);}
+.lobby-roll-line strong{color:var(--gold-bright);font-weight:600;}
+.lobby-roll-result{font-size:.9rem;color:var(--text-main);margin-top:1px;}
+.lobby-roll-result strong{color:var(--gold-bright);}
+.lobby-roll-time{font-size:.7rem;color:var(--text-muted);flex-shrink:0;}
+
 .sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed;opacity:.45;filter:grayscale(1);pointer-events:none}.sub-toggle.locked span{color:#888}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1758,12 +1771,68 @@ function renderFocoPips(){
     });
   });
 }
+/* ===== Rolagens ao vivo (o mestre vê no lobby, sem precisar de tabela nova) ===== */
+let rollsChannel=null;
+let rollsChannelReady=false;
+let lobbyRollsLog=[];
+function ensureRollsChannel(){
+  if(!ONLINE_ENABLED) return null;
+  try{ ensureSupabaseClient(); }catch(e){ return null; }
+  if(!rollsChannel){
+    rollsChannel=supabaseClient.channel('sonhos-lobby-rolls');
+    rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
+    rollsChannel.subscribe(status=>{ if(status==='SUBSCRIBED') rollsChannelReady=true; });
+  }
+  return rollsChannel;
+}
+function broadcastRoll(info){
+  const ch=ensureRollsChannel();
+  if(!ch || !rollsChannelReady) return;
+  const payload={
+    nome:(state?.identidade?.nome||'').trim() || 'Personagem sem nome',
+    quando:Date.now(),
+    ...info
+  };
+  ch.send({type:'broadcast',event:'roll',payload}).catch(()=>{});
+}
+function buildLobbyRollEntryHtml(r){
+  const hora=new Date(r.quando||Date.now()).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return `
+    <span class="lobby-roll-icon">🎲</span>
+    <div class="lobby-roll-body">
+      <div class="lobby-roll-line"><strong>${escapeHtml(r.nome||'Personagem')}</strong> rolou ${escapeHtml(r.label||'dados')}</div>
+      <div class="lobby-roll-result">${escapeHtml(r.detalhe||'')} → <strong>${escapeHtml(String(r.resultado ?? ''))}</strong></div>
+    </div>
+    <span class="lobby-roll-time">${hora}</span>`;
+}
+function addLobbyRollEntry(payload){
+  if(!payload) return;
+  lobbyRollsLog.unshift(payload);
+  if(lobbyRollsLog.length>30) lobbyRollsLog.length=30;
+  const list=document.getElementById('lobbyRollsList');
+  if(!list) return;
+  const empty=list.querySelector('.lobby-rolls-empty'); if(empty) empty.remove();
+  const el=document.createElement('div');
+  el.className='lobby-roll-entry lobby-roll-in';
+  el.innerHTML=buildLobbyRollEntryHtml(payload);
+  list.prepend(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove('lobby-roll-in')));
+  while(list.children.length>30) list.removeChild(list.lastChild);
+}
+function renderLobbyRolls(){
+  const list=document.getElementById('lobbyRollsList');
+  if(!list) return;
+  list.innerHTML = lobbyRollsLog.length
+    ? lobbyRollsLog.map(r=>`<div class="lobby-roll-entry">${buildLobbyRollEntryHtml(r)}</div>`).join('')
+    : '<div class="lobby-rolls-empty empty-hint">Nenhuma rolagem ainda.</div>';
+}
 function rollIniciativa(){
   const t=totals(); const mod=computeIniciativa(t);
   const d20=Math.floor(Math.random()*20)+1; const totalRoll=d20+mod;
   const el=document.getElementById('iniciativaResultado');
   el.textContent = `🎲 ${d20} + ${mod} = ${totalRoll}`;
   el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+  broadcastRoll({label:'Iniciativa', detalhe:`${d20} ${mod>=0?'+':'-'} ${Math.abs(mod)}`, resultado:totalRoll, tipo:'iniciativa'});
 }
 // Regra da rolagem de atributo: rola tantos d20 quanto for Valor+Mod e pega o
 // maior. Se Valor+Mod for 0 (ou negativo), rola 2d20 e pega o pior dos dois.
@@ -1792,6 +1861,7 @@ function rollAttrDice(key){
     btn.classList.remove('mostrando-resultado');
     if(resultEl) resultEl.classList.remove('show');
   }, 3200);
+  broadcastRoll({label:ATTR_META[key]?.label||key, detalhe:dados.length>1?`[${dados.join(', ')}]`:`${dados[0]}`, resultado, tipo:'atributo'});
 }
 function rollDadoPersonalizado(){
   const qtd=Math.max(1, Math.min(100, Number(document.getElementById('dadoQtdInput').value)||1));
@@ -1801,6 +1871,7 @@ function rollDadoPersonalizado(){
   const el=document.getElementById('dadoPersonalizadoResultado');
   el.textContent = dados.length>1 ? `🎲 [${dados.join(', ')}] = ${soma}` : `🎲 ${soma}`;
   el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+  broadcastRoll({label:`${qtd}d${faces}`, detalhe:dados.length>1?`[${dados.join(', ')}]`:`${dados[0]}`, resultado:soma, tipo:'personalizado'});
 }
 function renderCondicoes(){
   const list=document.getElementById('condicoesList');
@@ -2219,6 +2290,12 @@ function renderLobby(characters){
         </div>` : ''}
       </div>
 
+      <div class="lobby-rolls">
+        <h2>🎲 Rolagens</h2>
+        <p class="hint-text">Rolagens feitas pelos jogadores aparecem aqui em tempo real.</p>
+        <div class="lobby-rolls-list" id="lobbyRollsList"></div>
+      </div>
+
       <div class="lobby-capangas">
         <h2>⚔️ Capangas</h2>
         <p class="hint-text">${isAdmin ? 'Somente o mestre pode adicionar, editar, remover e decidir quais grupos os jogadores podem ver.' : 'Capangas liberados pelo mestre para os jogadores.'}</p>
@@ -2238,6 +2315,7 @@ function renderLobby(characters){
     </div>`;
 
   renderLobbyCapangas();
+  renderLobbyRolls();
   if(isAdmin){
     document.getElementById('addLobbyCapangaBtn')?.addEventListener('click',addLobbyCapanga);
     document.getElementById('lobbyCapangaNome')?.addEventListener('keydown',e=>{if(e.key==='Enter') addLobbyCapanga();});
@@ -2328,6 +2406,8 @@ async function initLobby(){
     await loadLobbyCharacters();
     subscribeLobbyRealtime();
     subscribeLobbyCapangas();
+    ensureRollsChannel();
+    renderLobbyRolls();
   }catch(e){
     console.error(e);
 
