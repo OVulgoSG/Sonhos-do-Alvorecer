@@ -446,7 +446,8 @@ lobby:{
   mostrarMental:false
 },
 
-notas:'',
+notasHistoria:'',
+    notasAparencia:'',
     dinheiro:'B$10000000',
     itens:[],
     poderes:'',
@@ -512,11 +513,15 @@ function validaRaca(v){ return true; }
 */
 const SUPABASE_URL = 'https://ttxiiwmwiewkwhrtfexk.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_F_35YV-JNu02UCx0ND5MTQ_ORn2PzM0';
-const ONLINE_ENABLED = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('COLE_AQUI') && !SUPABASE_ANON_KEY.includes('COLE_AQUI');
+const URL_PARAMS = new URLSearchParams(location.search);
+// Modo de teste: abrindo com ?local (ou ?offline) na URL, o app nunca chama o
+// Supabase — nem leitura, nem escrita, nem realtime. Útil pra testar à vontade
+// sem gastar cota do banco nem criar fichas de teste de verdade.
+const FORCE_OFFLINE = URL_PARAMS.has('local') || URL_PARAMS.has('offline');
+const ONLINE_ENABLED = !FORCE_OFFLINE && SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('COLE_AQUI') && !SUPABASE_ANON_KEY.includes('COLE_AQUI');
 let state = defaultState();
 let saveTimer = null;
 let supabaseClient = null;
-const URL_PARAMS = new URLSearchParams(location.search);
   const IS_LOBBY = URL_PARAMS.has('lobby');
 const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
 // A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
@@ -598,6 +603,11 @@ function mergeState(loaded) {
   base.lobby,
   loaded?.lobby||{}
 );
+  // Fichas antigas guardavam tudo num campo único "notas"; se a ficha carregada
+  // ainda não tem o campo novo, o texto antigo vira o ponto de partida de "História".
+  merged.notasHistoria = (loaded && loaded.notasHistoria !== undefined) ? loaded.notasHistoria : ((loaded && loaded.notas) || '');
+  merged.notasAparencia = (loaded && loaded.notasAparencia) || '';
+  delete merged.notas;
   merged.itens=loaded?.itens||[];
   merged.capangas=Array.isArray(loaded?.capangas) ? loaded.capangas.map(c=>({id:c.id||crypto.randomUUID?.()||String(Date.now()+Math.random()),nome:String(c.nome||'Capangas'),vida:Math.max(0,Number(c.vida)||0),energia:Math.max(0,Number(c.energia)||0),quantidade:Math.max(1,Number(c.quantidade)||1)})) : [];
   return merged;
@@ -831,11 +841,7 @@ function getPlayerRule(){
   if(nome.startsWith('andr')) return {mensagem:'Você já ganha buff em trair.', bloqueado:false};
   if(nome.includes('maozinh')) return {mensagem:'Não vai passar daqui.', bloqueado:true};
   if(nome.startsWith('vin')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
-  if(nome.startsWith('nicolas')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
-  if(nome.startsWith('nicholas')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
-  if(nome.startsWith('nicole')) return {mensagem:'Toma sequência de holly', bloqueado:false};
-  if(nome.startsWith('nick')) return {mensagem:'Toma sequência de holly', bloqueado:false};
-  if(nome.startsWith('bon')) return {mensagem:'Toma sequência de holly', bloqueado:false};
+  if(nome.startsWith('nic')) return {mensagem:'Quanto tempo, bem vindo de volta.', bloqueado:false};
   if(nome.startsWith('wal')) return {mensagem:'O teu poder é o preto.', bloqueado:false};
   if(nome.startsWith('eduard')) return {mensagem:'Proibido fazer personagem menor de idade.', bloqueado:idade>0 && idade<18};
   return {mensagem:'', bloqueado:false};
@@ -1190,7 +1196,7 @@ function renderFichaChooser(){
       <div class="ficha-chooser-actions">
         <button type="button" class="btn-link" data-action="abrir">Abrir</button>
         <button type="button" class="btn-link" data-action="duplicar">Duplicar</button>
-        <button type="button" class="btn-link" data-action="remover">Remover</button>
+        <button type="button" class="btn-link" data-action="excluir">Excluir</button>
       </div>
     </div>`;
   }).join('');
@@ -1218,7 +1224,7 @@ function renderFichaChooser(){
       try{ await duplicarFicha(id); }
       catch(err){ alert('Não foi possível duplicar a ficha: '+(err?.message||err)); btn.disabled=false; btn.textContent='Duplicar'; }
     });
-    item.querySelector('[data-action="remover"]').addEventListener('click', ()=>{
+    item.querySelector('[data-action="excluir"]').addEventListener('click', ()=>{
       if(!confirm(`Remover "${registro?.nome||'esta ficha'}" da sua lista?\n\nIsso só tira daqui do seu navegador — o link continua funcionando normalmente se você (ou outra pessoa) ainda tiver o endereço dele.`)) return;
       removerFichaConhecida(id);
       if(loadFichasConhecidas().length>0) renderFichaChooser(); else { state=defaultState(); renderWizard(); }
@@ -1737,9 +1743,12 @@ function bindTabPoderes(){
   });
 }
 
-function buildTabNotas(){ return `<div class="panel"><h3>Notas de História/Personagem</h3><textarea id="notasTextarea" rows="14" placeholder="${LOREM_IPSUM}"></textarea></div>`; }
-function fillTabNotas(){ document.getElementById('notasTextarea').value=state.notas; }
-function bindTabNotas(){ document.getElementById('notasTextarea').addEventListener('input', e=>{ state.notas=e.target.value; scheduleSave(); }); }
+function buildTabNotas(){ return `<div class="panel"><h3>História &amp; Personalidade</h3><textarea id="notasHistoriaTextarea" rows="10" placeholder="${LOREM_IPSUM}"></textarea></div><div class="panel"><h3>Aparência &amp; Estética</h3><textarea id="notasAparenciaTextarea" rows="10" placeholder="${LOREM_IPSUM}"></textarea></div>`; }
+function fillTabNotas(){ document.getElementById('notasHistoriaTextarea').value=state.notasHistoria; document.getElementById('notasAparenciaTextarea').value=state.notasAparencia; }
+function bindTabNotas(){
+  document.getElementById('notasHistoriaTextarea').addEventListener('input', e=>{ state.notasHistoria=e.target.value; scheduleSave(); });
+  document.getElementById('notasAparenciaTextarea').addEventListener('input', e=>{ state.notasAparencia=e.target.value; scheduleSave(); });
+}
 
 function formatDinheiro(value){
   const raw=String(value??'').replace(/^B\$\s*/i,'').replace(/\D/g,'');
@@ -2175,6 +2184,13 @@ async function initLobby(){
 async function init(){
   document.getElementById('app').innerHTML =
     '<div class="loading-screen">⚓ Erguendo velas...</div>';
+
+  if(FORCE_OFFLINE){
+    const badge=document.createElement('div');
+    badge.textContent='🧪 Modo de teste offline — nada aqui é salvo no servidor';
+    badge.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#3a2a08;color:#f2ca6e;text-align:center;font-size:.78rem;padding:5px;';
+    document.body.appendChild(badge);
+  }
 
   if(IS_LOBBY){
     await initLobby();
