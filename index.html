@@ -1775,26 +1775,74 @@ function renderFocoPips(){
 /* ===== Rolagens ao vivo (o mestre vê no lobby, sem precisar de tabela nova) ===== */
 let rollsChannel=null;
 let rollsChannelReady=false;
+let rollsChannelConnecting=false;
 let lobbyRollsLog=[];
+let pendingRollPayloads=[];
+function flushPendingRolls(){
+  if(!rollsChannel || !rollsChannelReady || !pendingRollPayloads.length) return;
+  const fila=[...pendingRollPayloads];
+  pendingRollPayloads=[];
+  fila.forEach(payload=>sendRollWithRetry(payload));
+}
 function ensureRollsChannel(){
   if(!ONLINE_ENABLED) return null;
   try{ ensureSupabaseClient(); }catch(e){ return null; }
-  if(!rollsChannel){
-    rollsChannel=supabaseClient.channel('sonhos-lobby-rolls');
-    rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
-    rollsChannel.subscribe(status=>{ if(status==='SUBSCRIBED') rollsChannelReady=true; });
-  }
+  if(rollsChannel) return rollsChannel;
+  if(rollsChannelConnecting) return null;
+
+  rollsChannelConnecting=true;
+  rollsChannel=supabaseClient.channel('sonhos-lobby-rolls');
+  rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
+  rollsChannel.subscribe(status=>{
+    if(status==='SUBSCRIBED'){
+      rollsChannelReady=true;
+      rollsChannelConnecting=false;
+      // Qualquer rolagem feita durante a conexão fica na fila e é enviada
+      // assim que o canal estiver realmente inscrito.
+      flushPendingRolls();
+    }
+  });
   return rollsChannel;
 }
+async function sendRollWithRetry(payload){
+  const ch=rollsChannel;
+  if(!ch || !rollsChannelReady){
+    pendingRollPayloads.push(payload);
+    ensureRollsChannel();
+    return;
+  }
+
+  // O lobby pode ainda estar terminando de assinar o mesmo canal.
+  // Repetimos a transmissão algumas vezes para que a primeira rolagem
+  // não seja perdida nessa janela de sincronização.
+  for(let tentativa=0; tentativa<3; tentativa++){
+    try{
+      await ch.send({type:'broadcast',event:'roll',payload});
+      if(tentativa<2) await new Promise(r=>setTimeout(r,250));
+    }catch(e){
+      if(tentativa===2){
+        pendingRollPayloads.push(payload);
+        return;
+      }
+      await new Promise(r=>setTimeout(r,250));
+    }
+  }
+}
 function broadcastRoll(info){
-  const ch=ensureRollsChannel();
-  if(!ch || !rollsChannelReady) return;
   const payload={
+    id:(crypto.randomUUID?.() || ('roll_'+Date.now()+'_'+Math.random().toString(36).slice(2))),
     nome:(state?.identidade?.nome||'').trim() || 'Personagem sem nome',
     quando:Date.now(),
     ...info
   };
-  ch.send({type:'broadcast',event:'roll',payload}).catch(()=>{});
+
+  if(!rollsChannelReady || !rollsChannel){
+    pendingRollPayloads.push(payload);
+    ensureRollsChannel();
+    return;
+  }
+
+  sendRollWithRetry(payload);
 }
 function buildLobbyRollEntryHtml(r){
   const hora=new Date(r.quando||Date.now()).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -1808,6 +1856,7 @@ function buildLobbyRollEntryHtml(r){
 }
 function addLobbyRollEntry(payload){
   if(!payload) return;
+  if(payload.id && lobbyRollsLog.some(r=>r.id===payload.id)) return;
   lobbyRollsLog.unshift(payload);
   if(lobbyRollsLog.length>30) lobbyRollsLog.length=30;
   const list=document.getElementById('lobbyRollsList');
@@ -2450,12 +2499,22 @@ async function init(){
     }
     updateDocumentTitle();
 
+    // Conecta o canal de rolagens já aqui (não só no primeiro clique de rolar),
+    // pra ele já estar pronto quando o jogador rolar o primeiro dado.
+    if(ONLINE_ENABLED && characterId) ensureRollsChannel();
+
     if(ONLINE_ENABLED && state.wizardDone && !characterId){
       try{
         await createOnlineCharacter();
+        // A ficha nova só recebe o characterId neste ponto.
+        // Garante que o canal de rolagens também seja criado agora, antes
+        // da primeira rolagem do jogador.
+        ensureRollsChannel();
       }catch(e){
         console.warn('Não foi possível criar a ficha online:',e);
       }
+    }else if(ONLINE_ENABLED && characterId){
+      ensureRollsChannel();
     }
 
     if(ONLINE_ENABLED) addOnlineControls();
