@@ -423,6 +423,50 @@ textarea { resize:vertical; line-height:1.6; }
 .lobby-roll-time{font-size:.7rem;color:var(--text-muted);flex-shrink:0;}
 
 .sub-toggle.locked{opacity:.45;filter:grayscale(1);cursor:not-allowed}.sub-toggle.locked input{cursor:not-allowed;opacity:.45;filter:grayscale(1);pointer-events:none}.sub-toggle.locked span{color:#888}
+
+/* ===== Recorte/zoom de foto antes de enviar ===== */
+.crop-modal-overlay{position:fixed;inset:0;background:rgba(4,7,13,.82);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
+.crop-modal{background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-lg);max-width:340px;width:100%;text-align:center;}
+.crop-modal h3{color:var(--gold-bright);font-size:1.05rem;margin-bottom:4px;}
+.crop-stage{width:240px;height:240px;border-radius:50%;overflow:hidden;margin:14px auto 0;position:relative;border:3px solid var(--gold);background:var(--bg-void);cursor:grab;touch-action:none;box-shadow:0 0 0 4px rgba(212,169,66,.15), var(--shadow-lg);}
+.crop-stage.dragging{cursor:grabbing;}
+.crop-stage img{position:absolute;top:0;left:0;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+.crop-controls{margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text-muted);font-size:.85rem;}
+.crop-controls input[type="range"]{width:180px;accent-color:var(--gold);}
+.crop-actions{display:flex;gap:10px;justify-content:center;margin-top:18px;}
+.crop-actions .btn{flex:1;}
+
+.portrait-remove{position:absolute;top:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:var(--bg-void);border:1px solid var(--border-soft);color:var(--text-muted);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:.15s;}
+.portrait-remove:hover{border-color:var(--danger);color:var(--danger);background:#1a0f0e;transform:scale(1.1);}
+
+/* ===== Crítico (nat 20 / nat 1) nos dados de d20 ===== */
+.attr-roll-result.crit-alto{border-color:#7be0a0;color:#c9ffdf;box-shadow:0 0 14px rgba(123,224,160,.55);}
+.attr-roll-result.crit-baixo{border-color:var(--danger);color:#ffd9d6;box-shadow:0 0 14px rgba(240,138,133,.55);}
+.attr-roll-btn.crit-alto .d20-icon{animation:critGlowAlto 1.1s ease-in-out infinite;}
+.attr-roll-btn.crit-baixo .d20-icon{animation:critGlowBaixo 1.1s ease-in-out infinite;}
+@keyframes critGlowAlto{0%,100%{filter:drop-shadow(0 0 7px rgba(123,224,160,.7));}50%{filter:drop-shadow(0 0 15px rgba(123,224,160,1));}}
+@keyframes critGlowBaixo{0%,100%{filter:drop-shadow(0 0 7px rgba(240,138,133,.7));}50%{filter:drop-shadow(0 0 15px rgba(240,138,133,1));}}
+.pulse.crit-alto{color:#c9ffdf;text-shadow:0 0 12px rgba(123,224,160,.75);}
+.pulse.crit-baixo{color:#ffd9d6;text-shadow:0 0 12px rgba(240,138,133,.75);}
+.lobby-roll-entry.crit-alto{border-color:#7be0a0;box-shadow:0 0 10px rgba(123,224,160,.25) inset;}
+.lobby-roll-entry.crit-baixo{border-color:var(--danger);box-shadow:0 0 10px rgba(240,138,133,.25) inset;}
+
+/* ===== Botões com mais peso ao toque ===== */
+.btn{transform:translateY(0);box-shadow:0 0 0 rgba(0,0,0,0);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(212,169,66,.35);}
+.btn-primary:active{transform:translateY(0);box-shadow:0 2px 6px rgba(212,169,66,.25);}
+.btn-ghost:hover{transform:translateY(-1px);}
+.btn-ghost:active{transform:translateY(0);}
+
+/* ===== Tela de carregamento animada ===== */
+.loading-screen{position:relative;}
+.loading-screen .loading-anchor{display:inline-block;animation:anchorSway 1.6s ease-in-out infinite;transform-origin:50% 20%;}
+@keyframes anchorSway{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+
+/* ===== Estados vazios com mais vida ===== */
+.empty-icon{display:block;font-size:1.6rem;margin-bottom:6px;opacity:.7;}
+.lobby-card,.lobby-capanga-card{transition:transform .2s ease, box-shadow .2s ease;}
+.lobby-card:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(0,0,0,.4);}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -439,6 +483,22 @@ textarea { resize:vertical; line-height:1.6; }
   </symbol>
 </svg>
 <div id="app"></div>
+<div class="crop-modal-overlay" id="photoCropOverlay" hidden>
+  <div class="crop-modal">
+    <h3>Ajustar retrato</h3>
+    <p class="hint-text">Arraste pra posicionar e use o zoom antes de confirmar.</p>
+    <div class="crop-stage" id="cropStage">
+      <img id="cropImg" alt="Pré-visualização da foto">
+    </div>
+    <div class="crop-controls">
+      <span>🔍</span><input type="range" id="cropZoom" min="100" max="300" value="100">
+    </div>
+    <div class="crop-actions">
+      <button type="button" class="btn btn-ghost" id="cropCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="cropConfirmBtn">Usar foto</button>
+    </div>
+  </div>
+</div>
 <script>
 /* ===== Configuração ===== */
 const STORAGE_KEY = 'personagem';
@@ -758,7 +818,7 @@ function shipDivider(){
 }
 function scheduleSave(){
   clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
-  saveTimer=setTimeout(saveState,700);
+  saveTimer=setTimeout(saveState,350);
 }
 async function saveState(){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
@@ -766,7 +826,6 @@ async function saveState(){
   clearTimeout(onlineSaveTimer);
   localSaveInFlight=true;
   onlineSaveTimer=setTimeout(async()=>{
-    /* delay total agora ~1s após parar de digitar, antes era ~500ms */
     try{
       if(IS_MASTER_SHEET) await supabaseClient.rpc('update_character_by_admin',{p_id:characterId,p_state:state});
       else await supabaseClient.rpc('update_character_by_token',{p_id:characterId,p_token:editToken,p_state:state});
@@ -1502,6 +1561,7 @@ function renderSheetHeader(){
     <div class="portrait" id="portraitFrame">
       <img id="portraitImg" alt="Retrato do personagem" ${state.imagem?'':'hidden'}>
       <div id="portraitPlaceholder" class="portrait-placeholder" ${state.imagem?'hidden':''}>📷<br>Adicionar<br>retrato</div>
+      <button type="button" id="portraitRemoveBtn" class="portrait-remove" title="Remover foto" ${state.imagem?'':'hidden'}>×</button>
       <input type="file" id="imagemInput" accept="image/*" hidden>
     </div>
     <div class="identity-block">
@@ -1549,41 +1609,144 @@ function renderSheetHeader(){
     });
   });
   document.getElementById('hdrPontoSonho').addEventListener('change', e=>{ state.pontoSonho=e.target.checked; scheduleSave(); });
-  document.getElementById('portraitFrame').addEventListener('click', ()=>document.getElementById('imagemInput').click());
+  document.getElementById('portraitFrame').addEventListener('click', (e)=>{
+    if(e.target.closest('#portraitRemoveBtn')) return;
+    document.getElementById('imagemInput').click();
+  });
   document.getElementById('imagemInput').addEventListener('change', handleImagemUpload);
+  document.getElementById('portraitRemoveBtn').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(!confirm('Remover a foto do personagem?')) return;
+    removePortraitImage();
+  });
+}
+function applyPortraitImage(dataUrl){
+  state.imagem=dataUrl;
+  const img=document.getElementById('portraitImg');
+  const ph=document.getElementById('portraitPlaceholder');
+  const rm=document.getElementById('portraitRemoveBtn');
+  if(img){ img.src=dataUrl; img.hidden=false; }
+  if(ph) ph.hidden=true;
+  if(rm) rm.hidden=false;
+  scheduleSave();
+}
+function removePortraitImage(){
+  state.imagem='';
+  const img=document.getElementById('portraitImg');
+  const ph=document.getElementById('portraitPlaceholder');
+  const rm=document.getElementById('portraitRemoveBtn');
+  if(img){ img.hidden=true; img.removeAttribute('src'); }
+  if(ph) ph.hidden=false;
+  if(rm) rm.hidden=true;
+  scheduleSave();
 }
 function handleImagemUpload(e){
-  const file=e.target.files[0]; if(!file) return;
-  const aplicarImagem=(dataUrl)=>{
-    state.imagem=dataUrl;
-    document.getElementById('portraitImg').src=state.imagem;
-    document.getElementById('portraitImg').hidden=false;
-    document.getElementById('portraitPlaceholder').hidden=true;
-    scheduleSave();
-  };
+  const file=e.target.files[0];
+  e.target.value='';
+  if(!file) return;
   const reader=new FileReader();
   reader.onload=(ev)=>{
     const img=new Image();
-    img.onload=()=>{
-      // O retrato aparece só numa moldura pequena (círculo de ~96px), então não
-      // precisa guardar a foto original inteira — isso só infla o localStorage
-      // e a linha no Supabase. Redimensiona pro maior lado ficar em até 500px.
-      const MAX=280;
-      let w=img.naturalWidth, h=img.naturalHeight;
-      if(w>MAX || h>MAX){
-        if(w>=h){ h=Math.round(h*MAX/w); w=MAX; } else { w=Math.round(w*MAX/h); h=MAX; }
-      }
-      const canvas=document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
-      const ctx=canvas.getContext('2d');
-      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,w,h);
-      ctx.drawImage(img,0,0,w,h);
-      aplicarImagem(canvas.toDataURL('image/jpeg',0.72));
-    };
-    img.onerror=()=>aplicarImagem(ev.target.result);
+    img.onload=()=>openPhotoCropModal(img);
+    img.onerror=()=>alert('Não foi possível abrir essa imagem.');
     img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+/* ===== Modal de recorte/zoom da foto ===== */
+let cropState=null;
+let cropModalBound=false;
+function bindCropModalOnce(){
+  if(cropModalBound) return;
+  cropModalBound=true;
+  const stage=document.getElementById('cropStage');
+  const zoom=document.getElementById('cropZoom');
+  const onPointerDown=(e)=>{
+    if(!cropState) return;
+    cropState.dragging=true;
+    stage.classList.add('dragging');
+    cropState.startX=e.clientX; cropState.startY=e.clientY;
+    cropState.origX=cropState.x; cropState.origY=cropState.y;
+    stage.setPointerCapture && stage.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove=(e)=>{
+    if(!cropState || !cropState.dragging) return;
+    cropState.x = cropState.origX + (e.clientX - cropState.startX);
+    cropState.y = cropState.origY + (e.clientY - cropState.startY);
+    applyCropTransform();
+  };
+  const onPointerUp=(e)=>{
+    if(!cropState) return;
+    cropState.dragging=false;
+    stage.classList.remove('dragging');
+  };
+  stage.addEventListener('pointerdown', onPointerDown);
+  stage.addEventListener('pointermove', onPointerMove);
+  stage.addEventListener('pointerup', onPointerUp);
+  stage.addEventListener('pointercancel', onPointerUp);
+  zoom.addEventListener('input', ()=>{
+    if(!cropState) return;
+    cropState.scale = Number(zoom.value)/100;
+    applyCropTransform();
+  });
+  document.getElementById('cropCancelBtn').addEventListener('click', closeCropModal);
+  document.getElementById('cropConfirmBtn').addEventListener('click', confirmCropPhoto);
+  document.getElementById('photoCropOverlay').addEventListener('click', (e)=>{
+    if(e.target.id==='photoCropOverlay') closeCropModal();
+  });
+}
+function openPhotoCropModal(img){
+  bindCropModalOnce();
+  const overlay=document.getElementById('photoCropOverlay');
+  const imgEl=document.getElementById('cropImg');
+  const zoom=document.getElementById('cropZoom');
+  const STAGE=240;
+  const baseScale=Math.max(STAGE/img.naturalWidth, STAGE/img.naturalHeight);
+  cropState={img, stageSize:STAGE, baseScale, scale:1, x:0, y:0, dragging:false, startX:0, startY:0, origX:0, origY:0};
+  zoom.value=100;
+  imgEl.src=img.src;
+  overlay.hidden=false;
+  applyCropTransform();
+}
+function closeCropModal(){
+  document.getElementById('photoCropOverlay').hidden=true;
+  cropState=null;
+}
+function clampCropOffsets(){
+  const {img, stageSize, baseScale, scale}=cropState;
+  const dispW=img.naturalWidth*baseScale*scale;
+  const dispH=img.naturalHeight*baseScale*scale;
+  const maxX=Math.max(0,(dispW-stageSize)/2), maxY=Math.max(0,(dispH-stageSize)/2);
+  cropState.x=Math.max(-maxX, Math.min(maxX, cropState.x));
+  cropState.y=Math.max(-maxY, Math.min(maxY, cropState.y));
+}
+function applyCropTransform(){
+  clampCropOffsets();
+  const {img, stageSize, baseScale, scale, x, y}=cropState;
+  const dispW=img.naturalWidth*baseScale*scale;
+  const dispH=img.naturalHeight*baseScale*scale;
+  const imgEl=document.getElementById('cropImg');
+  imgEl.style.width=dispW+'px';
+  imgEl.style.height=dispH+'px';
+  imgEl.style.transform=`translate(${(stageSize-dispW)/2+x}px, ${(stageSize-dispH)/2+y}px)`;
+}
+function confirmCropPhoto(){
+  if(!cropState) return;
+  const {img, stageSize, baseScale, scale, x, y}=cropState;
+  const OUT=320;
+  const canvas=document.createElement('canvas');
+  canvas.width=OUT; canvas.height=OUT;
+  const ctx=canvas.getContext('2d');
+  const factor=OUT/stageSize;
+  const dispW=img.naturalWidth*baseScale*scale*factor;
+  const dispH=img.naturalHeight*baseScale*scale*factor;
+  const drawX=((stageSize-img.naturalWidth*baseScale*scale)/2 + x)*factor;
+  const drawY=((stageSize-img.naturalHeight*baseScale*scale)/2 + y)*factor;
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,OUT,OUT);
+  ctx.drawImage(img, drawX, drawY, dispW, dispH);
+  applyPortraitImage(canvas.toDataURL('image/jpeg',0.85));
+  closeCropModal();
 }
 
 function bindTabs(){
@@ -1775,79 +1938,32 @@ function renderFocoPips(){
 /* ===== Rolagens ao vivo (o mestre vê no lobby, sem precisar de tabela nova) ===== */
 let rollsChannel=null;
 let rollsChannelReady=false;
-let rollsChannelConnecting=false;
 let lobbyRollsLog=[];
-let pendingRollPayloads=[];
-function flushPendingRolls(){
-  if(!rollsChannel || !rollsChannelReady || !pendingRollPayloads.length) return;
-  const fila=[...pendingRollPayloads];
-  pendingRollPayloads=[];
-  fila.forEach(payload=>sendRollWithRetry(payload));
-}
 function ensureRollsChannel(){
   if(!ONLINE_ENABLED) return null;
   try{ ensureSupabaseClient(); }catch(e){ return null; }
-  if(rollsChannel) return rollsChannel;
-  if(rollsChannelConnecting) return null;
-
-  rollsChannelConnecting=true;
-  rollsChannel=supabaseClient.channel('sonhos-lobby-rolls');
-  rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
-  rollsChannel.subscribe(status=>{
-    if(status==='SUBSCRIBED'){
-      rollsChannelReady=true;
-      rollsChannelConnecting=false;
-      // Qualquer rolagem feita durante a conexão fica na fila e é enviada
-      // assim que o canal estiver realmente inscrito.
-      flushPendingRolls();
-    }
-  });
+  if(!rollsChannel){
+    rollsChannel=supabaseClient.channel('sonhos-lobby-rolls');
+    rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
+    rollsChannel.subscribe(status=>{ if(status==='SUBSCRIBED') rollsChannelReady=true; });
+  }
   return rollsChannel;
 }
-async function sendRollWithRetry(payload){
-  const ch=rollsChannel;
-  if(!ch || !rollsChannelReady){
-    pendingRollPayloads.push(payload);
-    ensureRollsChannel();
-    return;
-  }
-
-  // O lobby pode ainda estar terminando de assinar o mesmo canal.
-  // Repetimos a transmissão algumas vezes para que a primeira rolagem
-  // não seja perdida nessa janela de sincronização.
-  for(let tentativa=0; tentativa<3; tentativa++){
-    try{
-      await ch.send({type:'broadcast',event:'roll',payload});
-      if(tentativa<2) await new Promise(r=>setTimeout(r,250));
-    }catch(e){
-      if(tentativa===2){
-        pendingRollPayloads.push(payload);
-        return;
-      }
-      await new Promise(r=>setTimeout(r,250));
-    }
-  }
-}
 function broadcastRoll(info){
+  const ch=ensureRollsChannel();
+  if(!ch || !rollsChannelReady) return;
   const payload={
-    id:(crypto.randomUUID?.() || ('roll_'+Date.now()+'_'+Math.random().toString(36).slice(2))),
     nome:(state?.identidade?.nome||'').trim() || 'Personagem sem nome',
     quando:Date.now(),
     ...info
   };
-
-  if(!rollsChannelReady || !rollsChannel){
-    pendingRollPayloads.push(payload);
-    ensureRollsChannel();
-    return;
-  }
-
-  sendRollWithRetry(payload);
+  ch.send({type:'broadcast',event:'roll',payload}).catch(()=>{});
 }
 function buildLobbyRollEntryHtml(r){
   const hora=new Date(r.quando||Date.now()).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const icone = r.critico==='alto' ? '✨' : (r.critico==='baixo' ? '💀' : '🎲');
   return `
-    <span class="lobby-roll-icon">🎲</span>
+    <span class="lobby-roll-icon">${icone}</span>
     <div class="lobby-roll-body">
       <div class="lobby-roll-line"><strong>${escapeHtml(r.nome||'Personagem')}</strong> rolou ${escapeHtml(r.label||'dados')}</div>
       <div class="lobby-roll-result">${escapeHtml(r.detalhe||'')} → <strong>${escapeHtml(String(r.resultado ?? ''))}</strong></div>
@@ -1856,14 +1972,13 @@ function buildLobbyRollEntryHtml(r){
 }
 function addLobbyRollEntry(payload){
   if(!payload) return;
-  if(payload.id && lobbyRollsLog.some(r=>r.id===payload.id)) return;
   lobbyRollsLog.unshift(payload);
   if(lobbyRollsLog.length>30) lobbyRollsLog.length=30;
   const list=document.getElementById('lobbyRollsList');
   if(!list) return;
   const empty=list.querySelector('.lobby-rolls-empty'); if(empty) empty.remove();
   const el=document.createElement('div');
-  el.className='lobby-roll-entry lobby-roll-in';
+  el.className='lobby-roll-entry lobby-roll-in'+(payload.critico?' crit-'+payload.critico:'');
   el.innerHTML=buildLobbyRollEntryHtml(payload);
   list.prepend(el);
   requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove('lobby-roll-in')));
@@ -1873,16 +1988,18 @@ function renderLobbyRolls(){
   const list=document.getElementById('lobbyRollsList');
   if(!list) return;
   list.innerHTML = lobbyRollsLog.length
-    ? lobbyRollsLog.map(r=>`<div class="lobby-roll-entry">${buildLobbyRollEntryHtml(r)}</div>`).join('')
-    : '<div class="lobby-rolls-empty empty-hint">Nenhuma rolagem ainda.</div>';
+    ? lobbyRollsLog.map(r=>`<div class="lobby-roll-entry${r.critico?' crit-'+r.critico:''}">${buildLobbyRollEntryHtml(r)}</div>`).join('')
+    : '<div class="lobby-rolls-empty empty-hint"><span class="empty-icon">🎲</span>Nenhuma rolagem ainda.</div>';
 }
 function rollIniciativa(){
   const t=totals(); const mod=computeIniciativa(t);
   const d20=Math.floor(Math.random()*20)+1; const totalRoll=d20+mod;
+  const crit = d20===20 ? 'alto' : (d20===1 ? 'baixo' : null);
   const el=document.getElementById('iniciativaResultado');
   el.textContent = `🎲 ${d20} + ${mod} = ${totalRoll}`;
-  el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
-  broadcastRoll({label:'Iniciativa', detalhe:`${d20} ${mod>=0?'+':'-'} ${Math.abs(mod)}`, resultado:totalRoll, tipo:'iniciativa'});
+  el.classList.remove('pulse','crit-alto','crit-baixo'); void el.offsetWidth; el.classList.add('pulse');
+  if(crit) el.classList.add('crit-'+crit);
+  broadcastRoll({label:'Iniciativa', detalhe:`${d20} ${mod>=0?'+':'-'} ${Math.abs(mod)}`, resultado:totalRoll, tipo:'iniciativa', critico:crit});
 }
 // Regra da rolagem de atributo: rola tantos d20 quanto for Valor+Mod e pega o
 // maior. Se Valor+Mod for 0 (ou negativo), rola 2d20 e pega o pior dos dois.
@@ -1901,17 +2018,22 @@ function rollAttrDice(key){
   if(!btn) return;
   if(btn._rollTimer) clearTimeout(btn._rollTimer);
   const resultEl=btn.querySelector('.attr-roll-result');
+  const crit = resultado===20 ? 'alto' : (resultado===1 ? 'baixo' : null);
   btn.classList.remove('rolling'); void btn.offsetWidth; btn.classList.add('rolling');
+  btn.classList.remove('crit-alto','crit-baixo');
   if(resultEl){
+    resultEl.classList.remove('crit-alto','crit-baixo');
     resultEl.textContent = dados.length>1 ? `[${dados.join(',')}]→${resultado}` : `${resultado}`;
     resultEl.classList.add('show');
+    if(crit) resultEl.classList.add('crit-'+crit);
   }
+  if(crit) btn.classList.add('crit-'+crit);
   btn.classList.add('mostrando-resultado');
   btn._rollTimer=setTimeout(()=>{
-    btn.classList.remove('mostrando-resultado');
-    if(resultEl) resultEl.classList.remove('show');
+    btn.classList.remove('mostrando-resultado','crit-alto','crit-baixo');
+    if(resultEl){ resultEl.classList.remove('show','crit-alto','crit-baixo'); }
   }, 3200);
-  broadcastRoll({label:ATTR_META[key]?.label||key, detalhe:dados.length>1?`[${dados.join(', ')}]`:`${dados[0]}`, resultado, tipo:'atributo'});
+  broadcastRoll({label:ATTR_META[key]?.label||key, detalhe:dados.length>1?`[${dados.join(', ')}]`:`${dados[0]}`, resultado, tipo:'atributo', critico:crit});
 }
 function rollDadoPersonalizado(){
   const qtd=Math.max(1, Math.min(100, Number(document.getElementById('dadoQtdInput').value)||1));
@@ -2201,13 +2323,14 @@ async function loadLobbyCharacters(){
     .order('created_at',{ascending:true});
   if(lobbyError) throw lobbyError;
 
-  const result=(lobbyRows||[]).map(row=>{
+  const result=await Promise.all((lobbyRows||[]).map(async row=>{
     const pub=row.public_data||{};
-    // As flags de privacidade já vêm sincronizadas dentro de public_data.lobby
-    // (via trigger no banco), então não precisamos mais buscar a ficha inteira
-    // aqui — isso economiza um fetch pesado (com a foto em base64) por
-    // personagem, toda vez que o lobby recarrega.
-    const privacy=pub.lobby||{};
+    let fichaLobby={};
+    try{
+      const {data:fullState}=await supabaseClient.rpc('get_character_state',{p_id:row.character_id});
+      fichaLobby=fullState?.lobby||{};
+    }catch(e){}
+    const privacy={...(pub.lobby||{}),...fichaLobby};
     return {
       id:row.character_id,
       public_data:pub,
@@ -2219,7 +2342,7 @@ async function loadLobbyCharacters(){
         mostrarMental:privacy.mostrarMental===true
       }
     };
-  });
+  }));
   renderLobby(result);
 }
 
@@ -2277,7 +2400,7 @@ function renderLobbyCapangas(groupsOverride=null){
   const groups=normalizeLobbyCapangas(groupsOverride??getLobbyCapangas());
   const isAdmin=!!LOBBY_ADMIN_TOKEN;
   const cards=groups.map(c=>buildLobbyCapangaCard(c,isAdmin)).filter(Boolean).join('');
-  list.innerHTML=cards||'<div class="empty-hint">Nenhum grupo de capangas disponível.</div>';
+  list.innerHTML=cards||'<div class="empty-hint"><span class="empty-icon">⚔️</span>Nenhum grupo de capangas disponível.</div>';
   if(isAdmin){
     list.querySelectorAll('[data-remove-lobby-capanga]').forEach(btn=>btn.onclick=()=>saveLobbyCapangas(groups.filter(c=>c.id!==btn.dataset.removeLobbyCapanga)));
     list.querySelectorAll('[data-toggle-capanga-visibility],[data-toggle-capanga-name],[data-toggle-capanga-life],[data-toggle-capanga-energy]').forEach(cb=>cb.onchange=()=>{
@@ -2359,7 +2482,7 @@ function renderLobby(characters){
       </div>
 
       <div id="lobbyCharacters" class="lobby-grid">
-        ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty">Nenhum personagem está em cena.</div>`}
+        ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty"><span class="empty-icon">🧭</span>Nenhum personagem está em cena.</div>`}
       </div>
     </div>`;
 
@@ -2469,7 +2592,7 @@ async function initLobby(){
 /* ===== Boot ===== */
 async function init(){
   document.getElementById('app').innerHTML =
-    '<div class="loading-screen">⚓ Erguendo velas...</div>';
+    '<div class="loading-screen"><span class="loading-anchor">⚓</span> Erguendo velas...</div>';
 
   if(FORCE_OFFLINE){
     const badge=document.createElement('div');
@@ -2499,22 +2622,12 @@ async function init(){
     }
     updateDocumentTitle();
 
-    // Conecta o canal de rolagens já aqui (não só no primeiro clique de rolar),
-    // pra ele já estar pronto quando o jogador rolar o primeiro dado.
-    if(ONLINE_ENABLED && characterId) ensureRollsChannel();
-
     if(ONLINE_ENABLED && state.wizardDone && !characterId){
       try{
         await createOnlineCharacter();
-        // A ficha nova só recebe o characterId neste ponto.
-        // Garante que o canal de rolagens também seja criado agora, antes
-        // da primeira rolagem do jogador.
-        ensureRollsChannel();
       }catch(e){
         console.warn('Não foi possível criar a ficha online:',e);
       }
-    }else if(ONLINE_ENABLED && characterId){
-      ensureRollsChannel();
     }
 
     if(ONLINE_ENABLED) addOnlineControls();
