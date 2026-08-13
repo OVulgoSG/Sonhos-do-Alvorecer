@@ -20,8 +20,18 @@ html, body { margin:0; padding:0; }
   --bg-void:#04070d; --bg-panel:#0f1c38; --bg-panel-alt:#152a4d; --border-soft:#2b3d63;
   --gold:#d4a942; --gold-bright:#f2ca6e; --text-main:#e9edf7; --text-muted:#93a3c9;
   --vida:#c0392b; --energia:#2fb8a6; --mental:#9370db; --danger:#f08a85;
+  --accent-poderes:#c9793f; --accent-notas:#7c88b8; --accent-inventario:#7fa07a;
   --radius-lg:16px; --radius-md:10px; --radius-sm:6px;
   --shadow-lg:0 14px 34px rgba(0,0,0,.5);
+}
+html{ scrollbar-width:thin; scrollbar-color:var(--border-soft) var(--bg-void); }
+::-webkit-scrollbar{ width:9px; height:9px; }
+::-webkit-scrollbar-track{ background:var(--bg-void); }
+::-webkit-scrollbar-thumb{ background:var(--border-soft); border-radius:8px; border:2px solid var(--bg-void); }
+::-webkit-scrollbar-thumb:hover{ background:var(--gold); }
+body::before{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.035; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 body {
   font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
@@ -57,8 +67,9 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; font-weight:600; letter-spacing:.02em;
 input[type="text"], input[type="number"], select, textarea {
   background:var(--bg-void); border:1px solid var(--border-soft); border-radius:var(--radius-sm);
   color:var(--text-main); padding:9px 11px; font-family:inherit; font-size:.95rem; width:100%;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.4);
 }
-input:focus, select:focus, textarea:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,169,66,.18); }
+input:focus, select:focus, textarea:focus { outline:none; border-color:var(--gold); box-shadow:inset 0 1px 3px rgba(0,0,0,.4), 0 0 0 3px rgba(212,169,66,.18); }
 textarea { resize:vertical; line-height:1.6; }
 
 .btn { font-family:'Cinzel',serif; font-size:.9rem; font-weight:600; padding:10px 20px; border-radius:var(--radius-sm); cursor:pointer; border:1px solid transparent; transition:.15s; }
@@ -95,6 +106,7 @@ textarea { resize:vertical; line-height:1.6; }
 .attr-head { color:var(--text-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; padding-bottom:4px; border-bottom:1px solid var(--border-soft); margin-bottom:4px; }
 .attr-label { font-size:.9rem; display:flex; align-items:center; gap:5px; }
 .attr-row input { padding:6px 7px; text-align:center; }
+.attr-grid .attr-row:not(.attr-head):nth-child(even) { background:rgba(255,255,255,.025); border-radius:6px; margin:0 -6px; padding:2px 6px; }
 .attr-roll-btn { background:transparent; border:none; border-radius:50%; color:var(--gold-bright); cursor:pointer; height:38px; width:100%; padding:0; display:flex; align-items:center; justify-content:center; position:relative; transition:transform .15s ease; }
 .attr-roll-btn:hover { transform:scale(1.14); }
 .attr-roll-btn:active { transform:scale(.92); }
@@ -145,8 +157,19 @@ textarea { resize:vertical; line-height:1.6; }
 .fruta-block.active .fruta-details { display:flex; }
 .fruta-details input, .fruta-details select { flex:1; min-width:120px; }
 
-.panel { background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:20px; margin-bottom:18px; box-shadow:var(--shadow-lg), inset 0 0 46px rgba(0,0,0,.22); }
+.panel { background:var(--bg-panel); border:1px solid var(--border-soft); border-top:2px solid var(--border-soft); border-radius:var(--radius-lg); padding:20px; margin-bottom:18px; box-shadow:var(--shadow-lg), inset 0 0 46px rgba(0,0,0,.22); transition:border-top-color .3s ease; }
 .panel h3 { color:var(--gold-bright); font-size:1.05rem; margin-bottom:14px; }
+.tab-content[data-tab="poderes"] .panel { border-top-color:var(--accent-poderes); }
+.tab-content[data-tab="notas"] .panel { border-top-color:var(--accent-notas); }
+.tab-content[data-tab="inventario"] .panel { border-top-color:var(--accent-inventario); }
+.tab-btn[data-tab="poderes"].active { color:var(--accent-poderes); border-bottom-color:var(--accent-poderes); }
+.tab-btn[data-tab="notas"].active { color:var(--accent-notas); border-bottom-color:var(--accent-notas); }
+.tab-btn[data-tab="inventario"].active { color:var(--accent-inventario); border-bottom-color:var(--accent-inventario); }
+.tab-content .panel:not(:last-child) { position:relative; }
+.tab-content .panel:not(:last-child)::after {
+  content:'◆'; position:absolute; left:50%; bottom:-15px; transform:translate(-50%,50%);
+  font-size:.5rem; color:var(--gold); opacity:.35; line-height:1; pointer-events:none;
+}
 
 .sheet-header { display:flex; gap:18px; background:var(--bg-panel); border:1px solid var(--border-soft); border-radius:var(--radius-lg); padding:18px; margin-bottom:16px; box-shadow:var(--shadow-lg); }
 .portrait { width:96px; height:96px; border-radius:50%; border:2px solid var(--gold); background:var(--bg-void); flex-shrink:0; cursor:pointer; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
@@ -696,6 +719,7 @@ function refreshCurrentSheetTab(){
   const tab=state.activeTab||'base';
   const content=document.getElementById('tabContent');
   if(!content) return;
+  content.dataset.tab=tab;
   if(tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
   else if(tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
   else if(tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
@@ -1816,6 +1840,7 @@ function switchTab(tab){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
   state.activeTab=tab;
   const content=document.getElementById('tabContent');
+  content.dataset.tab=tab;
   if (tab==='base'){ content.innerHTML=buildTabBase(); fillTabBase(); bindTabBase(); }
   else if (tab==='poderes'){ content.innerHTML=buildTabPoderes(); fillTabPoderes(); bindTabPoderes(); }
   else if (tab==='notas'){ content.innerHTML=buildTabNotas(); fillTabNotas(); bindTabNotas(); }
