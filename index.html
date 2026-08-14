@@ -147,10 +147,24 @@ textarea { resize:vertical; line-height:1.6; }
 .attr-roll-result {
   position:absolute; bottom:118%; left:50%; transform:translateX(-50%) translateY(4px);
   background:#0a1630; border:1px solid var(--gold); color:var(--gold-bright);
-  font-size:.68rem; font-weight:700; padding:4px 8px; border-radius:6px; white-space:nowrap;
+  font-size:.68rem; font-weight:700; padding:6px 9px; border-radius:8px; white-space:normal;
   opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
   box-shadow:0 6px 16px rgba(0,0,0,.4); z-index:20;
+  display:flex; flex-direction:column; align-items:center; gap:5px; max-width:220px;
 }
+.attr-roll-result .dice-chips{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; }
+.attr-roll-result .die-chip{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:19px; height:19px; border-radius:50%; font-size:.63rem; font-weight:800;
+  color:#0b0b0b; border:1px solid rgba(0,0,0,.25);
+}
+.attr-roll-result .die-chip.die-vermelho{ background:#e0554a; color:#3a0e0a; }
+.attr-roll-result .die-chip.die-amarelo{ background:#e8c93f; color:#3a2f05; }
+.attr-roll-result .die-chip.die-verde{ background:#4fbf7a; color:#0a3018; }
+.attr-roll-result .die-chip.die-dourado{ background:#e0ac3f; color:#3a2405; }
+.attr-roll-result .die-chip.die-azul{ background:#4ea3e0; color:#062038; }
+.attr-roll-result .die-chip.die-chosen{ box-shadow:0 0 0 2px #fff, 0 0 8px rgba(255,255,255,.6); transform:scale(1.12); }
+.attr-roll-result .dice-final{ font-size:.78rem; color:var(--gold-bright); white-space:nowrap; }
 .attr-roll-result.show { opacity:1; transform:translateX(-50%) translateY(0); }
 .attr-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
 
@@ -530,6 +544,9 @@ textarea { resize:vertical; line-height:1.6; }
 .theme-swatch-alvorecer{background:linear-gradient(135deg,#2c1810,#e8963c);}
 .theme-swatch-abissal{background:linear-gradient(135deg,#0a1f26,#3fc8c0);}
 @media print{ .theme-switcher{ display:none !important; } }
+
+.akuma-lista-link{ font-size:.68rem; font-weight:400; color:var(--text-muted); text-decoration:none; margin-left:8px; opacity:.65; vertical-align:middle; }
+.akuma-lista-link:hover{ opacity:1; color:var(--gold-bright); text-decoration:underline; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1023,19 +1040,6 @@ function bindSecretTrigger(el){
     if (secretClickCount>=5){ secretClickCount=0; openFormulaSettings(); }
   };
 }
-let akumaClickCount = 0; let akumaClickTimer = null;
-function bindAkumaDocTrigger(el){
-  if(!el) return;
-  el.onclick = ()=>{
-    akumaClickCount++;
-    clearTimeout(akumaClickTimer);
-    akumaClickTimer = setTimeout(()=>{ akumaClickCount=0; }, 900);
-    if(akumaClickCount>=3){
-      akumaClickCount=0;
-      window.open('https://docs.google.com/document/d/1xbJW05ySr6O0m4RwfgmMKJUjDMxEaq5av7m4_eaBV2A/edit?tab=t.0#heading=h.8kl76z2lfwpw','_blank','noopener');
-    }
-  };
-}
 function formulaFieldsHtml(){
   return FORMULA_FIELD_META.map(([key,label])=>`<label class="modal-field"><span>${label}</span><input type="number" step="any" class="formula-input" data-key="${key}"></label>`).join('');
 }
@@ -1196,7 +1200,7 @@ function buildAttrStep(group){
       <div class="attr-row attr-head"><div>Atributo</div><div>Valor</div><div>Mod.</div></div>
       ${rows}
     </div>
-    <p class="hint-text">Modificador é um ajuste (+ ou −) somado ao Valor — a soma dos dois é usada nos cálculos.</p>`;
+    <p class="hint-text">O Valor define quantos dados são rolados; o Modificador (+ ou −) é somado como um bônus fixo ao dado escolhido, formando o resultado final.</p>`;
 }
 function fillAttrStep(group){
   Object.entries(ATTR_META).filter(([k,v])=>v.group===group).forEach(([k])=>{
@@ -2116,29 +2120,46 @@ function rollIniciativa(){
   if(crit) el.classList.add('crit-'+crit);
   broadcastRoll({label:'Iniciativa', detalhe:`${d20} ${mod>=0?'+':'-'} ${Math.abs(mod)}`, resultado:totalRoll, tipo:'iniciativa', critico:crit});
 }
-// Regra da rolagem de atributo: rola tantos d20 quanto for Valor+Mod e pega o
-// maior. Se Valor+Mod for 0 (ou negativo), rola 2d20 e pega o pior dos dois.
+// Regra da rolagem de atributo: rola tantos d20 quanto for o Valor. O maior
+// dado rolado é o "escolhido"; se Valor for 0 (ou negativo), rola 2d20 e o
+// escolhido é o pior dos dois. O Mod. é um bônus/penalidade FIXO somado ao
+// dado escolhido para compor o resultado final (não influencia a quantidade
+// de dados rolados).
 function rollDicePool(n){
   if(n<=0){
     const a=Math.floor(Math.random()*20)+1, b=Math.floor(Math.random()*20)+1;
-    return {dados:[a,b], resultado:Math.min(a,b)};
+    const idxEscolhido = a<=b ? 0 : 1;
+    return {dados:[a,b], escolhido:Math.min(a,b), idxEscolhido};
   }
   const dados=[]; for(let i=0;i<n;i++) dados.push(Math.floor(Math.random()*20)+1);
-  return {dados, resultado:Math.max(...dados)};
+  const escolhido = Math.max(...dados);
+  const idxEscolhido = dados.indexOf(escolhido);
+  return {dados, escolhido, idxEscolhido};
+}
+function dieTier(v){
+  if(v<=5) return 'vermelho';
+  if(v<=10) return 'amarelo';
+  if(v<=15) return 'verde';
+  if(v<=19) return 'dourado';
+  return 'azul';
 }
 function rollAttrDice(key){
-  const n=total(key);
-  const {dados,resultado}=rollDicePool(n);
+  const n=Number(state.attrs[key].valor)||0;
+  const mod=Number(state.attrs[key].mod)||0;
+  const {dados,escolhido,idxEscolhido}=rollDicePool(n);
+  const resultado=escolhido+mod;
   const btn=document.querySelector(`.attr-roll-btn[data-attr="${key}"]`);
   if(!btn) return;
   if(btn._rollTimer) clearTimeout(btn._rollTimer);
   const resultEl=btn.querySelector('.attr-roll-result');
-  const crit = resultado===20 ? 'alto' : (resultado===1 ? 'baixo' : null);
+  const crit = escolhido===20 ? 'alto' : (escolhido===1 ? 'baixo' : null);
   btn.classList.remove('rolling'); void btn.offsetWidth; btn.classList.add('rolling');
   btn.classList.remove('crit-alto','crit-baixo');
   if(resultEl){
     resultEl.classList.remove('crit-alto','crit-baixo');
-    resultEl.textContent = dados.length>1 ? `[${dados.join(',')}]→${resultado}` : `${resultado}`;
+    const chipsHtml = dados.map((d,i)=>`<span class="die-chip die-${dieTier(d)}${i===idxEscolhido?' die-chosen':''}">${d}</span>`).join('');
+    const modTxt = mod!==0 ? ` ${mod>0?'+':'−'} ${Math.abs(mod)}` : '';
+    resultEl.innerHTML = `<span class="dice-chips">${chipsHtml}</span><span class="dice-final">${escolhido}${modTxt} = ${resultado}</span>`;
     resultEl.classList.add('show');
     if(crit) resultEl.classList.add('crit-'+crit);
   }
@@ -2229,7 +2250,7 @@ function buildTabPoderes(){
       <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkArmamento"><span>Haki do Armamento</span></label><p class="hint-text" id="pHintArmamento"></p><label class="sub-toggle"><input type="checkbox" id="pChkArmamentoAvancada"><span>Haki Avançado</span></label></div>
       <div class="haki-toggle"><label class="switch-row"><input type="checkbox" id="pChkConquistador"><span>Haki do Conquistador</span></label><p class="hint-text" id="pHintConquistador"></p><label class="sub-toggle"><input type="checkbox" id="pChkConquistadorAvancada"><span>Haki Avançado</span></label></div>
     </div>
-    <div class="panel"><h3 id="akumaNoMiTitle">Akuma no Mi</h3>${buildFrutasStep()}</div>
+    <div class="panel"><h3>Akuma no Mi <a href="https://docs.google.com/document/d/1xbJW05ySr6O0m4RwfgmMKJUjDMxEaq5av7m4_eaBV2A/edit?tab=t.0#heading=h.8kl76z2lfwpw" target="_blank" rel="noopener" class="akuma-lista-link">lista</a></h3>${buildFrutasStep()}</div>
     <div class="panel">
       <h3>Poderes / Habilidades / Capacidades / Notas "Mecânicas"</h3>
       <textarea id="poderesTextarea" rows="8" placeholder="Golpes, técnicas, habilidades especiais, anotações mecânicas..."></textarea>
@@ -2252,7 +2273,6 @@ function bindTabPoderes(){
   // Evita listeners duplicados que poderiam alterar o estado dos avançados.
   bindHakiControls();
   bindFrutasStep();
-  bindAkumaDocTrigger(document.getElementById('akumaNoMiTitle'));
   document.getElementById('poderesTextarea').addEventListener('input', e=>{
     state.poderes=e.target.value;
     scheduleSave();
