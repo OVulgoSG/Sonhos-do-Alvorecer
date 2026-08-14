@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){try{var t=localStorage.getItem('sda_theme');if(t&&t!=='perdidos')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <title>Sonhos do Alvorecer — Ficha de Personagem</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3Qgd2lkdGg9JzY0JyBoZWlnaHQ9JzY0JyByeD0nMTQnIGZpbGw9JyMwZjFjMzgnLz48Y2lyY2xlIGN4PSczMicgY3k9JzM0JyByPScxMycgZmlsbD0nI2YyY2E2ZScvPjxyZWN0IHg9JzAnIHk9JzM0JyB3aWR0aD0nNjQnIGhlaWdodD0nMzAnIGZpbGw9JyMwZjFjMzgnLz48cmVjdCB4PSc2JyB5PSc0Micgd2lkdGg9JzUyJyBoZWlnaHQ9JzQnIHJ4PScyJyBmaWxsPScjZDRhOTQyJy8+PC9zdmc+">
 <meta property="og:title" content="Sonhos do Alvorecer — Ficha de Personagem">
@@ -23,6 +24,19 @@ html, body { margin:0; padding:0; }
   --accent-poderes:#c9793f; --accent-notas:#7c88b8; --accent-inventario:#7fa07a;
   --radius-lg:16px; --radius-md:10px; --radius-sm:6px;
   --shadow-lg:0 14px 34px rgba(0,0,0,.5);
+}
+/* ===== Temas alternativos ===== */
+[data-theme="sangue"] {
+  --bg-void:#0a0404; --bg-panel:#210a0a; --bg-panel-alt:#2e0f0f; --border-soft:#4a1414;
+  --gold:#9c2020; --gold-bright:#dd3a3a; --text-main:#f3e2e2; --text-muted:#b98787;
+}
+[data-theme="alvorecer"] {
+  --bg-void:#160d08; --bg-panel:#2c1810; --bg-panel-alt:#3c2417; --border-soft:#5a3a24;
+  --gold:#e8963c; --gold-bright:#ffc266; --text-main:#fbe9d8; --text-muted:#cba084;
+}
+[data-theme="abissal"] {
+  --bg-void:#020a0c; --bg-panel:#0a1f26; --bg-panel-alt:#0f2b33; --border-soft:#1f4750;
+  --gold:#3fc8c0; --gold-bright:#7cf0e6; --text-main:#dcf5f2; --text-muted:#7fa8a6;
 }
 html{ scrollbar-width:thin; scrollbar-color:var(--border-soft) var(--bg-void); }
 ::-webkit-scrollbar{ width:9px; height:9px; }
@@ -497,6 +511,25 @@ textarea { resize:vertical; line-height:1.6; }
 .sync-toast.show{opacity:1;transform:translateY(0);pointer-events:auto;}
 .sync-toast button{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;line-height:1;margin-left:4px;}
 .sync-toast button:hover{color:var(--text-main);}
+
+/* ===== Seletor de tema ===== */
+.theme-switcher{position:fixed;top:14px;right:14px;z-index:9999;}
+.theme-switcher-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--border-soft);background:var(--bg-panel);color:var(--gold-bright);font-size:1.15rem;cursor:pointer;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;transition:.2s ease;}
+.theme-switcher-btn:hover{border-color:var(--gold);transform:scale(1.06);}
+.theme-switcher-panel{position:absolute;top:50px;right:0;background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:8px;display:none;flex-direction:column;gap:4px;min-width:230px;}
+.theme-switcher-panel.open{display:flex;}
+.theme-option{display:flex;align-items:center;gap:10px;background:none;border:1px solid transparent;border-radius:var(--radius-sm);padding:8px;cursor:pointer;text-align:left;color:var(--text-main);font-family:inherit;width:100%;}
+.theme-option:hover{background:var(--bg-panel-alt);}
+.theme-option.active{border-color:var(--gold);background:var(--bg-panel-alt);}
+.theme-option-text{display:flex;flex-direction:column;gap:1px;}
+.theme-option-text strong{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold-bright);}
+.theme-option-text small{font-size:.7rem;color:var(--text-muted);}
+.theme-swatch{width:22px;height:22px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.theme-swatch-perdidos{background:linear-gradient(135deg,#0f1c38,#d4a942);}
+.theme-swatch-sangue{background:linear-gradient(135deg,#210a0a,#9c2020);}
+.theme-swatch-alvorecer{background:linear-gradient(135deg,#2c1810,#e8963c);}
+.theme-swatch-abissal{background:linear-gradient(135deg,#0a1f26,#3fc8c0);}
+@media print{ .theme-switcher{ display:none !important; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -512,6 +545,10 @@ textarea { resize:vertical; line-height:1.6; }
     <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" class="d20-outline"/>
   </symbol>
 </svg>
+<div class="theme-switcher">
+  <button type="button" class="theme-switcher-btn" id="themeSwitcherBtn" title="Trocar tema" aria-label="Trocar tema">🎨</button>
+  <div class="theme-switcher-panel" id="themeSwitcherPanel"></div>
+</div>
 <div id="app"></div>
 <div class="crop-modal-overlay" id="photoCropOverlay" hidden>
   <div class="crop-modal">
@@ -2736,7 +2773,38 @@ function addOnlineControls(){
   b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
   b.onclick=copyShareLink; document.body.appendChild(b);
 }
-document.addEventListener('DOMContentLoaded', init);
+const THEMES=[
+  {id:'perdidos', nome:'Sonhos Perdidos', desc:'O tema original — breu e ouro'},
+  {id:'sangue', nome:'Maré de Sangue', desc:'Um pacto selado em sangue'},
+  {id:'alvorecer', nome:'Alvorecer Dourado', desc:'O horizonte em chamas'},
+  {id:'abissal', nome:'Abissal', desc:'As profundezas geladas do mar'}
+];
+function applyTheme(id){
+  if(!THEMES.some(t=>t.id===id)) id='perdidos';
+  if(id==='perdidos') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', id);
+  try{localStorage.setItem('sda_theme', id);}catch(e){}
+  document.querySelectorAll('.theme-option').forEach(o=>o.classList.toggle('active', o.dataset.themeId===id));
+}
+function initThemeSwitcher(){
+  const btn=document.getElementById('themeSwitcherBtn');
+  const panel=document.getElementById('themeSwitcherPanel');
+  if(!btn||!panel) return;
+  let saved='perdidos';
+  try{saved=localStorage.getItem('sda_theme')||'perdidos';}catch(e){}
+  panel.innerHTML=THEMES.map(t=>
+    `<button type="button" class="theme-option${t.id===saved?' active':''}" data-theme-id="${t.id}">`+
+      `<span class="theme-swatch theme-swatch-${t.id}"></span>`+
+      `<span class="theme-option-text"><strong>${t.nome}</strong><small>${t.desc}</small></span>`+
+    `</button>`
+  ).join('');
+  panel.querySelectorAll('.theme-option').forEach(opt=>{
+    opt.onclick=()=>{ applyTheme(opt.dataset.themeId); panel.classList.remove('open'); };
+  });
+  btn.onclick=(e)=>{ e.stopPropagation(); panel.classList.toggle('open'); };
+  document.addEventListener('click', e=>{ if(!panel.contains(e.target) && e.target!==btn) panel.classList.remove('open'); });
+}
+document.addEventListener('DOMContentLoaded', ()=>{ initThemeSwitcher(); init(); });
 </script>
 </body>
 </html>
