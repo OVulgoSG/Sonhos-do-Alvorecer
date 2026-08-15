@@ -28,7 +28,7 @@ html, body { margin:0; padding:0; }
 /* ===== Temas alternativos ===== */
 [data-theme="sangue"] {
   --bg-void:#0a0404; --bg-panel:#210a0a; --bg-panel-alt:#2e0f0f; --border-soft:#4a1414;
-  --gold:#9c2020; --gold-bright:#dd3a3a; --text-main:#f3e2e2; --text-muted:#b98787;
+  --gold:#c9982f; --gold-bright:#e8bd5a; --text-main:#f2e6db; --text-muted:#bba18c;
 }
 [data-theme="alvorecer"] {
   --bg-void:#160d08; --bg-panel:#2c1810; --bg-panel-alt:#3c2417; --border-soft:#5a3a24;
@@ -50,6 +50,11 @@ html, body { margin:0; padding:0; }
 [data-theme="karma"] .attr-roll-result.crit-alto{ border-color:#ff2d95; color:#ffd6ec; box-shadow:0 0 14px rgba(255,45,149,.65); }
 [data-theme="karma"] .attr-roll-btn.crit-alto .d20-icon{ filter:drop-shadow(0 0 9px rgba(255,127,198,.95)); }
 [data-theme="karma"] .attr-roll-result .die-chip.die-chosen{ box-shadow:0 0 0 2px #ff7fc6, 0 0 10px rgba(255,45,149,.85); }
+[data-theme="maravilhas"] {
+  --bg-void:#120a1f; --bg-panel:#241040; --bg-panel-alt:#2f1554; --border-soft:#5a2f8a;
+  --gold:#f2c94c; --gold-bright:#ffe066; --text-main:#f3ecff; --text-muted:#c3a8dd;
+  --accent-poderes:#f2c94c; --accent-notas:#a86ee0; --accent-inventario:#7a4fb5;
+}
 html{ scrollbar-width:thin; scrollbar-color:var(--border-soft) var(--bg-void); }
 ::-webkit-scrollbar{ width:9px; height:9px; }
 ::-webkit-scrollbar-track{ background:var(--bg-void); }
@@ -567,6 +572,7 @@ textarea { resize:vertical; line-height:1.6; }
 .theme-swatch-alvorecer{background:linear-gradient(135deg,#2c1810,#e8963c);}
 .theme-swatch-abissal{background:linear-gradient(135deg,#0a1f26,#3fc8c0);}
 .theme-swatch-karma{background:linear-gradient(135deg,#33081c,#ff2e9e);}
+.theme-swatch-maravilhas{background:linear-gradient(135deg,#241040,#f2c94c,#5a2f8a,#ffe066);background-size:200% 200%;}
 @media print{ .theme-switcher{ display:none !important; } }
 
 .akuma-lista-link{ font-size:.68rem; font-weight:400; color:var(--text-muted); text-decoration:none; margin-left:8px; opacity:.65; vertical-align:middle; }
@@ -607,6 +613,113 @@ textarea { resize:vertical; line-height:1.6; }
   80%{ transform:translate(5px,-30px) rotate(4deg); }
 }
 @media print{ .karma-butterflies{ display:none !important; } }
+
+/* ===== Efeitos decorativos por tema ===== */
+
+/* Sonhos Perdidos: lua e estrelas */
+.perdidos-night{ display:none; }
+[data-theme="perdidos"] .perdidos-night{ display:block; }
+.perdidos-moon{ position:fixed; top:5%; right:7%; width:60px; height:60px; pointer-events:none; z-index:-1; opacity:.55; filter:drop-shadow(0 0 16px rgba(242,202,110,.4)); }
+.perdidos-moon .crescent{ fill:#f2ca6e; }
+.perdidos-star{ position:fixed; border-radius:50%; background:#f2ca6e; pointer-events:none; z-index:-1; }
+.perdidos-star.s-1{ top:9%; left:10%; width:2px; height:2px; animation:starTwinkle 3.1s ease-in-out infinite; }
+.perdidos-star.s-2{ top:16%; left:22%; width:1.5px; height:1.5px; animation:starTwinkle 4s ease-in-out infinite; animation-delay:-1s; }
+.perdidos-star.s-3{ top:7%; left:38%; width:2.5px; height:2.5px; animation:starTwinkle 3.6s ease-in-out infinite; animation-delay:-2.2s; }
+.perdidos-star.s-4{ top:22%; left:52%; width:1.5px; height:1.5px; animation:starTwinkle 2.8s ease-in-out infinite; animation-delay:-.6s; }
+.perdidos-star.s-5{ top:12%; left:68%; width:2px; height:2px; animation:starTwinkle 3.4s ease-in-out infinite; animation-delay:-1.8s; }
+.perdidos-star.s-6{ top:27%; left:85%; width:2px; height:2px; animation:starTwinkle 3.9s ease-in-out infinite; animation-delay:-2.6s; }
+.perdidos-star.s-7{ top:5%; left:80%; width:1.5px; height:1.5px; animation:starTwinkle 3s ease-in-out infinite; animation-delay:-1.2s; }
+.perdidos-star.s-8{ top:32%; left:15%; width:1.5px; height:1.5px; animation:starTwinkle 4.2s ease-in-out infinite; animation-delay:-3s; }
+.perdidos-star.s-9{ top:18%; left:5%; width:2px; height:2px; animation:starTwinkle 3.3s ease-in-out infinite; animation-delay:-.3s; }
+.perdidos-star.s-10{ top:29%; left:60%; width:2px; height:2px; animation:starTwinkle 3.7s ease-in-out infinite; animation-delay:-2s; }
+@keyframes starTwinkle{ 0%,100%{ opacity:.2; } 50%{ opacity:.9; } }
+@media print{ .perdidos-night{ display:none !important; } }
+
+/* Maré de Sangue: gotas finas pingando */
+.sangue-drips{ display:none; }
+[data-theme="sangue"] .sangue-drips{ display:block; }
+.blood-drip{ position:fixed; top:-40px; width:9px; pointer-events:none; z-index:3; opacity:0; }
+.blood-drip .drop{ fill:#c0392b; filter:drop-shadow(0 0 3px rgba(192,57,43,.55)); }
+.blood-drip.d-1{ left:12%; animation:dripFall1 6.4s linear infinite; animation-delay:0s; }
+.blood-drip.d-2{ left:30%; width:6px; animation:dripFall2 8.2s linear infinite; animation-delay:-2.6s; }
+.blood-drip.d-3{ left:52%; animation:dripFall1 7.1s linear infinite; animation-delay:-4.1s; }
+.blood-drip.d-4{ left:68%; width:7px; animation:dripFall2 9s linear infinite; animation-delay:-1.2s; }
+.blood-drip.d-5{ left:85%; animation:dripFall1 6.8s linear infinite; animation-delay:-3.3s; }
+@keyframes dripFall1{
+  0%{ transform:translateY(0) scaleY(.6); opacity:0; }
+  6%{ opacity:.85; }
+  85%{ transform:translateY(100vh) scaleY(1.3); opacity:.7; }
+  100%{ transform:translateY(108vh) scaleY(1.3); opacity:0; }
+}
+@keyframes dripFall2{
+  0%{ transform:translateY(0) scaleY(.6); opacity:0; }
+  8%{ opacity:.75; }
+  85%{ transform:translateY(100vh) scaleY(1.25); opacity:.6; }
+  100%{ transform:translateY(108vh) scaleY(1.25); opacity:0; }
+}
+@media print{ .sangue-drips{ display:none !important; } }
+
+/* Abissal: bolhas de ar subindo */
+.abissal-bubbles{ display:none; }
+[data-theme="abissal"] .abissal-bubbles{ display:block; }
+.abissal-bubble{ position:fixed; bottom:-40px; border-radius:50%; pointer-events:none; z-index:3; opacity:0;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.55), rgba(127,240,230,.15) 60%, transparent 75%);
+  border:1px solid rgba(124,240,230,.35); }
+.abissal-bubble.b-1{ left:8%; width:14px; height:14px; animation:bubbleRise1 9s ease-in infinite; animation-delay:0s; }
+.abissal-bubble.b-2{ left:22%; width:9px; height:9px; animation:bubbleRise2 7.2s ease-in infinite; animation-delay:-2s; }
+.abissal-bubble.b-3{ left:40%; width:17px; height:17px; animation:bubbleRise1 11s ease-in infinite; animation-delay:-5s; }
+.abissal-bubble.b-4{ left:60%; width:11px; height:11px; animation:bubbleRise2 8s ease-in infinite; animation-delay:-1s; }
+.abissal-bubble.b-5{ left:76%; width:8px; height:8px; animation:bubbleRise1 10s ease-in infinite; animation-delay:-7s; }
+.abissal-bubble.b-6{ left:90%; width:13px; height:13px; animation:bubbleRise2 9.5s ease-in infinite; animation-delay:-4s; }
+@keyframes bubbleRise1{
+  0%{ transform:translate(0,0); opacity:0; }
+  8%{ opacity:.75; }
+  50%{ transform:translate(12px,-52vh); }
+  92%{ opacity:.5; }
+  100%{ transform:translate(-6px,-100vh); opacity:0; }
+}
+@keyframes bubbleRise2{
+  0%{ transform:translate(0,0); opacity:0; }
+  10%{ opacity:.7; }
+  50%{ transform:translate(-14px,-50vh); }
+  90%{ opacity:.45; }
+  100%{ transform:translate(8px,-100vh); opacity:0; }
+}
+@media print{ .abissal-bubbles{ display:none !important; } }
+
+/* Alvorecer Dourado: partículas de vaga-lumes */
+.alvorecer-fireflies{ display:none; }
+[data-theme="alvorecer"] .alvorecer-fireflies{ display:block; }
+.firefly{ position:fixed; width:5px; height:5px; border-radius:50%; pointer-events:none; z-index:3;
+  background:#ffc266; box-shadow:0 0 6px 2px rgba(255,194,102,.8); opacity:0; }
+.firefly.f-1{ top:20%; left:10%; animation:fireflyDrift1 13s ease-in-out infinite, fireflyFlicker 2.6s ease-in-out infinite; }
+.firefly.f-2{ top:65%; left:18%; animation:fireflyDrift2 15s ease-in-out infinite, fireflyFlicker 3.1s ease-in-out infinite; animation-delay:-4s,-.8s; }
+.firefly.f-3{ top:35%; left:78%; animation:fireflyDrift1 16s ease-in-out infinite, fireflyFlicker 2.4s ease-in-out infinite; animation-delay:-7s,-1.4s; }
+.firefly.f-4{ top:75%; left:70%; animation:fireflyDrift2 12s ease-in-out infinite, fireflyFlicker 3.4s ease-in-out infinite; animation-delay:-2s,-2s; }
+.firefly.f-5{ top:48%; left:45%; animation:fireflyDrift1 14s ease-in-out infinite, fireflyFlicker 2.9s ease-in-out infinite; animation-delay:-9s,-.4s; }
+.firefly.f-6{ top:15%; left:55%; width:4px; height:4px; animation:fireflyDrift2 11s ease-in-out infinite, fireflyFlicker 2.2s ease-in-out infinite; animation-delay:-5s,-1.8s; }
+@keyframes fireflyFlicker{ 0%,100%{ opacity:.15; } 50%{ opacity:.95; } }
+@keyframes fireflyDrift1{
+  0%,100%{ transform:translate(0,0); }
+  25%{ transform:translate(26px,-20px); }
+  50%{ transform:translate(6px,16px); }
+  75%{ transform:translate(-22px,-8px); }
+}
+@keyframes fireflyDrift2{
+  0%,100%{ transform:translate(0,0); }
+  30%{ transform:translate(-24px,12px); }
+  60%{ transform:translate(-8px,-22px); }
+  85%{ transform:translate(18px,6px); }
+}
+@media print{ .alvorecer-fireflies{ display:none !important; } }
+
+/* País das Maravilhas: listras roxo/amarelo */
+.maravilhas-stripes{ display:none; }
+[data-theme="maravilhas"] .maravilhas-stripes{
+  display:block; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:repeating-linear-gradient(135deg, rgba(242,201,76,.055) 0 26px, rgba(90,47,138,.11) 26px 52px);
+}
+@media print{ .maravilhas-stripes{ display:none !important; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -628,6 +741,12 @@ textarea { resize:vertical; line-height:1.6; }
     <path d="M32 34c4 10 14 18 22 16 6-1.5 6-11 1-16-4-4.5-14-4.5-23-2z" class="wing wing-right-bottom"/>
     <line x1="32" y1="24" x2="32" y2="42" class="body"/>
   </symbol>
+  <symbol id="moonIcon" viewBox="0 0 64 64">
+    <path d="M40 6a26 26 0 100 52c-14-4-24-16-24-26S26 10 40 6z" class="crescent"/>
+  </symbol>
+  <symbol id="bloodDropIcon" viewBox="0 0 24 32">
+    <path d="M12 1c0 0-9.5 13-9.5 20a9.5 9.5 0 0019 0C21.5 14 12 1 12 1z" class="drop"/>
+  </symbol>
 </svg>
 <div class="karma-butterflies" aria-hidden="true">
   <svg class="karma-butterfly bf-1" viewBox="0 0 64 64"><use href="#butterflyIcon"></use></svg>
@@ -636,6 +755,32 @@ textarea { resize:vertical; line-height:1.6; }
   <svg class="karma-butterfly bf-4" viewBox="0 0 64 64"><use href="#butterflyIcon"></use></svg>
   <svg class="karma-butterfly bf-5" viewBox="0 0 64 64"><use href="#butterflyIcon"></use></svg>
 </div>
+<div class="perdidos-night" aria-hidden="true">
+  <svg class="perdidos-moon" viewBox="0 0 64 64"><use href="#moonIcon"></use></svg>
+  <span class="perdidos-star s-1"></span><span class="perdidos-star s-2"></span>
+  <span class="perdidos-star s-3"></span><span class="perdidos-star s-4"></span>
+  <span class="perdidos-star s-5"></span><span class="perdidos-star s-6"></span>
+  <span class="perdidos-star s-7"></span><span class="perdidos-star s-8"></span>
+  <span class="perdidos-star s-9"></span><span class="perdidos-star s-10"></span>
+</div>
+<div class="sangue-drips" aria-hidden="true">
+  <svg class="blood-drip d-1" viewBox="0 0 24 32"><use href="#bloodDropIcon"></use></svg>
+  <svg class="blood-drip d-2" viewBox="0 0 24 32"><use href="#bloodDropIcon"></use></svg>
+  <svg class="blood-drip d-3" viewBox="0 0 24 32"><use href="#bloodDropIcon"></use></svg>
+  <svg class="blood-drip d-4" viewBox="0 0 24 32"><use href="#bloodDropIcon"></use></svg>
+  <svg class="blood-drip d-5" viewBox="0 0 24 32"><use href="#bloodDropIcon"></use></svg>
+</div>
+<div class="abissal-bubbles" aria-hidden="true">
+  <div class="abissal-bubble b-1"></div><div class="abissal-bubble b-2"></div>
+  <div class="abissal-bubble b-3"></div><div class="abissal-bubble b-4"></div>
+  <div class="abissal-bubble b-5"></div><div class="abissal-bubble b-6"></div>
+</div>
+<div class="alvorecer-fireflies" aria-hidden="true">
+  <span class="firefly f-1"></span><span class="firefly f-2"></span>
+  <span class="firefly f-3"></span><span class="firefly f-4"></span>
+  <span class="firefly f-5"></span><span class="firefly f-6"></span>
+</div>
+<div class="maravilhas-stripes" aria-hidden="true"></div>
 <div class="theme-switcher">
   <button type="button" class="theme-switcher-btn" id="themeSwitcherBtn" title="Trocar tema" aria-label="Trocar tema">🎨</button>
   <div class="theme-switcher-panel" id="themeSwitcherPanel"></div>
@@ -2873,7 +3018,8 @@ const THEMES=[
   {id:'sangue', nome:'Maré de Sangue', desc:'Um pacto selado em sangue'},
   {id:'alvorecer', nome:'Alvorecer Dourado', desc:'O horizonte em chamas'},
   {id:'abissal', nome:'Abissal', desc:'As profundezas geladas do mar'},
-  {id:'karma', nome:'Karma', desc:'Em homenagem à vilã que marcou a mesa'}
+  {id:'karma', nome:'Karma', desc:'Em homenagem à vilã que marcou a mesa'},
+  {id:'maravilhas', nome:'País das Maravilhas', desc:'Um chá completamente maluco'}
 ];
 function applyTheme(id){
   if(!THEMES.some(t=>t.id===id)) id='perdidos';
