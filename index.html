@@ -55,6 +55,15 @@ html, body { margin:0; padding:0; }
   --gold:#f2c94c; --gold-bright:#ffe066; --text-main:#f3ecff; --text-muted:#c3a8dd;
   --accent-poderes:#f2c94c; --accent-notas:#a86ee0; --accent-inventario:#7a4fb5;
 }
+[data-theme="luadesangue"] {
+  --bg-void:#05030a; --bg-panel:#1c0a12; --bg-panel-alt:#2a0f1a; --border-soft:#4a1a28;
+  --gold:#d9573f; --gold-bright:#ff7a5c; --text-main:#f5e2dd; --text-muted:#b9857f;
+  --vida:#c0392b; --energia:#e0644a; --mental:#a1495c;
+  --accent-poderes:#c9403f; --accent-notas:#a1495c; --accent-inventario:#6e3244;
+}
+[data-theme="luadesangue"] body{
+  background:radial-gradient(ellipse 160% 75% at 50% 118%, #4a0f14 0%, #170609 45%, #05030a 100%);
+}
 html{ scrollbar-width:thin; scrollbar-color:var(--border-soft) var(--bg-void); }
 ::-webkit-scrollbar{ width:9px; height:9px; }
 ::-webkit-scrollbar-track{ background:var(--bg-void); }
@@ -378,12 +387,22 @@ textarea { resize:vertical; line-height:1.6; }
   align-items:center;
   background:var(--bg-panel);
   border:1px solid var(--border-soft);
+  border-left:4px solid var(--border-soft);
   border-radius:var(--radius-lg);
   padding:16px;
   box-shadow:var(--shadow-lg);
 }
+/* Indício visual do tema que cada jogador escolheu na própria ficha */
+.lobby-theme-perdidos{ border-left-color:#d4a942; }
+.lobby-theme-sangue{ border-left-color:#9c2020; }
+.lobby-theme-alvorecer{ border-left-color:#e8963c; }
+.lobby-theme-abissal{ border-left-color:#3fc8c0; }
+.lobby-theme-karma{ border-left-color:#ff2e9e; }
+.lobby-theme-maravilhas{ border-left-color:#f2c94c; }
+.lobby-theme-luadesangue{ border-left-color:#e0442f; }
 
 .lobby-portrait{
+  position:relative;
   width:78px;
   height:78px;
   flex-shrink:0;
@@ -395,6 +414,16 @@ textarea { resize:vertical; line-height:1.6; }
   justify-content:center;
   overflow:hidden;
   font-size:2rem;
+}
+
+.lobby-portrait .lobby-theme-badge.theme-swatch{
+  position:absolute;
+  bottom:-2px;
+  right:-2px;
+  width:16px;
+  height:16px;
+  border:2px solid var(--bg-panel);
+  box-shadow:0 0 4px rgba(0,0,0,.5);
 }
 
 .lobby-portrait img{
@@ -554,6 +583,30 @@ textarea { resize:vertical; line-height:1.6; }
 .sync-toast button{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;line-height:1;margin-left:4px;}
 .sync-toast button:hover{color:var(--text-main);}
 
+/* ===== Easter egg "Akira" ===== */
+.akira-toast{
+  position:fixed; left:50%; top:22px; transform:translate(-50%,-14px);
+  z-index:10000; background:#150a1e; border:1px solid #9d6bd6; color:#f0e3ff;
+  padding:11px 18px; border-radius:var(--radius-md); box-shadow:0 10px 30px rgba(0,0,0,.55), 0 0 22px rgba(157,107,214,.35);
+  font-family:'Cinzel',serif; font-size:.86rem; letter-spacing:.02em;
+  display:flex; align-items:center; gap:10px; max-width:min(90vw,420px);
+  opacity:0; transition:opacity .4s ease, transform .4s ease; pointer-events:none;
+}
+.akira-toast.show{ opacity:1; transform:translate(-50%,0); }
+.akira-toast-icon{ font-size:1.15rem; filter:drop-shadow(0 0 6px rgba(157,107,214,.8)); animation:akiraIconPulse 1.8s ease-in-out infinite; }
+@keyframes akiraIconPulse{ 0%,100%{ opacity:.7; } 50%{ opacity:1; } }
+.akira-vignette{
+  position:fixed; inset:0; z-index:9998; pointer-events:none;
+  background:radial-gradient(ellipse 80% 80% at 50% 50%, transparent 45%, rgba(120,20,180,.28) 100%);
+  opacity:0; animation:akiraVignette 2.6s ease-in-out forwards;
+}
+@keyframes akiraVignette{
+  0%{ opacity:0; }
+  15%{ opacity:1; }
+  70%{ opacity:1; }
+  100%{ opacity:0; }
+}
+
 /* ===== Seletor de tema ===== */
 .theme-switcher{position:fixed;top:14px;right:14px;z-index:9999;}
 .theme-switcher-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--border-soft);background:var(--bg-panel);color:var(--gold-bright);font-size:1.15rem;cursor:pointer;box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;transition:.2s ease;}
@@ -573,6 +626,7 @@ textarea { resize:vertical; line-height:1.6; }
 .theme-swatch-abissal{background:linear-gradient(135deg,#0a1f26,#3fc8c0);}
 .theme-swatch-karma{background:linear-gradient(135deg,#33081c,#ff2e9e);}
 .theme-swatch-maravilhas{background:linear-gradient(135deg,#241040,#f2c94c,#5a2f8a,#ffe066);background-size:200% 200%;}
+.theme-swatch-luadesangue{background:linear-gradient(135deg,#1c0a12,#e0442f);}
 @media print{ .theme-switcher{ display:none !important; } }
 
 .akuma-lista-link{ font-size:.68rem; font-weight:400; color:var(--text-muted); text-decoration:none; margin-left:8px; opacity:.65; vertical-align:middle; }
@@ -720,6 +774,50 @@ textarea { resize:vertical; line-height:1.6; }
   background:repeating-linear-gradient(135deg, rgba(242,201,76,.055) 0 26px, rgba(90,47,138,.11) 26px 52px);
 }
 @media print{ .maravilhas-stripes{ display:none !important; } }
+
+/* Lua de Sangue: uma lua vermelha cheia pairando sobre o mar, refletida na água */
+.luadesangue-scene{ display:none; }
+[data-theme="luadesangue"] .luadesangue-scene{ display:block; }
+.luadesangue-moon{
+  position:fixed; top:7%; left:50%; width:120px; height:120px; transform:translateX(-50%);
+  z-index:-1; pointer-events:none; opacity:.94;
+  filter:drop-shadow(0 0 30px rgba(224,68,47,.5));
+  animation:bloodMoonPulse 6s ease-in-out infinite;
+}
+@keyframes bloodMoonPulse{
+  0%,100%{ filter:drop-shadow(0 0 26px rgba(224,68,47,.45)); }
+  50%{ filter:drop-shadow(0 0 48px rgba(224,68,47,.78)); }
+}
+.luadesangue-sea{ position:fixed; left:0; right:0; bottom:0; height:44vh; z-index:-1; pointer-events:none; overflow:hidden; }
+.luadesangue-sea::before{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(6,3,8,0) 0%, rgba(20,5,10,.55) 55%, rgba(20,5,10,.88) 100%);
+}
+.luadesangue-sea .sea-reflection{
+  position:absolute; left:50%; bottom:0; width:120px; height:100%; transform:translateX(-50%);
+  background:linear-gradient(to top, rgba(224,68,47,.62), rgba(224,68,47,.16) 65%, transparent);
+  filter:blur(1.5px);
+  animation:reflectionShimmer 3.6s ease-in-out infinite;
+}
+@keyframes reflectionShimmer{
+  0%,100%{ opacity:.6; transform:translateX(-50%) scaleX(1); }
+  50%{ opacity:.95; transform:translateX(-50%) scaleX(1.2); }
+}
+.luadesangue-sea .sea-ripple{ position:absolute; left:22%; right:22%; height:1px; background:rgba(224,68,47,.32); opacity:0; }
+.luadesangue-sea .sea-ripple.r-1{ bottom:26%; animation:rippleFade 4.4s ease-in-out infinite; }
+.luadesangue-sea .sea-ripple.r-2{ bottom:15%; left:14%; right:14%; animation:rippleFade 5.1s ease-in-out infinite; animation-delay:-1.7s; }
+.luadesangue-sea .sea-ripple.r-3{ bottom:6%; left:7%; right:7%; animation:rippleFade 4.7s ease-in-out infinite; animation-delay:-3.1s; }
+@keyframes rippleFade{
+  0%,100%{ opacity:0; transform:scaleX(.9); }
+  50%{ opacity:.55; transform:scaleX(1.06); }
+}
+.luadesangue-star{ position:fixed; border-radius:50%; background:#ffb199; pointer-events:none; z-index:-1; width:1.5px; height:1.5px; }
+.luadesangue-star.s-1{ top:9%; left:14%; animation:starTwinkle 3.4s ease-in-out infinite; }
+.luadesangue-star.s-2{ top:13%; left:78%; animation:starTwinkle 3.9s ease-in-out infinite; animation-delay:-1.4s; }
+.luadesangue-star.s-3{ top:21%; left:33%; animation:starTwinkle 3.1s ease-in-out infinite; animation-delay:-2.2s; }
+.luadesangue-star.s-4{ top:7%; left:62%; animation:starTwinkle 4.1s ease-in-out infinite; animation-delay:-.8s; }
+.luadesangue-star.s-5{ top:17%; left:88%; width:1px; height:1px; animation:starTwinkle 3.6s ease-in-out infinite; animation-delay:-2.7s; }
+@media print{ .luadesangue-scene{ display:none !important; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -746,6 +844,18 @@ textarea { resize:vertical; line-height:1.6; }
   </symbol>
   <symbol id="bloodDropIcon" viewBox="0 0 24 32">
     <path d="M12 1c0 0-9.5 13-9.5 20a9.5 9.5 0 0019 0C21.5 14 12 1 12 1z" class="drop"/>
+  </symbol>
+  <radialGradient id="bloodMoonGrad" cx="35%" cy="32%" r="75%">
+    <stop offset="0%" stop-color="#ffcdb8"/>
+    <stop offset="42%" stop-color="#e0442f"/>
+    <stop offset="100%" stop-color="#6e1210"/>
+  </radialGradient>
+  <symbol id="bloodMoonIcon" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="46" fill="url(#bloodMoonGrad)"/>
+    <circle cx="33" cy="36" r="7" fill="#3a0a08" opacity=".14"/>
+    <circle cx="62" cy="60" r="10" fill="#3a0a08" opacity=".12"/>
+    <circle cx="68" cy="30" r="4.5" fill="#3a0a08" opacity=".12"/>
+    <circle cx="40" cy="68" r="5" fill="#3a0a08" opacity=".1"/>
   </symbol>
 </svg>
 <div class="karma-butterflies" aria-hidden="true">
@@ -781,6 +891,16 @@ textarea { resize:vertical; line-height:1.6; }
   <span class="firefly f-5"></span><span class="firefly f-6"></span>
 </div>
 <div class="maravilhas-stripes" aria-hidden="true"></div>
+<div class="luadesangue-scene" aria-hidden="true">
+  <svg class="luadesangue-moon" viewBox="0 0 100 100"><use href="#bloodMoonIcon"></use></svg>
+  <div class="luadesangue-sea">
+    <div class="sea-reflection"></div>
+    <span class="sea-ripple r-1"></span><span class="sea-ripple r-2"></span><span class="sea-ripple r-3"></span>
+  </div>
+  <span class="luadesangue-star s-1"></span><span class="luadesangue-star s-2"></span>
+  <span class="luadesangue-star s-3"></span><span class="luadesangue-star s-4"></span>
+  <span class="luadesangue-star s-5"></span>
+</div>
 <div class="theme-switcher">
   <button type="button" class="theme-switcher-btn" id="themeSwitcherBtn" title="Trocar tema" aria-label="Trocar tema">🎨</button>
   <div class="theme-switcher-panel" id="themeSwitcherPanel"></div>
@@ -872,6 +992,8 @@ function defaultState() {
     limites:{morrendo:0,exaustao:0,enlouquecendo:0},
     foco:{emUso:0,maximo:3},
     imagem:null,
+    tema:'perdidos',
+    luaSangueDesbloqueada:false,
 
 lobby:{
   mostrarNome:false,
@@ -1048,6 +1170,13 @@ function mergeState(loaded) {
   merged.itens=loaded?.itens||[];
   merged.condicoes=Array.isArray(loaded?.condicoes) ? loaded.condicoes.map(c=>({nome:String(c?.nome||''),condicao:String(c?.condicao||''),duracao:String(c?.duracao||'')})) : [];
   merged.capangas=Array.isArray(loaded?.capangas) ? loaded.capangas.map(c=>({id:c.id||crypto.randomUUID?.()||String(Date.now()+Math.random()),nome:String(c.nome||'Capangas'),vida:Math.max(0,Number(c.vida)||0),energia:Math.max(0,Number(c.energia)||0),quantidade:Math.max(1,Number(c.quantidade)||1)})) : [];
+  // O tema visual escolhido faz parte da ficha — assim ele viaja com o
+  // personagem entre dispositivos e aparece no lobby. THEMES é declarado mais
+  // abaixo no arquivo, mas já existe no momento em que mergeState roda de verdade.
+  merged.luaSangueDesbloqueada = !!(loaded && loaded.luaSangueDesbloqueada);
+  const temaCarregadoValido = loaded && typeof THEMES!=='undefined' && THEMES.some(t=>t.id===loaded.tema);
+  const temaCarregadoLiberado = temaCarregadoValido && (loaded.tema!=='luadesangue' || merged.luaSangueDesbloqueada);
+  merged.tema = temaCarregadoLiberado ? loaded.tema : 'perdidos';
   return merged;
 }
 
@@ -1123,6 +1252,58 @@ function shipDivider(){
 function scheduleSave(){
   clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
   saveTimer=setTimeout(saveState,350);
+  checkAkiraEasterEgg();
+}
+
+/* ===== Easter egg "Akira" =====
+   Se a palavra "Akira" aparecer em qualquer texto escrito na ficha — nome,
+   raça, talento, sonho, anotações, itens, condições, frutas — um pequeno
+   presságio se revela. */
+let akiraEggActive = false;
+let akiraToastTimer = null;
+function akiraSearchableText(){
+  const id = state.identidade || {};
+  const bits = [id.nome, id.jogador, id.raca, id.talento, id.sonho, id.expectativa, state.notasHistoria, state.notasAparencia, state.poderes];
+  (state.itens||[]).forEach(it=>{ if(it) bits.push(it.nome, it.descricao); });
+  (state.condicoes||[]).forEach(c=>{ if(c) bits.push(c.nome); });
+  (state.frutas||[]).forEach(f=>{ if(f) bits.push(f.nome); });
+  return bits.filter(Boolean).join(' \n ');
+}
+function checkAkiraEasterEgg(){
+  if(IS_LOBBY || typeof state!=='object' || !state) return;
+  const found = /akira/i.test(akiraSearchableText());
+  if(found && !akiraEggActive){
+    akiraEggActive = true;
+    const justUnlocked = !state.luaSangueDesbloqueada;
+    if(justUnlocked){
+      state.luaSangueDesbloqueada = true;
+      scheduleSave();
+      renderThemeSwitcherPanel(state.tema||'perdidos');
+    }
+    triggerAkiraEasterEgg(justUnlocked);
+  }else if(!found && akiraEggActive){
+    akiraEggActive = false;
+  }
+}
+function triggerAkiraEasterEgg(justUnlocked){
+  const vinheta = document.createElement('div');
+  vinheta.className = 'akira-vignette';
+  document.body.appendChild(vinheta);
+  setTimeout(()=>vinheta.remove(), 2700);
+
+  let toast = document.getElementById('akiraToast');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.id = 'akiraToast';
+    toast.className = 'akira-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = justUnlocked
+    ? '<span class="akira-toast-icon">🌘</span><span>Um nome antigo ecoa pelo Alvorecer... <strong>Akira</strong> desperta. Uma <strong>Lua de Sangue</strong> agora paira sobre o mar — novo tema desbloqueado em 🎨.</span>'
+    : '<span class="akira-toast-icon">🌘</span><span>Um nome antigo ecoa pelo Alvorecer... <strong>Akira</strong> desperta.</span>';
+  requestAnimationFrame(()=>toast.classList.add('show'));
+  clearTimeout(akiraToastTimer);
+  akiraToastTimer = setTimeout(()=>toast.classList.remove('show'), justUnlocked ? 5600 : 4200);
 }
 let syncFailStreak=0;
 let syncToastTimer=null;
@@ -2644,6 +2825,8 @@ function buildLobbyCard(character){
   const isAdmin = !!LOBBY_ADMIN_TOKEN;
   const lobby = character.lobby || {};
   const pub = character.public_data || {};
+  const tema = THEMES.some(t=>t.id===character.tema) ? character.tema : 'perdidos';
+  const temaInfo = THEMES.find(t=>t.id===tema);
   const nome = (isAdmin || lobby.mostrarNome) ? (pub.nome || 'Personagem sem nome') : '???';
   const foto = (isAdmin || lobby.mostrarFoto) && pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : '<span>👤</span>';
   const vida = lobbyVisibleValue(isAdmin || lobby.mostrarVida, Number(pub.vida)||0);
@@ -2651,8 +2834,8 @@ function buildLobbyCard(character){
   const mental = lobbyVisibleValue(isAdmin || lobby.mostrarMental, Number(pub.mental)||0);
 
   return `
-    <div class="lobby-card" data-character-id="${character.id}" aria-label="Personagem em cena — ficha privada">
-      <div class="lobby-portrait">${foto}</div>
+    <div class="lobby-card lobby-theme-${tema}" data-character-id="${character.id}" aria-label="Personagem em cena — ficha privada">
+      <div class="lobby-portrait">${foto}<span class="lobby-theme-badge theme-swatch theme-swatch-${tema}" title="Tema: ${escapeHtml(temaInfo.nome)}"></span></div>
       <div class="lobby-info">
         <div class="lobby-name">${escapeHtml(nome)}</div>
         ${(isAdmin || lobby.mostrarNome) && pub.jogador ? `<div class="lobby-resource"><span>Jogador</span><strong>${escapeHtml(pub.jogador)}</strong></div>` : ''}
@@ -2681,15 +2864,17 @@ async function loadLobbyCharacters(){
 
   const result=await Promise.all((lobbyRows||[]).map(async row=>{
     const pub=row.public_data||{};
-    let fichaLobby={};
+    let fichaLobby={}; let tema='perdidos';
     try{
       const {data:fullState}=await supabaseClient.rpc('get_character_state',{p_id:row.character_id});
       fichaLobby=fullState?.lobby||{};
+      if(fullState?.tema) tema=fullState.tema;
     }catch(e){}
     const privacy={...(pub.lobby||{}),...fichaLobby};
     return {
       id:row.character_id,
       public_data:pub,
+      tema,
       lobby:{
         mostrarNome:privacy.mostrarNome===true,
         mostrarFoto:privacy.mostrarFoto===true,
@@ -2969,6 +3154,10 @@ async function init(){
       if(masterCapangas.length || !Array.isArray(state.capangas) || state.capangas.length===0) state.capangas=masterCapangas;
     }
 
+    // O tema é uma propriedade da ficha, não do navegador: ao abrir uma ficha
+    // (própria ou compartilhada), a aparência deve seguir o que está salvo nela.
+    applyTheme(state.tema || 'perdidos', {persist:false});
+
     if(state.wizardDone){
       renderSheet();
     }else if(!characterId && loadFichasConhecidas().length>0){
@@ -3019,23 +3208,34 @@ const THEMES=[
   {id:'alvorecer', nome:'Alvorecer Dourado', desc:'O horizonte em chamas'},
   {id:'abissal', nome:'Abissal', desc:'As profundezas geladas do mar'},
   {id:'karma', nome:'Karma', desc:'Em homenagem à vilã que marcou a mesa'},
-  {id:'maravilhas', nome:'País das Maravilhas', desc:'Um chá completamente maluco'}
+  {id:'maravilhas', nome:'País das Maravilhas', desc:'Um chá completamente maluco'},
+  {id:'luadesangue', nome:'Lua de Sangue', desc:'O mar aguado refletindo uma lua vermelha'}
 ];
-function applyTheme(id){
+function visibleThemes(){
+  const unlocked = typeof state==='object' && state && !!state.luaSangueDesbloqueada;
+  return THEMES.filter(t => t.id!=='luadesangue' || unlocked);
+}
+function applyTheme(id, opts){
+  opts = opts || {};
+  const unlocked = typeof state==='object' && state && !!state.luaSangueDesbloqueada;
+  if(id==='luadesangue' && !unlocked) id='perdidos';
   if(!THEMES.some(t=>t.id===id)) id='perdidos';
   if(id==='perdidos') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', id);
   try{localStorage.setItem('sda_theme', id);}catch(e){}
   document.querySelectorAll('.theme-option').forEach(o=>o.classList.toggle('active', o.dataset.themeId===id));
+  // O tema escolhido fica salvo na própria ficha (não só no navegador), pra
+  // acompanhar o personagem em qualquer dispositivo e aparecer no lobby.
+  if(opts.persist!==false && !IS_LOBBY && typeof state==='object' && state && state.tema!==id){
+    state.tema=id;
+    scheduleSave();
+  }
 }
-function initThemeSwitcher(){
-  const btn=document.getElementById('themeSwitcherBtn');
+function renderThemeSwitcherPanel(activeId){
   const panel=document.getElementById('themeSwitcherPanel');
-  if(!btn||!panel) return;
-  let saved='perdidos';
-  try{saved=localStorage.getItem('sda_theme')||'perdidos';}catch(e){}
-  panel.innerHTML=THEMES.map(t=>
-    `<button type="button" class="theme-option${t.id===saved?' active':''}" data-theme-id="${t.id}">`+
+  if(!panel) return;
+  panel.innerHTML=visibleThemes().map(t=>
+    `<button type="button" class="theme-option${t.id===activeId?' active':''}" data-theme-id="${t.id}">`+
       `<span class="theme-swatch theme-swatch-${t.id}"></span>`+
       `<span class="theme-option-text"><strong>${t.nome}</strong><small>${t.desc}</small></span>`+
     `</button>`
@@ -3043,6 +3243,14 @@ function initThemeSwitcher(){
   panel.querySelectorAll('.theme-option').forEach(opt=>{
     opt.onclick=()=>{ applyTheme(opt.dataset.themeId); panel.classList.remove('open'); };
   });
+}
+function initThemeSwitcher(){
+  const btn=document.getElementById('themeSwitcherBtn');
+  const panel=document.getElementById('themeSwitcherPanel');
+  if(!btn||!panel) return;
+  let saved='perdidos';
+  try{saved=localStorage.getItem('sda_theme')||'perdidos';}catch(e){}
+  renderThemeSwitcherPanel(saved);
   btn.onclick=(e)=>{ e.stopPropagation(); panel.classList.toggle('open'); };
   document.addEventListener('click', e=>{ if(!panel.contains(e.target) && e.target!==btn) panel.classList.remove('open'); });
 }
