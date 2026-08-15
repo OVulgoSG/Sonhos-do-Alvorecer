@@ -56,13 +56,13 @@ html, body { margin:0; padding:0; }
   --accent-poderes:#f2c94c; --accent-notas:#a86ee0; --accent-inventario:#7a4fb5;
 }
 [data-theme="luadesangue"] {
-  --bg-void:#05030a; --bg-panel:#1c0a12; --bg-panel-alt:#2a0f1a; --border-soft:#4a1a28;
-  --gold:#d9573f; --gold-bright:#ff7a5c; --text-main:#f5e2dd; --text-muted:#b9857f;
-  --vida:#c0392b; --energia:#e0644a; --mental:#a1495c;
-  --accent-poderes:#c9403f; --accent-notas:#a1495c; --accent-inventario:#6e3244;
+  --bg-void:#040a14; --bg-panel:#0c1826; --bg-panel-alt:#122234; --border-soft:#1f3a52;
+  --gold:#d9573f; --gold-bright:#ff7a5c; --text-main:#e6edf7; --text-muted:#7f97b0;
+  --vida:#c0392b; --energia:#3fa0c8; --mental:#5a7ea1;
+  --accent-poderes:#c9403f; --accent-notas:#3fa0c8; --accent-inventario:#2f6e8a;
 }
 [data-theme="luadesangue"] body{
-  background:radial-gradient(ellipse 160% 75% at 50% 118%, #4a0f14 0%, #170609 45%, #05030a 100%);
+  background:radial-gradient(ellipse 160% 75% at 50% 118%, #0c2436 0%, #051019 45%, #030812 100%);
 }
 html{ scrollbar-width:thin; scrollbar-color:var(--border-soft) var(--bg-void); }
 ::-webkit-scrollbar{ width:9px; height:9px; }
@@ -626,7 +626,7 @@ textarea { resize:vertical; line-height:1.6; }
 .theme-swatch-abissal{background:linear-gradient(135deg,#0a1f26,#3fc8c0);}
 .theme-swatch-karma{background:linear-gradient(135deg,#33081c,#ff2e9e);}
 .theme-swatch-maravilhas{background:linear-gradient(135deg,#241040,#f2c94c,#5a2f8a,#ffe066);background-size:200% 200%;}
-.theme-swatch-luadesangue{background:linear-gradient(135deg,#1c0a12,#e0442f);}
+.theme-swatch-luadesangue{background:linear-gradient(135deg,#0c1826,#e0442f);}
 @media print{ .theme-switcher{ display:none !important; } }
 
 .akuma-lista-link{ font-size:.68rem; font-weight:400; color:var(--text-muted); text-decoration:none; margin-left:8px; opacity:.65; vertical-align:middle; }
@@ -775,7 +775,9 @@ textarea { resize:vertical; line-height:1.6; }
 }
 @media print{ .maravilhas-stripes{ display:none !important; } }
 
-/* Lua de Sangue: uma lua vermelha cheia pairando sobre o mar, refletida na água */
+/* Lua de Sangue: lua vermelha cheia pairando sobre um mar azul e calmo — o
+   contraste entre o presságio no céu e a água tranquila é o efeito, então só
+   a coluna de reflexo carrega o vermelho; o resto do mar é azul-noite. */
 .luadesangue-scene{ display:none; }
 [data-theme="luadesangue"] .luadesangue-scene{ display:block; }
 .luadesangue-moon{
@@ -788,28 +790,37 @@ textarea { resize:vertical; line-height:1.6; }
   0%,100%{ filter:drop-shadow(0 0 26px rgba(224,68,47,.45)); }
   50%{ filter:drop-shadow(0 0 48px rgba(224,68,47,.78)); }
 }
-.luadesangue-sea{ position:fixed; left:0; right:0; bottom:0; height:44vh; z-index:-1; pointer-events:none; overflow:hidden; }
+.luadesangue-sea{ position:fixed; left:0; right:0; bottom:0; height:46vh; z-index:-1; pointer-events:none; overflow:hidden; }
 .luadesangue-sea::before{
+  /* corpo d'água azul-noite, calmo */
   content:''; position:absolute; inset:0;
-  background:linear-gradient(to top, rgba(6,3,8,0) 0%, rgba(20,5,10,.55) 55%, rgba(20,5,10,.88) 100%);
+  background:linear-gradient(to top, rgba(3,8,16,0) 0%, rgba(11,28,44,.55) 45%, rgba(7,18,30,.88) 100%);
+}
+.luadesangue-sea::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(30,80,115,.3) 0%, rgba(18,52,76,.14) 55%, transparent 100%);
 }
 .luadesangue-sea .sea-reflection{
-  position:absolute; left:50%; bottom:0; width:120px; height:100%; transform:translateX(-50%);
-  background:linear-gradient(to top, rgba(224,68,47,.62), rgba(224,68,47,.16) 65%, transparent);
-  filter:blur(1.5px);
-  animation:reflectionShimmer 3.6s ease-in-out infinite;
+  position:absolute; left:50%; bottom:0; width:100px; height:100%; transform:translateX(-50%);
+  background:linear-gradient(to top, rgba(224,68,47,.5), rgba(224,68,47,.12) 65%, transparent);
+  filter:blur(2px);
+  animation:reflectionShimmer 5.5s ease-in-out infinite;
 }
 @keyframes reflectionShimmer{
-  0%,100%{ opacity:.6; transform:translateX(-50%) scaleX(1); }
-  50%{ opacity:.95; transform:translateX(-50%) scaleX(1.2); }
+  0%,100%{ opacity:.5; transform:translateX(-50%) scaleX(1); }
+  50%{ opacity:.72; transform:translateX(-50%) scaleX(1.1); }
 }
-.luadesangue-sea .sea-ripple{ position:absolute; left:22%; right:22%; height:1px; background:rgba(224,68,47,.32); opacity:0; }
-.luadesangue-sea .sea-ripple.r-1{ bottom:26%; animation:rippleFade 4.4s ease-in-out infinite; }
-.luadesangue-sea .sea-ripple.r-2{ bottom:15%; left:14%; right:14%; animation:rippleFade 5.1s ease-in-out infinite; animation-delay:-1.7s; }
-.luadesangue-sea .sea-ripple.r-3{ bottom:6%; left:7%; right:7%; animation:rippleFade 4.7s ease-in-out infinite; animation-delay:-3.1s; }
-@keyframes rippleFade{
-  0%,100%{ opacity:0; transform:scaleX(.9); }
-  50%{ opacity:.55; transform:scaleX(1.06); }
+.luadesangue-sea .sea-wave{
+  position:absolute; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(110,180,220,.4), transparent);
+  opacity:0;
+}
+.luadesangue-sea .sea-wave.w-1{ bottom:31%; animation:waveDrift 8.5s ease-in-out infinite; }
+.luadesangue-sea .sea-wave.w-2{ bottom:18%; animation:waveDrift 10s ease-in-out infinite; animation-delay:-3.4s; }
+.luadesangue-sea .sea-wave.w-3{ bottom:8%; animation:waveDrift 11s ease-in-out infinite; animation-delay:-6s; }
+@keyframes waveDrift{
+  0%,100%{ opacity:0; transform:translateX(-4%); }
+  50%{ opacity:.5; transform:translateX(4%); }
 }
 .luadesangue-star{ position:fixed; border-radius:50%; background:#ffb199; pointer-events:none; z-index:-1; width:1.5px; height:1.5px; }
 .luadesangue-star.s-1{ top:9%; left:14%; animation:starTwinkle 3.4s ease-in-out infinite; }
@@ -895,7 +906,7 @@ textarea { resize:vertical; line-height:1.6; }
   <svg class="luadesangue-moon" viewBox="0 0 100 100"><use href="#bloodMoonIcon"></use></svg>
   <div class="luadesangue-sea">
     <div class="sea-reflection"></div>
-    <span class="sea-ripple r-1"></span><span class="sea-ripple r-2"></span><span class="sea-ripple r-3"></span>
+    <span class="sea-wave w-1"></span><span class="sea-wave w-2"></span><span class="sea-wave w-3"></span>
   </div>
   <span class="luadesangue-star s-1"></span><span class="luadesangue-star s-2"></span>
   <span class="luadesangue-star s-3"></span><span class="luadesangue-star s-4"></span>
