@@ -620,6 +620,17 @@ textarea { resize:vertical; line-height:1.6; }
 .theme-option-text strong{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold-bright);}
 .theme-option-text small{font-size:.7rem;color:var(--text-muted);}
 .theme-swatch{width:22px;height:22px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.15);}
+.theme-admin-divider{height:1px;background:var(--border-soft);margin:5px 2px;}
+.theme-admin-btn{display:flex;align-items:center;gap:8px;background:none;border:1px solid transparent;border-radius:var(--radius-sm);padding:8px;color:var(--text-muted);cursor:pointer;font-family:inherit;width:100%;text-align:left;font-size:.78rem;}
+.theme-admin-btn:hover{background:var(--bg-panel-alt);border-color:var(--border-soft);color:var(--gold-bright);}
+.admin-unlock-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-void);border:1px solid var(--border-soft);border-radius:var(--radius-md);padding:12px 14px;}
+.admin-unlock-info{min-width:0;}
+.admin-unlock-info strong{display:block;font-family:'Cinzel',serif;color:var(--gold-bright);font-size:.86rem;}
+.admin-unlock-info small{display:block;color:var(--text-muted);font-size:.72rem;margin-top:3px;line-height:1.35;}
+.admin-unlock-actions{display:flex;gap:6px;flex-shrink:0;}
+.admin-status{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.admin-status.on{color:#7be0a0;}
+.admin-status.off{color:var(--danger);}
 .theme-swatch-perdidos{background:linear-gradient(135deg,#0f1c38,#d4a942);}
 .theme-swatch-sangue{background:linear-gradient(135deg,#210a0a,#9c2020);}
 .theme-swatch-alvorecer{background:linear-gradient(135deg,#2c1810,#e8963c);}
@@ -1185,6 +1196,10 @@ function mergeState(loaded) {
   // personagem entre dispositivos e aparece no lobby. THEMES é declarado mais
   // abaixo no arquivo, mas já existe no momento em que mergeState roda de verdade.
   merged.luaSangueDesbloqueada = !!(loaded && loaded.luaSangueDesbloqueada);
+  ADMIN_UNLOCKS.forEach(u=>{
+    if(u.key==='luaSangueDesbloqueada') return;
+    merged[u.key] = !!(loaded && loaded[u.key]);
+  });
   const temaCarregadoValido = loaded && typeof THEMES!=='undefined' && THEMES.some(t=>t.id===loaded.tema);
   const temaCarregadoLiberado = temaCarregadoValido && (loaded.tema!=='luadesangue' || merged.luaSangueDesbloqueada);
   merged.tema = temaCarregadoLiberado ? loaded.tema : 'perdidos';
@@ -1262,6 +1277,7 @@ function shipDivider(){
 }
 function scheduleSave(){
   clearTimeout(saveTimer); clearTimeout(onlineSaveTimer);
+  checkAdminUnlockPhrase();
   saveTimer=setTimeout(saveState,350);
   checkAkiraEasterEgg();
 }
@@ -1286,9 +1302,21 @@ function checkAkiraEasterEgg(){
   if(found && !akiraEggActive){
     akiraEggActive = true;
     const justUnlocked = !state.luaSangueDesbloqueada;
+    const needsLegacyThemeRepair = !!state.luaSangueDesbloqueada && state.tema!=='luadesangue';
     if(justUnlocked){
       state.luaSangueDesbloqueada = true;
+      state.tema = 'luadesangue';
+      applyTheme('luadesangue',{persist:false});
+      renderThemeSwitcherPanel('luadesangue');
       scheduleSave();
+    }else if(needsLegacyThemeRepair){
+      // Fichas antigas podem ter a flag de desbloqueio sem o tema salvo.
+      // Ao reencontrar Akira, sincroniza os dois estados e corrige a ficha.
+      state.tema = 'luadesangue';
+      applyTheme('luadesangue',{persist:false});
+      renderThemeSwitcherPanel('luadesangue');
+      scheduleSave();
+    }else{
       renderThemeSwitcherPanel(state.tema||'perdidos');
     }
     triggerAkiraEasterEgg(justUnlocked);
@@ -3213,6 +3241,20 @@ function addOnlineControls(){
   b.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.35);';
   b.onclick=copyShareLink; document.body.appendChild(b);
 }
+const ADMIN_UNLOCKS=[
+  {
+    key:'luaSangueDesbloqueada',
+    nome:'Lua de Sangue',
+    desc:'Libera o tema secreto Lua de Sangue no seletor de temas.',
+    themeId:'luadesangue'
+  }
+  // Novos desbloqueáveis podem ser adicionados aqui.
+];
+
+const ADMIN_PHRASE='ConquistasdeAdministrador';
+const ADMIN_SESSION_KEY='sda_admin_panel';
+let adminPanelOpen=false;
+
 const THEMES=[
   {id:'perdidos', nome:'Sonhos Perdidos', desc:'O tema original — breu e ouro'},
   {id:'sangue', nome:'Maré de Sangue', desc:'Um pacto selado em sangue'},
@@ -3222,14 +3264,129 @@ const THEMES=[
   {id:'maravilhas', nome:'País das Maravilhas', desc:'Um chá completamente maluco'},
   {id:'luadesangue', nome:'Lua de Sangue', desc:'O mar aguado refletindo uma lua vermelha'}
 ];
+function adminPhraseSearchableText(){
+  return akiraSearchableText();
+}
+
+function stripAdminPhraseFromState(){
+  const rx=new RegExp(ADMIN_PHRASE,'ig');
+  const clean=(value)=>typeof value==='string' ? value.replace(rx,'') : value;
+  if(state?.identidade){
+    Object.keys(state.identidade).forEach(k=>{ state.identidade[k]=clean(state.identidade[k]); });
+  }
+  state.notasHistoria=clean(state.notasHistoria);
+  state.notasAparencia=clean(state.notasAparencia);
+  state.poderes=clean(state.poderes);
+  if(Array.isArray(state.itens)) state.itens.forEach(it=>{
+    if(it){ it.nome=clean(it.nome); it.desc=clean(it.desc); }
+  });
+  if(Array.isArray(state.condicoes)) state.condicoes.forEach(c=>{
+    if(c){ c.nome=clean(c.nome); c.condicao=clean(c.condicao); c.duracao=clean(c.duracao); }
+  });
+  if(Array.isArray(state.frutas)) state.frutas.forEach(f=>{
+    if(f){ f.nome=clean(f.nome); f.tipo=clean(f.tipo); }
+  });
+  if(Array.isArray(state.capangas)) state.capangas.forEach(c=>{
+    if(c) c.nome=clean(c.nome);
+  });
+}
+
+function openAdminPanel(){
+  if(IS_LOBBY) return;
+  const old=document.getElementById('adminUnlockOverlay');
+  if(old) old.remove();
+
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.id='adminUnlockOverlay';
+  overlay.innerHTML=`
+    <div class="modal-box">
+      <h3>⚙ Conquistas de Administrador</h3>
+      <p class="hint-text">Controle manual dos desbloqueáveis desta ficha. As alterações são salvas na própria ficha.</p>
+      <div id="adminUnlockList" style="display:flex;flex-direction:column;gap:10px;margin-top:14px;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btnAdminReset">Resetar desbloqueáveis</button>
+        <button type="button" class="btn btn-primary" id="btnAdminClose">Fechar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const list=overlay.querySelector('#adminUnlockList');
+  const render=()=>{
+    list.innerHTML=ADMIN_UNLOCKS.map(u=>{
+      const active=!!state[u.key];
+      return `<div class="admin-unlock-row">
+        <div class="admin-unlock-info">
+          <div class="admin-status ${active?'on':'off'}">${active?'Desbloqueado':'Bloqueado'}</div>
+          <strong>${escapeHtml(u.nome)}</strong>
+          <small>${escapeHtml(u.desc)}</small>
+        </div>
+        <div class="admin-unlock-actions">
+          <button type="button" class="btn ${active?'btn-ghost':'btn-primary'}" data-admin-action="unlock" data-admin-key="${escapeHtml(u.key)}">${active?'Desbloqueado':'Desbloquear'}</button>
+          <button type="button" class="btn btn-ghost" data-admin-action="lock" data-admin-key="${escapeHtml(u.key)}">Bloquear</button>
+        </div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-admin-action]').forEach(btn=>{
+      btn.onclick=()=>{
+        const key=btn.dataset.adminKey;
+        const action=btn.dataset.adminAction;
+        const unlock=ADMIN_UNLOCKS.find(u=>u.key===key);
+        if(!unlock) return;
+        state[key]=(action==='unlock');
+        if(action==='lock' && unlock.themeId && state.tema===unlock.themeId){
+          state.tema='perdidos';
+          applyTheme('perdidos',{persist:false});
+        }
+        renderThemeSwitcherPanel(state.tema||'perdidos');
+        scheduleSave();
+        render();
+      };
+    });
+  };
+
+  render();
+
+  overlay.querySelector('#btnAdminReset').onclick=()=>{
+    ADMIN_UNLOCKS.forEach(u=>{ state[u.key]=false; });
+    if(state.tema==='luadesangue'){
+      state.tema='perdidos';
+      applyTheme('perdidos',{persist:false});
+    }
+    renderThemeSwitcherPanel(state.tema||'perdidos');
+    scheduleSave();
+    render();
+  };
+  overlay.querySelector('#btnAdminClose').onclick=()=>overlay.remove();
+  overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.remove();});
+}
+
+function isAdminSessionUnlocked(){
+  try{return sessionStorage.getItem(ADMIN_SESSION_KEY)==='1';}catch(e){return false;}
+}
+
+function checkAdminUnlockPhrase(){
+  if(IS_LOBBY || typeof state!=='object' || !state) return;
+  if(!new RegExp(ADMIN_PHRASE,'i').test(adminPhraseSearchableText())) return;
+
+  adminPanelOpen=true;
+  try{ sessionStorage.setItem(ADMIN_SESSION_KEY,'1'); }catch(e){}
+  stripAdminPhraseFromState();
+  try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }catch(e){}
+  openAdminPanel();
+  adminPanelOpen=false;
+}
+
 function visibleThemes(){
-  const unlocked = typeof state==='object' && state && !!state.luaSangueDesbloqueada;
-  return THEMES.filter(t => t.id!=='luadesangue' || unlocked);
+  return THEMES.filter(t=>{
+    const unlock=ADMIN_UNLOCKS.find(u=>u.themeId===t.id);
+    return !unlock || !!(state && state[unlock.key]);
+  });
 }
 function applyTheme(id, opts){
   opts = opts || {};
-  const unlocked = typeof state==='object' && state && !!state.luaSangueDesbloqueada;
-  if(id==='luadesangue' && !unlocked) id='perdidos';
+  const unlock=ADMIN_UNLOCKS.find(u=>u.themeId===id);
+  if(unlock && !(state && state[unlock.key])) id='perdidos';
   if(!THEMES.some(t=>t.id===id)) id='perdidos';
   if(id==='perdidos') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', id);
@@ -3245,15 +3402,20 @@ function applyTheme(id, opts){
 function renderThemeSwitcherPanel(activeId){
   const panel=document.getElementById('themeSwitcherPanel');
   if(!panel) return;
+  const adminEntry=isAdminSessionUnlocked()
+    ? `<div class="theme-admin-divider"></div><button type="button" class="theme-admin-btn" id="themeAdminBtn">⚙ Conquistas de Administrador</button>`
+    : '';
   panel.innerHTML=visibleThemes().map(t=>
     `<button type="button" class="theme-option${t.id===activeId?' active':''}" data-theme-id="${t.id}">`+
       `<span class="theme-swatch theme-swatch-${t.id}"></span>`+
       `<span class="theme-option-text"><strong>${t.nome}</strong><small>${t.desc}</small></span>`+
     `</button>`
-  ).join('');
+  ).join('')+adminEntry;
   panel.querySelectorAll('.theme-option').forEach(opt=>{
     opt.onclick=()=>{ applyTheme(opt.dataset.themeId); panel.classList.remove('open'); };
   });
+  const adminBtn=document.getElementById('themeAdminBtn');
+  if(adminBtn) adminBtn.onclick=()=>{ panel.classList.remove('open'); openAdminPanel(); };
 }
 function initThemeSwitcher(){
   const btn=document.getElementById('themeSwitcherBtn');
