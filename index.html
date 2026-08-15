@@ -1042,9 +1042,9 @@ function total(key) { const a = state.attrs[key]; return (Number(a.valor)||0) + 
 function totals() { const t={}; Object.keys(ATTR_META).forEach(k=>t[k]=total(k)); return t; }
 function computeVida(t){
   const c=state.formulaConfig;
-  const base=(c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0);
-  return base + (state.identidade.profissao === 'Combatente (não tem Profissão)' ? 15 : 0);
+  return (c.vidaBase + t.vigor*c.vidaVigor + t.forca*c.vidaForca + t.combate*c.vidaCombate + t.vontade*c.vidaVontade) * (Number(c.vidaMultiplicador)||1) + (Number(c.vidaAjuste)||0);
 }
+function combatenteBonusVida(){ return state.identidade.profissao === 'Combatente (não tem Profissão)' ? 15 : 0; }
 function computeEnergia(t){ const c=state.formulaConfig; return (c.energiaBase + t.vontade*c.energiaVontade + t.combate*c.energiaCombate + t.poder*c.energiaPoder + t.vigor*c.energiaVigor - t.raciocinio*c.energiaRaciocinio) * (Number(c.energiaMultiplicador)||1) + (Number(c.energiaAjuste)||0); }
 function computeMente(t){
   const c=state.formulaConfig;
@@ -1056,8 +1056,8 @@ function frutaBonusVidaPercent(){
   let pct=0;
   state.frutas.forEach(f=>{
     if(!f.possui) return;
-    if (f.tipo==='Zoan') pct += f.despertada?0.75:0.50;
-    else if (f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += f.despertada?1.00:0.75;
+    if (f.tipo==='Zoan') pct += 0.50;
+    else if (f.tipo==='Zoan Mítica/Ancestral' || f.tipo==='Zoan Mítica' || f.tipo==='Zoan (Ancestral/Primordial)') pct += 0.75;
   });
   return pct;
 }
@@ -1069,7 +1069,7 @@ function frutaBonusEnergiaPercent(){
   });
   return pct;
 }
-function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())); }
+function computeVidaFinal(t){ return Math.ceil(computeVida(t) * (1+frutaBonusVidaPercent())) + combatenteBonusVida(); }
 function computeEnergiaFinal(t){ return Math.ceil(computeEnergia(t) * (1+frutaBonusEnergiaPercent())); }
 function syncCombatenteRecursos(profissaoAnterior){
   const eraCombatente = profissaoAnterior === 'Combatente (não tem Profissão)';
