@@ -537,8 +537,24 @@ textarea { resize:vertical; line-height:1.6; }
 .map-token-avatar{width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--gold-bright);background:var(--bg-panel-alt);display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);}
 .map-token-avatar img{width:100%;height:100%;object-fit:cover;}
 .map-token-tray{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-soft);}
-.map-tray-label{font-size:.8rem;color:var(--text-muted,#aaa);}
-.map-tray-chip{cursor:grab;}
+.map-tray-label{font-size:.8rem;color:var(--text-muted,#aaa);width:100%;}
+.map-tray-chip{cursor:grab;position:relative;}
+.map-token-generic{border-color:var(--accent-notas,#7c88b8);}
+.map-tray-chip-remove{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;border:none;background:#c0392b;color:#fff;line-height:1;cursor:pointer;font-size:.7rem;padding:0;}
+.map-generic-form{display:flex;gap:6px;align-items:center;width:100%;margin-top:2px;}
+.map-generic-form input[type=text]{flex:1;min-width:120px;}
+.map-token.selected .map-token-avatar{box-shadow:0 0 0 2px var(--gold-bright),0 2px 6px rgba(0,0,0,.5);}
+.map-token-size-controls{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:3px 6px;margin-bottom:4px;white-space:nowrap;z-index:10;box-shadow:var(--shadow-lg);}
+.map-token-size-controls button{width:20px;height:20px;padding:0;line-height:1;font-size:.85rem;border-radius:4px;border:1px solid var(--border-soft);background:var(--bg-void);color:var(--text-main);cursor:pointer;}
+.map-token-size-controls span{font-size:.72rem;color:var(--text-muted);min-width:32px;text-align:center;}
+.map-token-size-controls .map-token-remove-btn{background:#c0392b;border-color:#c0392b;color:#fff;width:auto;padding:0 6px;font-size:.7rem;}
+.map-fog-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;}
+.map-fog-brush{display:flex;gap:10px;font-size:.85rem;align-items:center;}
+.map-fog-layer{position:absolute;inset:0;pointer-events:none;}
+.map-fog-layer.fog-editable{pointer-events:auto;cursor:crosshair;}
+.fog-cell{position:absolute;}
+.fog-player-view .fog-cell{background:#0a0a0a;}
+.fog-admin-view .fog-cell{background:rgba(0,0,0,.5);outline:1px solid rgba(255,255,255,.08);}
 @media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
 
 .lobby-rolls{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
@@ -3085,7 +3101,26 @@ function normalizeMapState(s){
   const maps=Array.isArray(s?.maps)?s.maps.filter(m=>m&&m.id&&m.url).map(m=>({id:m.id,nome:String(m.nome||'Mapa'),url:m.url})):[];
   const activeMapId=maps.some(m=>m.id===s?.activeMapId)?s.activeMapId:(maps[0]?.id||null);
   const tokens=(s&&typeof s.tokens==='object'&&s.tokens)?s.tokens:{};
-  return {maps,activeMapId,tokens};
+  const genericTokens=Array.isArray(s?.genericTokens)?s.genericTokens.filter(t=>t&&t.id&&t.nome).map(t=>({id:String(t.id),nome:String(t.nome).slice(0,40)})):[];
+  const fog=(s&&typeof s.fog==='object'&&s.fog)?s.fog:{};
+  const camera=(s&&typeof s.camera==='object'&&s.camera)?s.camera:{};
+  return {maps,activeMapId,tokens,genericTokens,fog,camera};
+}
+const FOG_COLS=24, FOG_ROWS=16;
+function getMapFog(state, mapId){
+  const f=state.fog[mapId];
+  if(!f || !f.enabled) return null;
+  return {enabled:true, revealed:new Set(Array.isArray(f.revealed)?f.revealed:[])};
+}
+function isCellRevealed(state, mapId, col, row){
+  const fog=getMapFog(state, mapId);
+  if(!fog) return true; // névoa desligada = tudo visível
+  return fog.revealed.has(row+'_'+col);
+}
+function fracToCell(fx, fy){
+  const col=Math.max(0,Math.min(FOG_COLS-1, Math.floor(fx*FOG_COLS)));
+  const row=Math.max(0,Math.min(FOG_ROWS-1, Math.floor(fy*FOG_ROWS)));
+  return {col,row};
 }
 function getLobbyMapState(){
   try{return normalizeMapState(JSON.parse(localStorage.getItem(MAP_STORAGE_KEY)||'{}'));}catch(e){return normalizeMapState({});}
@@ -3102,6 +3137,37 @@ function broadcastLobbyMap(state){
   if(!LOBBY_ADMIN_TOKEN || !lobbyMapChannel || !lobbyMapReady) return;
   lobbyMapChannel.send({type:'broadcast',event:'map_state',payload:{state:normalizeMapState(state)}}).catch(()=>{});
 }
+// A câmera (zoom + posição) é transmitida à parte do resto do estado, sem
+// gravar no localStorage a cada pixel de scroll — só persiste de vez em
+// quando (debounce), pra não pesar. Jogadores nunca controlam a própria
+// câmera: sempre seguem a do mestre.
+function broadcastCamera(mapId, zoom, cx, cy){
+  if(!LOBBY_ADMIN_TOKEN || !lobbyMapChannel || !lobbyMapReady) return;
+  lobbyMapChannel.send({type:'broadcast',event:'camera_update',payload:{mapId,zoom,cx,cy}}).catch(()=>{});
+}
+let persistCameraTimer=null;
+function persistCameraDebounced(mapId, zoom, cx, cy){
+  clearTimeout(persistCameraTimer);
+  persistCameraTimer=setTimeout(()=>{
+    const state=getLobbyMapState();
+    state.camera[mapId]={zoom,cx,cy};
+    saveLobbyMapState(state);
+  },400);
+}
+function applyIncomingCamera(mapId, zoom, cx, cy){
+  if(LOBBY_ADMIN_TOKEN) return; // o mestre nunca é "puxado" pela própria câmera
+  const state=getLobbyMapState();
+  if(state.activeMapId!==mapId) return;
+  mapZoom=zoom;
+  const wrap=document.getElementById('mapImageWrap');
+  const viewport=document.getElementById('mapViewport');
+  if(!wrap||!viewport) return;
+  wrap.style.width=(zoom*100)+'%';
+  requestAnimationFrame(()=>{
+    viewport.scrollLeft=cx*wrap.scrollWidth-viewport.clientWidth/2;
+    viewport.scrollTop=cy*wrap.scrollHeight-viewport.clientHeight/2;
+  });
+}
 function subscribeLobbyMap(){
   if(lobbyMapChannel) supabaseClient.removeChannel(lobbyMapChannel);
   lobbyMapReady=false;
@@ -3109,9 +3175,22 @@ function subscribeLobbyMap(){
   lobbyMapChannel.on('broadcast',{event:'map_state'},({payload})=>{
     const state=normalizeMapState(payload?.state||{});
     try{localStorage.setItem(MAP_STORAGE_KEY,JSON.stringify(state));}catch(e){}
+    if(!LOBBY_ADMIN_TOKEN) mapZoom=(state.camera[state.activeMapId]?.zoom)||1;
     renderLobbyMap(lastLobbyCharacters);
   });
-  lobbyMapChannel.on('broadcast',{event:'map_request'},()=>{if(LOBBY_ADMIN_TOKEN) broadcastLobbyMap(getLobbyMapState());});
+  lobbyMapChannel.on('broadcast',{event:'camera_update'},({payload})=>{
+    if(!payload) return;
+    applyIncomingCamera(payload.mapId, payload.zoom, payload.cx, payload.cy);
+  });
+  lobbyMapChannel.on('broadcast',{event:'map_request'},()=>{
+    if(!LOBBY_ADMIN_TOKEN) return;
+    const state=getLobbyMapState();
+    broadcastLobbyMap(state);
+    if(state.activeMapId){
+      const cam=state.camera[state.activeMapId]||{zoom:1,cx:0.5,cy:0.5};
+      broadcastCamera(state.activeMapId, cam.zoom, cam.cx, cam.cy);
+    }
+  });
   lobbyMapChannel.subscribe(status=>{
     if(status==='SUBSCRIBED'){
       lobbyMapReady=true;
@@ -3122,6 +3201,10 @@ function subscribeLobbyMap(){
 }
 let lastLobbyCharacters=[];
 let mapZoom=1;
+let fogPaintMode=false;
+let fogBrush='revelar';
+let fogPainting=false;
+let selectedMapTokenId=null;
 const MAP_ZOOM_MIN=1, MAP_ZOOM_MAX=3, MAP_ZOOM_STEP=0.25;
 
 async function handleMapImageUpload(e){
@@ -3157,7 +3240,9 @@ async function handleMapImageUpload(e){
     const id=(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random());
     state.maps.push({id,nome,url});
     state.activeMapId=id;
+    state.camera[id]={zoom:1,cx:0.5,cy:0.5};
     saveLobbyMapState(state);
+    mapZoom=1;
     if(nomeInput) nomeInput.value='';
     renderLobbyMap(lastLobbyCharacters);
   }catch(err){
@@ -3170,23 +3255,30 @@ async function handleMapImageUpload(e){
 function setActiveMap(mapId){
   const state=getLobbyMapState();
   state.activeMapId=mapId;
+  if(!state.camera[mapId]) state.camera[mapId]={zoom:1,cx:0.5,cy:0.5};
   saveLobbyMapState(state);
-  mapZoom=1;
+  mapZoom=state.camera[mapId].zoom;
+  fogPaintMode=false;
+  selectedMapTokenId=null;
   renderLobbyMap(lastLobbyCharacters);
+  broadcastCamera(mapId, state.camera[mapId].zoom, state.camera[mapId].cx, state.camera[mapId].cy);
 }
 function removeMap(mapId){
   if(!confirm('Remover este mapa da pasta? (a imagem enviada continua no Storage, só sai da lista)')) return;
   const state=getLobbyMapState();
   state.maps=state.maps.filter(m=>m.id!==mapId);
   delete state.tokens[mapId];
-  if(state.activeMapId===mapId) state.activeMapId=state.maps[0]?.id||null;
+  delete state.fog[mapId];
+  delete state.camera[mapId];
+  if(state.activeMapId===mapId){ state.activeMapId=state.maps[0]?.id||null; selectedMapTokenId=null; }
   saveLobbyMapState(state);
   renderLobbyMap(lastLobbyCharacters);
 }
 function setTokenPosition(mapId, characterId, x, y){
   const state=getLobbyMapState();
   if(!state.tokens[mapId]) state.tokens[mapId]={};
-  state.tokens[mapId][characterId]={x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))};
+  const prevTamanho=state.tokens[mapId][characterId]?.tamanho;
+  state.tokens[mapId][characterId]={x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y)),...(prevTamanho?{tamanho:prevTamanho}:{})};
   saveLobbyMapState(state);
 }
 function removeTokenFromMap(mapId, characterId){
@@ -3194,21 +3286,117 @@ function removeTokenFromMap(mapId, characterId){
   if(state.tokens[mapId]) delete state.tokens[mapId][characterId];
   saveLobbyMapState(state);
 }
-function applyMapZoom(delta){
+const TOKEN_SIZE_MIN=0.5, TOKEN_SIZE_MAX=2.5, TOKEN_SIZE_STEP=0.25;
+function setTokenSize(mapId, tokenId, tamanho){
+  const state=getLobbyMapState();
+  if(!state.tokens[mapId] || !state.tokens[mapId][tokenId]) return;
+  state.tokens[mapId][tokenId].tamanho=Math.max(TOKEN_SIZE_MIN,Math.min(TOKEN_SIZE_MAX,+tamanho.toFixed(2)));
+  saveLobbyMapState(state);
+}
+/* ===== Tokens genéricos =====
+   Marcadores livres pro mestre colocar no mapa sem precisar de uma ficha —
+   só um nome. Ficam numa lista própria (fora dos personagens) e usam o
+   mesmo mecanismo de posição/tamanho de state.tokens, só que com um id
+   prefixado "gtk_" pra não colidir com ids de ficha. */
+function addGenericToken(nome){
+  const limpo=String(nome||'').trim().slice(0,40);
+  if(!limpo) return;
+  const state=getLobbyMapState();
+  const id='gtk_'+(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()));
+  state.genericTokens.push({id,nome:limpo});
+  saveLobbyMapState(state);
+  renderLobbyMap(lastLobbyCharacters);
+}
+function removeGenericToken(id){
+  const state=getLobbyMapState();
+  state.genericTokens=state.genericTokens.filter(t=>t.id!==id);
+  Object.keys(state.tokens).forEach(mapId=>{ if(state.tokens[mapId][id]) delete state.tokens[mapId][id]; });
+  saveLobbyMapState(state);
+  renderLobbyMap(lastLobbyCharacters);
+}
+function currentCameraFraction(){
+  const wrap=document.getElementById('mapImageWrap');
+  const viewport=document.getElementById('mapViewport');
+  if(!wrap||!viewport||!wrap.scrollWidth||!wrap.scrollHeight) return {cx:0.5,cy:0.5};
+  return {
+    cx:(viewport.scrollLeft+viewport.clientWidth/2)/wrap.scrollWidth,
+    cy:(viewport.scrollTop+viewport.clientHeight/2)/wrap.scrollHeight
+  };
+}
+function applyMapZoom(delta, mapId){
   mapZoom=Math.max(MAP_ZOOM_MIN,Math.min(MAP_ZOOM_MAX, +(mapZoom+delta).toFixed(2)));
   const wrap=document.getElementById('mapImageWrap');
   if(wrap) wrap.style.width=(mapZoom*100)+'%';
   const label=document.getElementById('mapZoomLabel');
   if(label) label.textContent=Math.round(mapZoom*100)+'%';
+  if(!LOBBY_ADMIN_TOKEN || !mapId) return;
+  requestAnimationFrame(()=>{
+    const {cx,cy}=currentCameraFraction();
+    broadcastCamera(mapId, mapZoom, cx, cy);
+    persistCameraDebounced(mapId, mapZoom, cx, cy);
+  });
+}
+function handleMapViewportScroll(mapId){
+  if(!LOBBY_ADMIN_TOKEN) return;
+  const {cx,cy}=currentCameraFraction();
+  broadcastCamera(mapId, mapZoom, cx, cy);
+  persistCameraDebounced(mapId, mapZoom, cx, cy);
 }
 
-function buildMapTokenIcon(character){
+/* ===== Névoa de guerra =====
+   Grid fixo de FOG_COLS x FOG_ROWS sobre o mapa. Guarda só as células
+   REVELADAS (lista esparsa) — enquanto a névoa não é ativada pro mapa,
+   comportamento é o de sempre (tudo visível). */
+function toggleFogEnabled(mapId){
+  const state=getLobbyMapState();
+  const current=state.fog[mapId];
+  if(current?.enabled){
+    delete state.fog[mapId];
+  }else{
+    state.fog[mapId]={enabled:true, revealed:[]};
+  }
+  fogPaintMode=false;
+  saveLobbyMapState(state);
+  renderLobbyMap(lastLobbyCharacters);
+}
+function setFogCell(mapId, col, row, revealed){
+  const state=getLobbyMapState();
+  const f=state.fog[mapId];
+  if(!f?.enabled) return;
+  const key=row+'_'+col;
+  const set=new Set(f.revealed||[]);
+  if(revealed) set.add(key); else set.delete(key);
+  f.revealed=Array.from(set);
+  saveLobbyMapState(state);
+}
+function setAllFog(mapId, revealed){
+  const state=getLobbyMapState();
+  const f=state.fog[mapId];
+  if(!f?.enabled) return;
+  if(revealed){
+    const all=[];
+    for(let r=0;r<FOG_ROWS;r++) for(let c=0;c<FOG_COLS;c++) all.push(r+'_'+c);
+    f.revealed=all;
+  }else{
+    f.revealed=[];
+  }
+  saveLobbyMapState(state);
+  renderLobbyMap(lastLobbyCharacters);
+}
+
+function buildMapTokenIcon(character, tamanho){
   const isAdmin=!!LOBBY_ADMIN_TOKEN;
   const pub=character.public_data||{};
   const lobby=character.lobby||{};
   const nome=(isAdmin||lobby.mostrarNome)?(pub.nome||'?'):'???';
   const foto=(isAdmin||lobby.mostrarFoto)&&pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : `<span>${escapeHtml((nome||'?').charAt(0).toUpperCase())}</span>`;
-  return `<div class="map-token-avatar" title="${escapeHtml(nome)}">${foto}</div>`;
+  const size=38*(tamanho||1);
+  return `<div class="map-token-avatar" title="${escapeHtml(nome)}" style="width:${size}px;height:${size}px;">${foto}</div>`;
+}
+function buildGenericTokenIcon(token, tamanho){
+  const nome=token.nome||'?';
+  const size=38*(tamanho||1);
+  return `<div class="map-token-avatar map-token-generic" title="${escapeHtml(nome)}" style="width:${size}px;height:${size}px;"><span>${escapeHtml(nome.charAt(0).toUpperCase())}</span></div>`;
 }
 
 function renderLobbyMap(characters){
@@ -3219,7 +3407,12 @@ function renderLobbyMap(characters){
   const state=getLobbyMapState();
   const activeMap=state.maps.find(m=>m.id===state.activeMapId)||null;
   const tokensOnMap=activeMap?(state.tokens[activeMap.id]||{}):{};
+  const fog=activeMap?getMapFog(state, activeMap.id):null;
   const chars=characters||[];
+  if(activeMap && !isAdmin){
+    const cam=state.camera[activeMap.id];
+    if(cam) mapZoom=cam.zoom;
+  }
 
   const mapsFolderHtml=isAdmin?`
     <div class="lobby-map-upload">
@@ -3239,33 +3432,93 @@ function renderLobbyMap(characters){
         </div>`).join('') : '<div class="empty-hint">Nenhum mapa na pasta ainda.</div>'}
     </div>` : '';
 
+  const genericTokens=state.genericTokens||[];
   const trayHtml=isAdmin&&activeMap ? `
     <div class="map-token-tray" id="mapTokenTray">
       <span class="map-tray-label">Arraste pro mapa:</span>
-      ${chars.filter(c=>!tokensOnMap[c.id]).map(c=>`<div class="map-tray-chip" draggable="true" data-drag-character="${escapeHtml(c.id)}">${buildMapTokenIcon(c)}</div>`).join('') || '<span class="hint-text">Todos os personagens já estão no mapa.</span>'}
+      ${chars.filter(c=>!tokensOnMap[c.id]).map(c=>`<div class="map-tray-chip" draggable="true" data-drag-character="${escapeHtml(c.id)}">${buildMapTokenIcon(c)}</div>`).join('')}
+      ${genericTokens.filter(t=>!tokensOnMap[t.id]).map(t=>`<div class="map-tray-chip" draggable="true" data-drag-generic="${escapeHtml(t.id)}">${buildGenericTokenIcon(t)}<button type="button" class="map-tray-chip-remove" data-remove-generic="${escapeHtml(t.id)}" title="Excluir este token">×</button></div>`).join('')}
+      ${(chars.filter(c=>!tokensOnMap[c.id]).length===0 && genericTokens.filter(t=>!tokensOnMap[t.id]).length===0) ? '<span class="hint-text">Todos os tokens já estão no mapa.</span>' : ''}
+      <div class="map-generic-form">
+        <input type="text" id="mapGenericTokenNome" placeholder="Nome do token (ex.: Goblin, Guarda)" maxlength="40">
+        <button type="button" id="mapGenericTokenAdd" class="btn btn-secondary">+ Token genérico</button>
+      </div>
     </div>` : '';
+
+  const fogCellsHtml=(()=>{
+    if(!activeMap) return '';
+    let cells='';
+    for(let r=0;r<FOG_ROWS;r++){
+      for(let c=0;c<FOG_COLS;c++){
+        const revealed=isCellRevealed(state, activeMap.id, c, r);
+        if(revealed) continue; // célula revelada não desenha nada por cima
+        cells+=`<div class="fog-cell" style="left:${(c/FOG_COLS*100).toFixed(3)}%;top:${(r/FOG_ROWS*100).toFixed(3)}%;width:${(100/FOG_COLS).toFixed(3)}%;height:${(100/FOG_ROWS).toFixed(3)}%;" data-fog-col="${c}" data-fog-row="${r}"></div>`;
+      }
+    }
+    return cells;
+  })();
 
   section.innerHTML=`
     <h2>🗺️ Mapa</h2>
-    <p class="hint-text">${isAdmin?'Suba mapas prontos, escolha o ativo e arraste os personagens sobre ele.':'Acompanhe a posição dos personagens no mapa da cena.'}</p>
+    <p class="hint-text">${isAdmin?'Suba mapas prontos, escolha o ativo, arraste os personagens e controle a névoa e a câmera de todos.':'Acompanhe a cena — a visão segue o que o mestre está mostrando.'}</p>
     ${mapsFolderHtml}
     ${activeMap?`
       <div class="map-toolbar">
         <strong>${escapeHtml(activeMap.nome)}</strong>
+        ${isAdmin?`
         <div class="map-zoom-controls">
           <button type="button" id="mapZoomOut" class="btn btn-secondary">−</button>
           <span id="mapZoomLabel">${Math.round(mapZoom*100)}%</span>
           <button type="button" id="mapZoomIn" class="btn btn-secondary">+</button>
           <button type="button" id="mapZoomReset" class="btn btn-secondary">Reset</button>
-        </div>
+        </div>`:''}
       </div>
-      <div class="map-viewport" id="mapViewport">
+      ${isAdmin?`
+      <div class="map-fog-toolbar">
+        <button type="button" id="mapFogToggle" class="btn ${fog?'btn-primary':'btn-secondary'}">${fog?'🌫️ Névoa ativa':'🌫️ Ativar névoa'}</button>
+        ${fog?`
+          <button type="button" id="mapFogPaintToggle" class="btn ${fogPaintMode?'btn-primary':'btn-secondary'}">${fogPaintMode?'✏️ Pintando...':'✏️ Editar névoa'}</button>
+          ${fogPaintMode?`
+            <div class="map-fog-brush">
+              <label><input type="radio" name="fogBrush" value="revelar" ${fogBrush==='revelar'?'checked':''}> Revelar</label>
+              <label><input type="radio" name="fogBrush" value="ocultar" ${fogBrush==='ocultar'?'checked':''}> Ocultar</label>
+            </div>
+            <button type="button" id="mapFogRevealAll" class="btn btn-secondary">Revelar tudo</button>
+            <button type="button" id="mapFogHideAll" class="btn btn-secondary">Ocultar tudo</button>
+          `:''}
+        `:''}
+      </div>`:''}
+      <div class="map-viewport" id="mapViewport" ${!isAdmin?'style="overflow:hidden;"':''}>
         <div class="map-image-wrap" id="mapImageWrap" style="width:${mapZoom*100}%">
           <img src="${escapeHtml(activeMap.url)}" alt="${escapeHtml(activeMap.nome)}" draggable="false">
-          ${chars.filter(c=>tokensOnMap[c.id]).map(c=>`
-            <div class="map-token" data-token-character="${escapeHtml(c.id)}" style="left:${(tokensOnMap[c.id].x*100).toFixed(2)}%; top:${(tokensOnMap[c.id].y*100).toFixed(2)}%;" ${isAdmin?'draggable="true"':''}>
-              ${buildMapTokenIcon(c)}
-            </div>`).join('')}
+          ${(()=>{
+            const visivel=(pos)=>{
+              if(isAdmin) return true;
+              if(!fog) return true;
+              const {col,row}=fracToCell(pos.x,pos.y);
+              return fog.revealed.has(row+'_'+col);
+            };
+            const placedChar=chars.filter(c=>tokensOnMap[c.id] && visivel(tokensOnMap[c.id])).map(c=>({id:c.id,kind:'character',obj:c}));
+            const placedGeneric=genericTokens.filter(t=>tokensOnMap[t.id] && visivel(tokensOnMap[t.id])).map(t=>({id:t.id,kind:'generic',obj:t}));
+            return [...placedChar,...placedGeneric].map(pt=>{
+              const pos=tokensOnMap[pt.id];
+              const tamanho=pos.tamanho||1;
+              const icon=pt.kind==='character'?buildMapTokenIcon(pt.obj,tamanho):buildGenericTokenIcon(pt.obj,tamanho);
+              const dataAttr=pt.kind==='character'?`data-token-character="${escapeHtml(pt.id)}"`:`data-token-generic="${escapeHtml(pt.id)}"`;
+              const sizeControls=(isAdmin && selectedMapTokenId===pt.id)?`
+                <div class="map-token-size-controls">
+                  <button type="button" data-token-size-dec="${escapeHtml(pt.id)}">−</button>
+                  <span>${Math.round(tamanho*100)}%</span>
+                  <button type="button" data-token-size-inc="${escapeHtml(pt.id)}">+</button>
+                  ${pt.kind==='generic'?`<button type="button" class="map-token-remove-btn" data-token-full-remove="${escapeHtml(pt.id)}">Excluir</button>`:''}
+                </div>`:'';
+              return `<div class="map-token${selectedMapTokenId===pt.id?' selected':''}" data-token-id="${escapeHtml(pt.id)}" ${dataAttr} style="left:${(pos.x*100).toFixed(2)}%; top:${(pos.y*100).toFixed(2)}%;" ${isAdmin?'draggable="true"':''}>
+                ${sizeControls}
+                ${icon}
+              </div>`;
+            }).join('');
+          })()}
+          <div class="map-fog-layer ${fogPaintMode?'fog-editable':''} ${isAdmin?'fog-admin-view':'fog-player-view'}" id="mapFogLayer">${fogCellsHtml}</div>
         </div>
       </div>` : '<div class="empty-hint"><span class="empty-icon">🗺️</span>Nenhum mapa ativo no momento.</div>'}
     ${trayHtml}
@@ -3273,38 +3526,123 @@ function renderLobbyMap(characters){
 
   document.getElementById('lobbyMapFile')?.addEventListener('change',handleMapImageUpload);
 
+  if(activeMap && !isAdmin){
+    const cam=state.camera[activeMap.id];
+    if(cam) requestAnimationFrame(()=>applyIncomingCamera(activeMap.id, cam.zoom, cam.cx, cam.cy));
+  }
+
   if(!isAdmin || !activeMap) return;
 
   section.querySelectorAll('[data-set-active-map]').forEach(b=>b.onclick=()=>setActiveMap(b.dataset.setActiveMap));
   section.querySelectorAll('[data-remove-map]').forEach(b=>b.onclick=(e)=>{e.stopPropagation();removeMap(b.dataset.removeMap);});
-  document.getElementById('mapZoomIn')?.addEventListener('click',()=>applyMapZoom(MAP_ZOOM_STEP));
-  document.getElementById('mapZoomOut')?.addEventListener('click',()=>applyMapZoom(-MAP_ZOOM_STEP));
-  document.getElementById('mapZoomReset')?.addEventListener('click',()=>{ mapZoom=1; applyMapZoom(0); });
+  document.getElementById('mapZoomIn')?.addEventListener('click',()=>applyMapZoom(MAP_ZOOM_STEP, activeMap.id));
+  document.getElementById('mapZoomOut')?.addEventListener('click',()=>applyMapZoom(-MAP_ZOOM_STEP, activeMap.id));
+  document.getElementById('mapZoomReset')?.addEventListener('click',()=>{ mapZoom=1; applyMapZoom(0, activeMap.id); });
+  document.getElementById('mapViewport')?.addEventListener('scroll',()=>handleMapViewportScroll(activeMap.id));
+
+  document.getElementById('mapFogToggle')?.addEventListener('click',()=>toggleFogEnabled(activeMap.id));
+  document.getElementById('mapFogPaintToggle')?.addEventListener('click',()=>{ fogPaintMode=!fogPaintMode; renderLobbyMap(lastLobbyCharacters); });
+  document.getElementById('mapFogRevealAll')?.addEventListener('click',()=>setAllFog(activeMap.id, true));
+  document.getElementById('mapFogHideAll')?.addEventListener('click',()=>setAllFog(activeMap.id, false));
+  section.querySelectorAll('input[name=fogBrush]').forEach(r=>r.addEventListener('change',()=>{ fogBrush=r.value; }));
 
   const wrap=document.getElementById('mapImageWrap');
+  const fogLayer=document.getElementById('mapFogLayer');
+
   function dropAt(characterId, clientX, clientY){
     const rect=wrap.getBoundingClientRect();
     if(clientX<rect.left||clientX>rect.right||clientY<rect.top||clientY>rect.bottom){
       removeTokenFromMap(activeMap.id, characterId);
+      if(selectedMapTokenId===characterId) selectedMapTokenId=null;
     }else{
       setTokenPosition(activeMap.id, characterId, (clientX-rect.left)/rect.width, (clientY-rect.top)/rect.height);
     }
     renderLobbyMap(lastLobbyCharacters);
   }
-  section.querySelectorAll('[data-drag-character]').forEach(chip=>{
-    chip.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', chip.dataset.dragCharacter); e.dataTransfer.effectAllowed='move'; });
-  });
-  section.querySelectorAll('.map-token').forEach(tok=>{
-    tok.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', tok.dataset.tokenCharacter); e.dataTransfer.effectAllowed='move'; });
-  });
-  wrap.addEventListener('dragover',e=>e.preventDefault());
-  wrap.addEventListener('drop',e=>{
-    e.preventDefault();
-    const characterId=e.dataTransfer.getData('text/plain');
-    if(characterId) dropAt(characterId, e.clientX, e.clientY);
-  });
-  // Fora do mapa também precisa aceitar drop, pra permitir "tirar" um token arrastando-o pra fora.
-  document.addEventListener('dragover',e=>e.preventDefault(),{once:false});
+  if(!fogPaintMode){
+    section.querySelectorAll('[data-drag-character],[data-drag-generic]').forEach(chip=>{
+      const id=chip.dataset.dragCharacter||chip.dataset.dragGeneric;
+      chip.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed='move'; });
+    });
+    section.querySelectorAll('.map-token').forEach(tok=>{
+      tok.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', tok.dataset.tokenId); e.dataTransfer.effectAllowed='move'; });
+      tok.addEventListener('click',e=>{
+        if(e.target.closest('.map-token-size-controls')) return;
+        e.stopPropagation();
+        selectedMapTokenId=(selectedMapTokenId===tok.dataset.tokenId)?null:tok.dataset.tokenId;
+        renderLobbyMap(lastLobbyCharacters);
+      });
+    });
+    section.querySelectorAll('[data-token-size-dec]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.stopPropagation();
+        const id=b.dataset.tokenSizeDec;
+        const atual=(tokensOnMap[id]?.tamanho)||1;
+        setTokenSize(activeMap.id, id, atual-TOKEN_SIZE_STEP);
+        renderLobbyMap(lastLobbyCharacters);
+      });
+    });
+    section.querySelectorAll('[data-token-size-inc]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.stopPropagation();
+        const id=b.dataset.tokenSizeInc;
+        const atual=(tokensOnMap[id]?.tamanho)||1;
+        setTokenSize(activeMap.id, id, atual+TOKEN_SIZE_STEP);
+        renderLobbyMap(lastLobbyCharacters);
+      });
+    });
+    section.querySelectorAll('[data-token-full-remove]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.stopPropagation();
+        selectedMapTokenId=null;
+        removeGenericToken(b.dataset.tokenFullRemove);
+      });
+    });
+    section.querySelectorAll('[data-remove-generic]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.stopPropagation();
+        if(confirm('Excluir este token genérico da pasta?')) removeGenericToken(b.dataset.removeGeneric);
+      });
+    });
+    const genericAddBtn=document.getElementById('mapGenericTokenAdd');
+    const genericInput=document.getElementById('mapGenericTokenNome');
+    if(genericAddBtn && genericInput){
+      const criar=()=>{ if(genericInput.value.trim()) addGenericToken(genericInput.value); };
+      genericAddBtn.addEventListener('click',criar);
+      genericInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); criar(); } });
+    }
+    wrap.addEventListener('dragover',e=>e.preventDefault());
+    wrap.addEventListener('drop',e=>{
+      e.preventDefault();
+      const tokenId=e.dataTransfer.getData('text/plain');
+      if(tokenId) dropAt(tokenId, e.clientX, e.clientY);
+    });
+    // Fora do mapa também precisa aceitar drop, pra permitir "tirar" um token arrastando-o pra fora.
+    document.addEventListener('dragover',e=>e.preventDefault(),{once:false});
+  }else if(fogLayer){
+    function cellFromEvent(e){
+      const rect=wrap.getBoundingClientRect();
+      const fx=(e.clientX-rect.left)/rect.width, fy=(e.clientY-rect.top)/rect.height;
+      return fracToCell(Math.max(0,Math.min(1,fx)), Math.max(0,Math.min(1,fy)));
+    }
+    function paintAt(e){
+      const {col,row}=cellFromEvent(e);
+      setFogCell(activeMap.id, col, row, fogBrush==='revelar');
+      const key=`[data-fog-col="${col}"][data-fog-row="${row}"]`;
+      if(fogBrush==='revelar'){ fogLayer.querySelector(key)?.remove(); }
+      else if(!fogLayer.querySelector(key)){
+        const div=document.createElement('div');
+        div.className='fog-cell';
+        div.style.left=(col/FOG_COLS*100)+'%'; div.style.top=(row/FOG_ROWS*100)+'%';
+        div.style.width=(100/FOG_COLS)+'%'; div.style.height=(100/FOG_ROWS)+'%';
+        div.dataset.fogCol=col; div.dataset.fogRow=row;
+        fogLayer.appendChild(div);
+      }
+    }
+    fogLayer.addEventListener('pointerdown',e=>{ fogPainting=true; paintAt(e); });
+    fogLayer.addEventListener('pointermove',e=>{ if(fogPainting) paintAt(e); });
+    window.addEventListener('pointerup',()=>{ fogPainting=false; });
+  }
 }
 
 function renderLobby(characters){
