@@ -519,6 +519,7 @@ textarea { resize:vertical; line-height:1.6; }
 .lobby-map h2{color:var(--gold-bright);font-size:1.1rem;margin-bottom:6px;}
 .lobby-map-upload{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
 .lobby-map-upload input[type=text]{flex:1;min-width:180px;}
+.lobby-map-upload-status{font-size:.8rem;color:var(--text-muted,#aaa);margin-top:6px;min-height:1.1em;}
 .lobby-map-folder{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
 .map-folder-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;width:88px;}
 .map-folder-thumb{padding:0;border:2px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden;width:80px;height:56px;cursor:pointer;background:none;}
@@ -2319,14 +2320,15 @@ function applyCropTransform(){
    Storage (limite separado de 1GB) e só a URL pública fica salva no state. */
 const LOBBY_IMAGES_BUCKET='lobby-images';
 async function uploadBlobToLobbyStorage(blob, pathPrefix){
-  if(!ONLINE_ENABLED || !supabaseClient) return null;
+  if(!ONLINE_ENABLED || !supabaseClient) return {url:null, error:'Supabase não está configurado (ONLINE_ENABLED=false).'};
   try{
     const filename=`${pathPrefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
     const {error}=await supabaseClient.storage.from(LOBBY_IMAGES_BUCKET).upload(filename, blob, {contentType:'image/jpeg', upsert:true});
-    if(error){ console.warn('Falha ao subir imagem para o Storage:', error); return null; }
+    if(error){ console.warn('Falha ao subir imagem para o Storage:', error); return {url:null, error}; }
     const {data}=supabaseClient.storage.from(LOBBY_IMAGES_BUCKET).getPublicUrl(filename);
-    return data?.publicUrl || null;
-  }catch(e){ console.warn('Falha ao subir imagem para o Storage:', e); return null; }
+    if(!data?.publicUrl) return {url:null, error:'Upload ok, mas não veio URL pública (bucket é público?).'};
+    return {url:data.publicUrl, error:null};
+  }catch(e){ console.warn('Falha ao subir imagem para o Storage:', e); return {url:null, error:e}; }
 }
 function canvasToBlob(canvas, quality){
   return new Promise(resolve=>canvas.toBlob(b=>resolve(b), 'image/jpeg', quality));
@@ -2350,7 +2352,7 @@ async function confirmCropPhoto(){
   // cai de volta pro base64 local (não quebra o fluxo de quem não tem Supabase configurado).
   const blob=await canvasToBlob(canvas,0.85);
   let finalSrc=null;
-  if(blob && ONLINE_ENABLED) finalSrc=await uploadBlobToLobbyStorage(blob, characterId ? `portraits/${characterId}` : 'portraits/tmp');
+  if(blob && ONLINE_ENABLED){ const r=await uploadBlobToLobbyStorage(blob, characterId ? `portraits/${characterId}` : 'portraits/tmp'); finalSrc=r.url; }
   applyPortraitImage(finalSrc || canvas.toDataURL('image/jpeg',0.85));
 }
 
@@ -3125,15 +3127,16 @@ const MAP_ZOOM_MIN=1, MAP_ZOOM_MAX=3, MAP_ZOOM_STEP=0.25;
 async function handleMapImageUpload(e){
   const file=e.target.files[0];
   e.target.value='';
-  if(!file || !LOBBY_ADMIN_TOKEN) return;
+  if(!file) return;
+  if(!LOBBY_ADMIN_TOKEN){ alert('Link de mestre não identificado — abra o lobby pelo link de admin.'); return; }
   const nomeInput=document.getElementById('lobbyMapNome');
   const nome=(nomeInput?.value||'').trim() || file.name.replace(/\.[^.]+$/,'');
-  const btn=document.getElementById('lobbyMapUploadBtn');
-  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  const status=document.getElementById('lobbyMapUploadStatus');
+  if(status){ status.textContent='Processando imagem...'; status.style.color=''; }
   try{
     // Redimensiona pro lado maior ficar em no máx. 1600px, pra não pesar no storage/tráfego.
-    const dataUrl=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
-    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=dataUrl; });
+    const dataUrl=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error('Não foi possível ler o arquivo escolhido.')); r.readAsDataURL(file); });
+    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('O arquivo escolhido não parece ser uma imagem válida.')); i.src=dataUrl; });
     const MAXSIDE=1600;
     const scale=Math.min(1, MAXSIDE/Math.max(img.naturalWidth,img.naturalHeight));
     const canvas=document.createElement('canvas');
@@ -3141,8 +3144,15 @@ async function handleMapImageUpload(e){
     canvas.height=Math.round(img.naturalHeight*scale);
     canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
     const blob=await canvasToBlob(canvas,0.85);
-    const url=blob ? await uploadBlobToLobbyStorage(blob,'maps') : null;
-    if(!url){ alert('Não foi possível enviar o mapa. Verifique sua conexão e se o bucket "lobby-images" existe no Supabase.'); return; }
+    if(!blob) throw new Error('Não foi possível converter a imagem.');
+    if(status) status.textContent='Enviando para o Supabase...';
+    const {url,error}=await uploadBlobToLobbyStorage(blob,'maps');
+    if(!url){
+      const msg='Falha ao enviar: '+(error?.message||error||'erro desconhecido')+'. Confira se o bucket "lobby-images" existe e se rodou o setup-storage.sql no seu projeto Supabase.';
+      if(status){ status.textContent=msg; status.style.color='#e57373'; }
+      alert(msg);
+      return;
+    }
     const state=getLobbyMapState();
     const id=(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random());
     state.maps.push({id,nome,url});
@@ -3152,9 +3162,9 @@ async function handleMapImageUpload(e){
     renderLobbyMap(lastLobbyCharacters);
   }catch(err){
     console.error(err);
-    alert('Não foi possível processar essa imagem.');
-  }finally{
-    if(btn){ btn.disabled=false; btn.textContent='Adicionar mapa'; }
+    const msg='Não foi possível processar essa imagem: '+(err?.message||err);
+    if(status){ status.textContent=msg; status.style.color='#e57373'; }
+    alert(msg);
   }
 }
 function setActiveMap(mapId){
@@ -3216,10 +3226,10 @@ function renderLobbyMap(characters){
       <input type="text" id="lobbyMapNome" placeholder="Nome do mapa (ex.: Taverna do Porto)">
       <label class="btn btn-secondary" style="cursor:pointer;">
         <input type="file" id="lobbyMapFile" accept="image/*" hidden>
-        📁 Escolher imagem
+        📁 Escolher imagem e enviar
       </label>
-      <button type="button" id="lobbyMapUploadBtn" class="btn btn-primary" disabled>Adicionar mapa</button>
     </div>
+    <div class="lobby-map-upload-status" id="lobbyMapUploadStatus"></div>
     <div class="lobby-map-folder">
       ${state.maps.length ? state.maps.map(m=>`
         <div class="map-folder-item ${m.id===state.activeMapId?'active':''}">
@@ -3263,12 +3273,7 @@ function renderLobbyMap(characters){
 
   if(!isAdmin || !activeMap) return;
 
-  document.getElementById('lobbyMapFile')?.addEventListener('change',()=>{
-    const btn=document.getElementById('lobbyMapUploadBtn');
-    if(btn) btn.disabled=!document.getElementById('lobbyMapFile').files.length;
-  });
   document.getElementById('lobbyMapFile')?.addEventListener('change',handleMapImageUpload);
-  document.getElementById('lobbyMapUploadBtn')?.addEventListener('click',()=>document.getElementById('lobbyMapFile')?.click());
   section.querySelectorAll('[data-set-active-map]').forEach(b=>b.onclick=()=>setActiveMap(b.dataset.setActiveMap));
   section.querySelectorAll('[data-remove-map]').forEach(b=>b.onclick=(e)=>{e.stopPropagation();removeMap(b.dataset.removeMap);});
   document.getElementById('mapZoomIn')?.addEventListener('click',()=>applyMapZoom(MAP_ZOOM_STEP));
