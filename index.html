@@ -3271,9 +3271,10 @@ function renderLobbyMap(characters){
     ${trayHtml}
   `;
 
+  document.getElementById('lobbyMapFile')?.addEventListener('change',handleMapImageUpload);
+
   if(!isAdmin || !activeMap) return;
 
-  document.getElementById('lobbyMapFile')?.addEventListener('change',handleMapImageUpload);
   section.querySelectorAll('[data-set-active-map]').forEach(b=>b.onclick=()=>setActiveMap(b.dataset.setActiveMap));
   section.querySelectorAll('[data-remove-map]').forEach(b=>b.onclick=(e)=>{e.stopPropagation();removeMap(b.dataset.removeMap);});
   document.getElementById('mapZoomIn')?.addEventListener('click',()=>applyMapZoom(MAP_ZOOM_STEP));
