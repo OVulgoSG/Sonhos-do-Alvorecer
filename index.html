@@ -515,6 +515,29 @@ textarea { resize:vertical; line-height:1.6; }
 .lobby-privacy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px;}
 .lobby-privacy-grid label{display:flex;align-items:center;gap:8px;background:var(--bg-panel-alt);padding:10px;border-radius:var(--radius-md);}
 @media(max-width:760px){.lobby-capangas-form{grid-template-columns:1fr 1fr;}.lobby-capangas-form .btn{grid-column:1/-1;}}
+.lobby-map{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--gold);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
+.lobby-map h2{color:var(--gold-bright);font-size:1.1rem;margin-bottom:6px;}
+.lobby-map-upload{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;}
+.lobby-map-upload input[type=text]{flex:1;min-width:180px;}
+.lobby-map-folder{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.map-folder-item{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;width:88px;}
+.map-folder-thumb{padding:0;border:2px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden;width:80px;height:56px;cursor:pointer;background:none;}
+.map-folder-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.map-folder-item.active .map-folder-thumb{border-color:var(--gold-bright);}
+.map-folder-item span{font-size:.72rem;text-align:center;line-height:1.2;color:var(--text-muted,#aaa);}
+.map-folder-remove{position:absolute;top:-6px;right:6px;width:18px;height:18px;border-radius:50%;border:none;background:#c0392b;color:#fff;line-height:1;cursor:pointer;font-size:.8rem;}
+.map-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.map-zoom-controls{display:flex;align-items:center;gap:8px;}
+.map-zoom-controls button{width:32px;height:32px;padding:0;}
+.map-viewport{margin-top:10px;max-height:70vh;overflow:auto;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:#111;}
+.map-image-wrap{position:relative;min-width:100%;}
+.map-image-wrap img{display:block;width:100%;height:auto;user-select:none;}
+.map-token{position:absolute;transform:translate(-50%,-50%);cursor:grab;touch-action:none;}
+.map-token-avatar{width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--gold-bright);background:var(--bg-panel-alt);display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);}
+.map-token-avatar img{width:100%;height:100%;object-fit:cover;}
+.map-token-tray{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-soft);}
+.map-tray-label{font-size:.8rem;color:var(--text-muted,#aaa);}
+.map-tray-chip{cursor:grab;}
 @media(max-width:760px){.capangas-form,.capanga-row{grid-template-columns:1fr 1fr;}.capanga-row .capanga-name{grid-column:1/-1;}.capangas-form .btn{grid-column:1/-1;}}
 
 .lobby-rolls{margin-bottom:18px;background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);}
@@ -1995,6 +2018,7 @@ async function finalizeCharacter(){
 /* ===== Ficha final ===== */
 
 const CAPANGAS_STORAGE_KEY='sonhos_capangas_mestre';
+const MAP_STORAGE_KEY='sonhos_mapa_mestre';
 function loadMasterCapangas(){
   try{
     const raw=localStorage.getItem(CAPANGAS_STORAGE_KEY);
@@ -2289,7 +2313,25 @@ function applyCropTransform(){
   imgEl.style.height=dispH+'px';
   imgEl.style.transform=`translate(${(stageSize-dispW)/2+x}px, ${(stageSize-dispH)/2+y}px)`;
 }
-function confirmCropPhoto(){
+/* ===== Upload de imagens pro Supabase Storage (bucket "lobby-images") =====
+   Em vez de guardar base64 gigante dentro do jsonb da ficha (o que enche
+   rápido o limite de 500MB do banco), a imagem final vira um arquivo no
+   Storage (limite separado de 1GB) e só a URL pública fica salva no state. */
+const LOBBY_IMAGES_BUCKET='lobby-images';
+async function uploadBlobToLobbyStorage(blob, pathPrefix){
+  if(!ONLINE_ENABLED || !supabaseClient) return null;
+  try{
+    const filename=`${pathPrefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+    const {error}=await supabaseClient.storage.from(LOBBY_IMAGES_BUCKET).upload(filename, blob, {contentType:'image/jpeg', upsert:true});
+    if(error){ console.warn('Falha ao subir imagem para o Storage:', error); return null; }
+    const {data}=supabaseClient.storage.from(LOBBY_IMAGES_BUCKET).getPublicUrl(filename);
+    return data?.publicUrl || null;
+  }catch(e){ console.warn('Falha ao subir imagem para o Storage:', e); return null; }
+}
+function canvasToBlob(canvas, quality){
+  return new Promise(resolve=>canvas.toBlob(b=>resolve(b), 'image/jpeg', quality));
+}
+async function confirmCropPhoto(){
   if(!cropState) return;
   const {img, stageSize, baseScale, scale, x, y}=cropState;
   const OUT=320;
@@ -2303,8 +2345,13 @@ function confirmCropPhoto(){
   const drawY=((stageSize-img.naturalHeight*baseScale*scale)/2 + y)*factor;
   ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,OUT,OUT);
   ctx.drawImage(img, drawX, drawY, dispW, dispH);
-  applyPortraitImage(canvas.toDataURL('image/jpeg',0.85));
   closeCropModal();
+  // Tenta subir pro Storage primeiro; se der errado ou estiver offline,
+  // cai de volta pro base64 local (não quebra o fluxo de quem não tem Supabase configurado).
+  const blob=await canvasToBlob(canvas,0.85);
+  let finalSrc=null;
+  if(blob && ONLINE_ENABLED) finalSrc=await uploadBlobToLobbyStorage(blob, characterId ? `portraits/${characterId}` : 'portraits/tmp');
+  applyPortraitImage(finalSrc || canvas.toDataURL('image/jpeg',0.85));
 }
 
 function bindTabs(){
@@ -3025,6 +3072,235 @@ function subscribeLobbyCapangas(){
   });
 }
 
+/* ===== Mapa do lobby =====
+   Segue o mesmo padrão leve dos capangas: o estado (lista de mapas prontos,
+   mapa ativo e posição dos tokens) mora no localStorage do mestre e é
+   transmitido ao vivo por um canal de broadcast do Supabase Realtime — não
+   cria tabela nova nem RPC nova. Só as IMAGENS dos mapas vão pro Storage
+   (bucket "lobby-images", pasta "maps/"), porque essas sim precisam
+   sobreviver entre sessões/dispositivos. */
+function normalizeMapState(s){
+  const maps=Array.isArray(s?.maps)?s.maps.filter(m=>m&&m.id&&m.url).map(m=>({id:m.id,nome:String(m.nome||'Mapa'),url:m.url})):[];
+  const activeMapId=maps.some(m=>m.id===s?.activeMapId)?s.activeMapId:(maps[0]?.id||null);
+  const tokens=(s&&typeof s.tokens==='object'&&s.tokens)?s.tokens:{};
+  return {maps,activeMapId,tokens};
+}
+function getLobbyMapState(){
+  try{return normalizeMapState(JSON.parse(localStorage.getItem(MAP_STORAGE_KEY)||'{}'));}catch(e){return normalizeMapState({});}
+}
+function saveLobbyMapState(state){
+  const normalized=normalizeMapState(state);
+  try{localStorage.setItem(MAP_STORAGE_KEY,JSON.stringify(normalized));}catch(e){}
+  broadcastLobbyMap(normalized);
+  return normalized;
+}
+let lobbyMapChannel=null;
+let lobbyMapReady=false;
+function broadcastLobbyMap(state){
+  if(!LOBBY_ADMIN_TOKEN || !lobbyMapChannel || !lobbyMapReady) return;
+  lobbyMapChannel.send({type:'broadcast',event:'map_state',payload:{state:normalizeMapState(state)}}).catch(()=>{});
+}
+function subscribeLobbyMap(){
+  if(lobbyMapChannel) supabaseClient.removeChannel(lobbyMapChannel);
+  lobbyMapReady=false;
+  lobbyMapChannel=supabaseClient.channel('sonhos-lobby-map');
+  lobbyMapChannel.on('broadcast',{event:'map_state'},({payload})=>{
+    const state=normalizeMapState(payload?.state||{});
+    try{localStorage.setItem(MAP_STORAGE_KEY,JSON.stringify(state));}catch(e){}
+    renderLobbyMap(lastLobbyCharacters);
+  });
+  lobbyMapChannel.on('broadcast',{event:'map_request'},()=>{if(LOBBY_ADMIN_TOKEN) broadcastLobbyMap(getLobbyMapState());});
+  lobbyMapChannel.subscribe(status=>{
+    if(status==='SUBSCRIBED'){
+      lobbyMapReady=true;
+      if(LOBBY_ADMIN_TOKEN) broadcastLobbyMap(getLobbyMapState());
+      else lobbyMapChannel.send({type:'broadcast',event:'map_request',payload:{}}).catch(()=>{});
+    }
+  });
+}
+let lastLobbyCharacters=[];
+let mapZoom=1;
+const MAP_ZOOM_MIN=1, MAP_ZOOM_MAX=3, MAP_ZOOM_STEP=0.25;
+
+async function handleMapImageUpload(e){
+  const file=e.target.files[0];
+  e.target.value='';
+  if(!file || !LOBBY_ADMIN_TOKEN) return;
+  const nomeInput=document.getElementById('lobbyMapNome');
+  const nome=(nomeInput?.value||'').trim() || file.name.replace(/\.[^.]+$/,'');
+  const btn=document.getElementById('lobbyMapUploadBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  try{
+    // Redimensiona pro lado maior ficar em no máx. 1600px, pra não pesar no storage/tráfego.
+    const dataUrl=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
+    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=dataUrl; });
+    const MAXSIDE=1600;
+    const scale=Math.min(1, MAXSIDE/Math.max(img.naturalWidth,img.naturalHeight));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.round(img.naturalWidth*scale);
+    canvas.height=Math.round(img.naturalHeight*scale);
+    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+    const blob=await canvasToBlob(canvas,0.85);
+    const url=blob ? await uploadBlobToLobbyStorage(blob,'maps') : null;
+    if(!url){ alert('Não foi possível enviar o mapa. Verifique sua conexão e se o bucket "lobby-images" existe no Supabase.'); return; }
+    const state=getLobbyMapState();
+    const id=(crypto.randomUUID&&crypto.randomUUID())||String(Date.now()+Math.random());
+    state.maps.push({id,nome,url});
+    state.activeMapId=id;
+    saveLobbyMapState(state);
+    if(nomeInput) nomeInput.value='';
+    renderLobbyMap(lastLobbyCharacters);
+  }catch(err){
+    console.error(err);
+    alert('Não foi possível processar essa imagem.');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='Adicionar mapa'; }
+  }
+}
+function setActiveMap(mapId){
+  const state=getLobbyMapState();
+  state.activeMapId=mapId;
+  saveLobbyMapState(state);
+  mapZoom=1;
+  renderLobbyMap(lastLobbyCharacters);
+}
+function removeMap(mapId){
+  if(!confirm('Remover este mapa da pasta? (a imagem enviada continua no Storage, só sai da lista)')) return;
+  const state=getLobbyMapState();
+  state.maps=state.maps.filter(m=>m.id!==mapId);
+  delete state.tokens[mapId];
+  if(state.activeMapId===mapId) state.activeMapId=state.maps[0]?.id||null;
+  saveLobbyMapState(state);
+  renderLobbyMap(lastLobbyCharacters);
+}
+function setTokenPosition(mapId, characterId, x, y){
+  const state=getLobbyMapState();
+  if(!state.tokens[mapId]) state.tokens[mapId]={};
+  state.tokens[mapId][characterId]={x:Math.max(0,Math.min(1,x)),y:Math.max(0,Math.min(1,y))};
+  saveLobbyMapState(state);
+}
+function removeTokenFromMap(mapId, characterId){
+  const state=getLobbyMapState();
+  if(state.tokens[mapId]) delete state.tokens[mapId][characterId];
+  saveLobbyMapState(state);
+}
+function applyMapZoom(delta){
+  mapZoom=Math.max(MAP_ZOOM_MIN,Math.min(MAP_ZOOM_MAX, +(mapZoom+delta).toFixed(2)));
+  const wrap=document.getElementById('mapImageWrap');
+  if(wrap) wrap.style.width=(mapZoom*100)+'%';
+  const label=document.getElementById('mapZoomLabel');
+  if(label) label.textContent=Math.round(mapZoom*100)+'%';
+}
+
+function buildMapTokenIcon(character){
+  const isAdmin=!!LOBBY_ADMIN_TOKEN;
+  const pub=character.public_data||{};
+  const lobby=character.lobby||{};
+  const nome=(isAdmin||lobby.mostrarNome)?(pub.nome||'?'):'???';
+  const foto=(isAdmin||lobby.mostrarFoto)&&pub.imagem ? `<img src="${escapeHtml(pub.imagem)}" alt="">` : `<span>${escapeHtml((nome||'?').charAt(0).toUpperCase())}</span>`;
+  return `<div class="map-token-avatar" title="${escapeHtml(nome)}">${foto}</div>`;
+}
+
+function renderLobbyMap(characters){
+  lastLobbyCharacters=characters||lastLobbyCharacters;
+  const section=document.getElementById('lobbyMapSection');
+  if(!section) return;
+  const isAdmin=!!LOBBY_ADMIN_TOKEN;
+  const state=getLobbyMapState();
+  const activeMap=state.maps.find(m=>m.id===state.activeMapId)||null;
+  const tokensOnMap=activeMap?(state.tokens[activeMap.id]||{}):{};
+  const chars=characters||[];
+
+  const mapsFolderHtml=isAdmin?`
+    <div class="lobby-map-upload">
+      <input type="text" id="lobbyMapNome" placeholder="Nome do mapa (ex.: Taverna do Porto)">
+      <label class="btn btn-secondary" style="cursor:pointer;">
+        <input type="file" id="lobbyMapFile" accept="image/*" hidden>
+        📁 Escolher imagem
+      </label>
+      <button type="button" id="lobbyMapUploadBtn" class="btn btn-primary" disabled>Adicionar mapa</button>
+    </div>
+    <div class="lobby-map-folder">
+      ${state.maps.length ? state.maps.map(m=>`
+        <div class="map-folder-item ${m.id===state.activeMapId?'active':''}">
+          <button type="button" class="map-folder-thumb" data-set-active-map="${escapeHtml(m.id)}" title="Usar este mapa"><img src="${escapeHtml(m.url)}" alt=""></button>
+          <span>${escapeHtml(m.nome)}</span>
+          <button type="button" class="map-folder-remove" data-remove-map="${escapeHtml(m.id)}" title="Remover da pasta">×</button>
+        </div>`).join('') : '<div class="empty-hint">Nenhum mapa na pasta ainda.</div>'}
+    </div>` : '';
+
+  const trayHtml=isAdmin&&activeMap ? `
+    <div class="map-token-tray" id="mapTokenTray">
+      <span class="map-tray-label">Arraste pro mapa:</span>
+      ${chars.filter(c=>!tokensOnMap[c.id]).map(c=>`<div class="map-tray-chip" draggable="true" data-drag-character="${escapeHtml(c.id)}">${buildMapTokenIcon(c)}</div>`).join('') || '<span class="hint-text">Todos os personagens já estão no mapa.</span>'}
+    </div>` : '';
+
+  section.innerHTML=`
+    <h2>🗺️ Mapa</h2>
+    <p class="hint-text">${isAdmin?'Suba mapas prontos, escolha o ativo e arraste os personagens sobre ele.':'Acompanhe a posição dos personagens no mapa da cena.'}</p>
+    ${mapsFolderHtml}
+    ${activeMap?`
+      <div class="map-toolbar">
+        <strong>${escapeHtml(activeMap.nome)}</strong>
+        <div class="map-zoom-controls">
+          <button type="button" id="mapZoomOut" class="btn btn-secondary">−</button>
+          <span id="mapZoomLabel">${Math.round(mapZoom*100)}%</span>
+          <button type="button" id="mapZoomIn" class="btn btn-secondary">+</button>
+          <button type="button" id="mapZoomReset" class="btn btn-secondary">Reset</button>
+        </div>
+      </div>
+      <div class="map-viewport" id="mapViewport">
+        <div class="map-image-wrap" id="mapImageWrap" style="width:${mapZoom*100}%">
+          <img src="${escapeHtml(activeMap.url)}" alt="${escapeHtml(activeMap.nome)}" draggable="false">
+          ${chars.filter(c=>tokensOnMap[c.id]).map(c=>`
+            <div class="map-token" data-token-character="${escapeHtml(c.id)}" style="left:${(tokensOnMap[c.id].x*100).toFixed(2)}%; top:${(tokensOnMap[c.id].y*100).toFixed(2)}%;" ${isAdmin?'draggable="true"':''}>
+              ${buildMapTokenIcon(c)}
+            </div>`).join('')}
+        </div>
+      </div>` : '<div class="empty-hint"><span class="empty-icon">🗺️</span>Nenhum mapa ativo no momento.</div>'}
+    ${trayHtml}
+  `;
+
+  if(!isAdmin || !activeMap) return;
+
+  document.getElementById('lobbyMapFile')?.addEventListener('change',()=>{
+    const btn=document.getElementById('lobbyMapUploadBtn');
+    if(btn) btn.disabled=!document.getElementById('lobbyMapFile').files.length;
+  });
+  document.getElementById('lobbyMapFile')?.addEventListener('change',handleMapImageUpload);
+  document.getElementById('lobbyMapUploadBtn')?.addEventListener('click',()=>document.getElementById('lobbyMapFile')?.click());
+  section.querySelectorAll('[data-set-active-map]').forEach(b=>b.onclick=()=>setActiveMap(b.dataset.setActiveMap));
+  section.querySelectorAll('[data-remove-map]').forEach(b=>b.onclick=(e)=>{e.stopPropagation();removeMap(b.dataset.removeMap);});
+  document.getElementById('mapZoomIn')?.addEventListener('click',()=>applyMapZoom(MAP_ZOOM_STEP));
+  document.getElementById('mapZoomOut')?.addEventListener('click',()=>applyMapZoom(-MAP_ZOOM_STEP));
+  document.getElementById('mapZoomReset')?.addEventListener('click',()=>{ mapZoom=1; applyMapZoom(0); });
+
+  const wrap=document.getElementById('mapImageWrap');
+  function dropAt(characterId, clientX, clientY){
+    const rect=wrap.getBoundingClientRect();
+    if(clientX<rect.left||clientX>rect.right||clientY<rect.top||clientY>rect.bottom){
+      removeTokenFromMap(activeMap.id, characterId);
+    }else{
+      setTokenPosition(activeMap.id, characterId, (clientX-rect.left)/rect.width, (clientY-rect.top)/rect.height);
+    }
+    renderLobbyMap(lastLobbyCharacters);
+  }
+  section.querySelectorAll('[data-drag-character]').forEach(chip=>{
+    chip.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', chip.dataset.dragCharacter); e.dataTransfer.effectAllowed='move'; });
+  });
+  section.querySelectorAll('.map-token').forEach(tok=>{
+    tok.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain', tok.dataset.tokenCharacter); e.dataTransfer.effectAllowed='move'; });
+  });
+  wrap.addEventListener('dragover',e=>e.preventDefault());
+  wrap.addEventListener('drop',e=>{
+    e.preventDefault();
+    const characterId=e.dataTransfer.getData('text/plain');
+    if(characterId) dropAt(characterId, e.clientX, e.clientY);
+  });
+  // Fora do mapa também precisa aceitar drop, pra permitir "tirar" um token arrastando-o pra fora.
+  document.addEventListener('dragover',e=>e.preventDefault(),{once:false});
+}
+
 function renderLobby(characters){
   const app=document.getElementById('app');
   const isAdmin=!!LOBBY_ADMIN_TOKEN;
@@ -3061,12 +3337,15 @@ function renderLobby(characters){
         <div class="lobby-capangas-list" id="lobbyCapangasList"></div>
       </div>
 
+      <div class="lobby-map" id="lobbyMapSection"></div>
+
       <div id="lobbyCharacters" class="lobby-grid">
         ${characters.length ? characters.map(buildLobbyCard).join('') : `<div class="lobby-empty"><span class="empty-icon">🧭</span>Nenhum personagem está em cena.</div>`}
       </div>
     </div>`;
 
   renderLobbyCapangas();
+  renderLobbyMap(characters);
   renderLobbyRolls();
   if(isAdmin){
     document.getElementById('addLobbyCapangaBtn')?.addEventListener('click',addLobbyCapanga);
@@ -3138,7 +3417,10 @@ function subscribeLobbyRealtime(){
 
 if(!window.__sonhosCapangasStorageBound){
   window.__sonhosCapangasStorageBound=true;
-  window.addEventListener('storage',e=>{ if(e.key===CAPANGAS_STORAGE_KEY) renderLobbyCapangas(); });
+  window.addEventListener('storage',e=>{
+    if(e.key===CAPANGAS_STORAGE_KEY) renderLobbyCapangas();
+    if(e.key===MAP_STORAGE_KEY) renderLobbyMap(lastLobbyCharacters);
+  });
 }
 
 async function initLobby(){
@@ -3158,6 +3440,7 @@ async function initLobby(){
     await loadLobbyCharacters();
     subscribeLobbyRealtime();
     subscribeLobbyCapangas();
+    subscribeLobbyMap();
     ensureRollsChannel();
     renderLobbyRolls();
   }catch(e){
