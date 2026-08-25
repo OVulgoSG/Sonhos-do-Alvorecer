@@ -541,6 +541,7 @@ textarea { resize:vertical; line-height:1.6; }
 .map-tray-chip{cursor:grab;position:relative;}
 .map-token-generic{border-color:var(--accent-notas,#7c88b8);}
 .map-tray-chip-remove{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;border:none;background:#c0392b;color:#fff;line-height:1;cursor:pointer;font-size:.7rem;padding:0;}
+.map-tray-chip-img{position:absolute;top:-6px;left:-6px;width:16px;height:16px;border-radius:50%;border:none;background:var(--bg-panel-alt);color:var(--gold-bright);line-height:1;cursor:pointer;font-size:.6rem;padding:0;display:flex;align-items:center;justify-content:center;}
 .map-generic-form{display:flex;gap:6px;align-items:center;width:100%;margin-top:2px;}
 .map-generic-form input[type=text]{flex:1;min-width:120px;}
 .map-token.selected .map-token-avatar{box-shadow:0 0 0 2px var(--gold-bright),0 2px 6px rgba(0,0,0,.5);}
@@ -2349,6 +2350,22 @@ async function uploadBlobToLobbyStorage(blob, pathPrefix){
 function canvasToBlob(canvas, quality){
   return new Promise(resolve=>canvas.toBlob(b=>resolve(b), 'image/jpeg', quality));
 }
+async function processTokenImageFile(file){
+  const dataUrl=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error('Não foi possível ler a imagem.')); r.readAsDataURL(file); });
+  const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('O arquivo escolhido não parece ser uma imagem válida.')); i.src=dataUrl; });
+  const OUT=256;
+  const canvas=document.createElement('canvas');
+  canvas.width=OUT; canvas.height=OUT;
+  const ctx=canvas.getContext('2d');
+  const side=Math.min(img.naturalWidth,img.naturalHeight);
+  const sx=(img.naturalWidth-side)/2, sy=(img.naturalHeight-side)/2;
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, OUT, OUT);
+  const blob=await canvasToBlob(canvas,0.85);
+  if(!blob) throw new Error('Não foi possível converter a imagem.');
+  const {url,error}=await uploadBlobToLobbyStorage(blob,'tokens');
+  if(!url) throw new Error('Falha ao enviar imagem: '+(error?.message||error||'erro desconhecido')+'. Confira o bucket "lobby-images".');
+  return url;
+}
 async function confirmCropPhoto(){
   if(!cropState) return;
   const {img, stageSize, baseScale, scale, x, y}=cropState;
@@ -3101,7 +3118,7 @@ function normalizeMapState(s){
   const maps=Array.isArray(s?.maps)?s.maps.filter(m=>m&&m.id&&m.url).map(m=>({id:m.id,nome:String(m.nome||'Mapa'),url:m.url})):[];
   const activeMapId=maps.some(m=>m.id===s?.activeMapId)?s.activeMapId:(maps[0]?.id||null);
   const tokens=(s&&typeof s.tokens==='object'&&s.tokens)?s.tokens:{};
-  const genericTokens=Array.isArray(s?.genericTokens)?s.genericTokens.filter(t=>t&&t.id&&t.nome).map(t=>({id:String(t.id),nome:String(t.nome).slice(0,40)})):[];
+  const genericTokens=Array.isArray(s?.genericTokens)?s.genericTokens.filter(t=>t&&t.id&&t.nome).map(t=>({id:String(t.id),nome:String(t.nome).slice(0,40),...(t.imagem?{imagem:String(t.imagem)}:{})})):[];
   const fog=(s&&typeof s.fog==='object'&&s.fog)?s.fog:{};
   const camera=(s&&typeof s.camera==='object'&&s.camera)?s.camera:{};
   return {maps,activeMapId,tokens,genericTokens,fog,camera};
@@ -3298,12 +3315,34 @@ function setTokenSize(mapId, tokenId, tamanho){
    só um nome. Ficam numa lista própria (fora dos personagens) e usam o
    mesmo mecanismo de posição/tamanho de state.tokens, só que com um id
    prefixado "gtk_" pra não colidir com ids de ficha. */
-function addGenericToken(nome){
+function addGenericToken(nome, imagem){
   const limpo=String(nome||'').trim().slice(0,40);
   if(!limpo) return;
   const state=getLobbyMapState();
   const id='gtk_'+(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()));
-  state.genericTokens.push({id,nome:limpo});
+  state.genericTokens.push({id,nome:limpo,...(imagem?{imagem}:{})});
+  saveLobbyMapState(state);
+  renderLobbyMap(lastLobbyCharacters);
+}
+async function setGenericTokenImageFromFile(id, file){
+  try{
+    const imagem=await processTokenImageFile(file);
+    const state=getLobbyMapState();
+    const tok=state.genericTokens.find(t=>t.id===id);
+    if(!tok) return;
+    tok.imagem=imagem;
+    saveLobbyMapState(state);
+    renderLobbyMap(lastLobbyCharacters);
+  }catch(err){
+    console.error(err);
+    alert('Não foi possível processar essa imagem: '+(err?.message||err));
+  }
+}
+function removeGenericTokenImage(id){
+  const state=getLobbyMapState();
+  const tok=state.genericTokens.find(t=>t.id===id);
+  if(!tok || !tok.imagem) return;
+  delete tok.imagem;
   saveLobbyMapState(state);
   renderLobbyMap(lastLobbyCharacters);
 }
@@ -3396,7 +3435,8 @@ function buildMapTokenIcon(character, tamanho){
 function buildGenericTokenIcon(token, tamanho){
   const nome=token.nome||'?';
   const size=38*(tamanho||1);
-  return `<div class="map-token-avatar map-token-generic" title="${escapeHtml(nome)}" style="width:${size}px;height:${size}px;"><span>${escapeHtml(nome.charAt(0).toUpperCase())}</span></div>`;
+  const foto=token.imagem ? `<img src="${escapeHtml(token.imagem)}" alt="">` : `<span>${escapeHtml(nome.charAt(0).toUpperCase())}</span>`;
+  return `<div class="map-token-avatar map-token-generic" title="${escapeHtml(nome)}" style="width:${size}px;height:${size}px;">${foto}</div>`;
 }
 
 function renderLobbyMap(characters){
@@ -3437,12 +3477,18 @@ function renderLobbyMap(characters){
     <div class="map-token-tray" id="mapTokenTray">
       <span class="map-tray-label">Arraste pro mapa:</span>
       ${chars.filter(c=>!tokensOnMap[c.id]).map(c=>`<div class="map-tray-chip" draggable="true" data-drag-character="${escapeHtml(c.id)}">${buildMapTokenIcon(c)}</div>`).join('')}
-      ${genericTokens.filter(t=>!tokensOnMap[t.id]).map(t=>`<div class="map-tray-chip" draggable="true" data-drag-generic="${escapeHtml(t.id)}">${buildGenericTokenIcon(t)}<button type="button" class="map-tray-chip-remove" data-remove-generic="${escapeHtml(t.id)}" title="Excluir este token">×</button></div>`).join('')}
+      ${genericTokens.filter(t=>!tokensOnMap[t.id]).map(t=>`<div class="map-tray-chip" draggable="true" data-drag-generic="${escapeHtml(t.id)}">${buildGenericTokenIcon(t)}<button type="button" class="map-tray-chip-img" data-generic-img="${escapeHtml(t.id)}" title="Trocar imagem">🖼️</button><button type="button" class="map-tray-chip-remove" data-remove-generic="${escapeHtml(t.id)}" title="Excluir este token">×</button></div>`).join('')}
       ${(chars.filter(c=>!tokensOnMap[c.id]).length===0 && genericTokens.filter(t=>!tokensOnMap[t.id]).length===0) ? '<span class="hint-text">Todos os tokens já estão no mapa.</span>' : ''}
       <div class="map-generic-form">
         <input type="text" id="mapGenericTokenNome" placeholder="Nome do token (ex.: Goblin, Guarda)" maxlength="40">
+        <label class="btn btn-secondary" style="cursor:pointer;">
+          <input type="file" id="mapGenericTokenImagem" accept="image/*" hidden>
+          🖼️ Imagem (opcional)
+        </label>
+        <span class="hint-text" id="mapGenericTokenImagemStatus"></span>
         <button type="button" id="mapGenericTokenAdd" class="btn btn-secondary">+ Token genérico</button>
       </div>
+      <input type="file" id="genericTokenImageEditInput" accept="image/*" hidden>
     </div>` : '';
 
   const fogCellsHtml=(()=>{
@@ -3510,6 +3556,7 @@ function renderLobbyMap(characters){
                   <button type="button" data-token-size-dec="${escapeHtml(pt.id)}">−</button>
                   <span>${Math.round(tamanho*100)}%</span>
                   <button type="button" data-token-size-inc="${escapeHtml(pt.id)}">+</button>
+                  ${pt.kind==='generic'?`<button type="button" data-generic-img="${escapeHtml(pt.id)}" title="Trocar imagem">🖼️</button>`:''}
                   ${pt.kind==='generic'?`<button type="button" class="map-token-remove-btn" data-token-full-remove="${escapeHtml(pt.id)}">Excluir</button>`:''}
                 </div>`:'';
               return `<div class="map-token${selectedMapTokenId===pt.id?' selected':''}" data-token-id="${escapeHtml(pt.id)}" ${dataAttr} style="left:${(pos.x*100).toFixed(2)}%; top:${(pos.y*100).toFixed(2)}%;" ${isAdmin?'draggable="true"':''}>
@@ -3604,10 +3651,50 @@ function renderLobbyMap(characters){
         if(confirm('Excluir este token genérico da pasta?')) removeGenericToken(b.dataset.removeGeneric);
       });
     });
+    const editImgInput=document.getElementById('genericTokenImageEditInput');
+    section.querySelectorAll('[data-generic-img]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.stopPropagation();
+        if(!editImgInput) return;
+        editImgInput.dataset.targetId=b.dataset.genericImg;
+        editImgInput.click();
+      });
+    });
+    editImgInput?.addEventListener('change',e=>{
+      const file=e.target.files[0];
+      const targetId=editImgInput.dataset.targetId;
+      e.target.value='';
+      if(file && targetId) setGenericTokenImageFromFile(targetId, file);
+    });
     const genericAddBtn=document.getElementById('mapGenericTokenAdd');
     const genericInput=document.getElementById('mapGenericTokenNome');
+    const genericImgInput=document.getElementById('mapGenericTokenImagem');
+    const genericImgStatus=document.getElementById('mapGenericTokenImagemStatus');
+    let pendingGenericFile=null;
+    genericImgInput?.addEventListener('change',e=>{
+      pendingGenericFile=e.target.files[0]||null;
+      if(genericImgStatus) genericImgStatus.textContent=pendingGenericFile?('📎 '+pendingGenericFile.name):'';
+    });
     if(genericAddBtn && genericInput){
-      const criar=()=>{ if(genericInput.value.trim()) addGenericToken(genericInput.value); };
+      const criar=async()=>{
+        const nome=genericInput.value.trim();
+        if(!nome) return;
+        genericAddBtn.disabled=true;
+        try{
+          let imagem=null;
+          if(pendingGenericFile){
+            if(genericImgStatus) genericImgStatus.textContent='Enviando imagem...';
+            try{ imagem=await processTokenImageFile(pendingGenericFile); }
+            catch(err){ alert('Não foi possível processar a imagem: '+(err?.message||err)+'\n\nO token será criado sem imagem.'); }
+          }
+          addGenericToken(nome, imagem);
+        } finally {
+          genericAddBtn.disabled=false;
+          pendingGenericFile=null;
+          if(genericImgInput) genericImgInput.value='';
+          if(genericImgStatus) genericImgStatus.textContent='';
+        }
+      };
       genericAddBtn.addEventListener('click',criar);
       genericInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); criar(); } });
     }
