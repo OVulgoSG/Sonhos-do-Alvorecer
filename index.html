@@ -1145,6 +1145,12 @@ let saveTimer = null;
 let supabaseClient = null;
   const IS_LOBBY = URL_PARAMS.has('lobby');
 const LOBBY_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
+// Identificador de mesa: isola os canais de tempo real (mapa/rolagens/capangas)
+// e o cache local do mestre entre mesas diferentes que usem este mesmo projeto
+// Supabase. Sem "&mesa=..." na URL, cai no valor 'default' — então, pra uma
+// mesa nova ficar isolada de verdade, tanto o link do mestre quanto o link
+// que ele compartilha com os jogadores precisam levar o mesmo "&mesa=algo".
+const MESA_ID = (URL_PARAMS.get('mesa')||'').trim().replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40) || 'default';
 // A raiz do site sempre começa uma ficha nova. Somente um link com ?ficha=...
 // carrega uma ficha existente. Isso evita que testes anteriores apareçam sozinhos.
 let characterId = URL_PARAMS.get('ficha') || null;
@@ -1485,7 +1491,7 @@ window.addEventListener('popstate',()=>{
 });
 
 function fichaShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?ficha='+encodeURIComponent(characterId)) : ''; }
-function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby') : ''; }
+function lobbyShareUrl(){ return characterId ? (location.origin === 'null' ? '' : location.origin+location.pathname+'?lobby'+(MESA_ID!=='default'?'&mesa='+encodeURIComponent(MESA_ID):'')) : ''; }
 function copyTextOrPrompt(text,message){
   if(!text) return;
   navigator.clipboard?.writeText(text).then(()=>alert(message)).catch(()=>prompt('Copie este link:',text));
@@ -2035,8 +2041,21 @@ async function finalizeCharacter(){
 
 /* ===== Ficha final ===== */
 
-const CAPANGAS_STORAGE_KEY='sonhos_capangas_mestre';
-const MAP_STORAGE_KEY='sonhos_mapa_mestre';
+const CAPANGAS_STORAGE_KEY='sonhos_capangas_mestre_'+MESA_ID;
+const MAP_STORAGE_KEY='sonhos_mapa_mestre_'+MESA_ID;
+// Migração: quem já usava a ficha antes de existir o escopo por mesa tinha os
+// dados salvos nas chaves antigas (sem sufixo). Se a mesa atual for a
+// 'default' (ou seja, ninguém passou "&mesa=" ainda), copia o que existir nas
+// chaves antigas pra não perder mapas/capangas já configurados.
+(function migrateLobbyStorageKeys(){
+  try{
+    [['sonhos_capangas_mestre',CAPANGAS_STORAGE_KEY],['sonhos_mapa_mestre',MAP_STORAGE_KEY]].forEach(([oldKey,newKey])=>{
+      if(oldKey===newKey) return;
+      const oldVal=localStorage.getItem(oldKey);
+      if(oldVal!==null && localStorage.getItem(newKey)===null) localStorage.setItem(newKey, oldVal);
+    });
+  }catch(e){}
+})();
 function loadMasterCapangas(){
   try{
     const raw=localStorage.getItem(CAPANGAS_STORAGE_KEY);
@@ -2584,7 +2603,7 @@ function ensureRollsChannel(){
   if(!ONLINE_ENABLED) return null;
   try{ ensureSupabaseClient(); }catch(e){ return null; }
   if(!rollsChannel){
-    rollsChannel=supabaseClient.channel('sonhos-lobby-rolls');
+    rollsChannel=supabaseClient.channel('sonhos-lobby-rolls-'+MESA_ID);
     rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
     rollsChannel.subscribe(status=>{ if(status==='SUBSCRIBED') rollsChannelReady=true; });
   }
@@ -3091,7 +3110,7 @@ function addLobbyCapanga(){
 function subscribeLobbyCapangas(){
   if(lobbyCapangaChannel) supabaseClient.removeChannel(lobbyCapangaChannel);
   lobbyCapangaReady=false;
-  lobbyCapangaChannel=supabaseClient.channel('sonhos-lobby-capangas');
+  lobbyCapangaChannel=supabaseClient.channel('sonhos-lobby-capangas-'+MESA_ID);
   lobbyCapangaChannel.on('broadcast',{event:'capangas_state'},({payload})=>{
     const groups=normalizeLobbyCapangas(payload?.groups||[]);
     try{localStorage.setItem(CAPANGAS_STORAGE_KEY,JSON.stringify(groups));}catch(e){}
@@ -3188,7 +3207,7 @@ function applyIncomingCamera(mapId, zoom, cx, cy){
 function subscribeLobbyMap(){
   if(lobbyMapChannel) supabaseClient.removeChannel(lobbyMapChannel);
   lobbyMapReady=false;
-  lobbyMapChannel=supabaseClient.channel('sonhos-lobby-map');
+  lobbyMapChannel=supabaseClient.channel('sonhos-lobby-map-'+MESA_ID);
   lobbyMapChannel.on('broadcast',{event:'map_state'},({payload})=>{
     const state=normalizeMapState(payload?.state||{});
     try{localStorage.setItem(MAP_STORAGE_KEY,JSON.stringify(state));}catch(e){}
@@ -3214,6 +3233,26 @@ function subscribeLobbyMap(){
       if(LOBBY_ADMIN_TOKEN) broadcastLobbyMap(getLobbyMapState());
       else lobbyMapChannel.send({type:'broadcast',event:'map_request',payload:{}}).catch(()=>{});
     }
+  });
+}
+// Retira do mapa o token de personagem selecionado ao apertar Delete/Backspace.
+// Só age em token de personagem (não genérico — esse já tem seu próprio botão
+// "Excluir") e nunca quando o foco está num campo de texto, pra não atrapalhar
+// quem estiver digitando (ex.: apagando texto com Backspace).
+function setupMapTokenKeyboardRemoval(){
+  document.addEventListener('keydown', e=>{
+    if(!LOBBY_ADMIN_TOKEN) return;
+    if(e.key!=='Delete' && e.key!=='Backspace') return;
+    if(!selectedMapTokenId || selectedMapTokenId.startsWith('gtk_')) return;
+    const tag=(document.activeElement&&document.activeElement.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select'||(document.activeElement&&document.activeElement.isContentEditable)) return;
+    const mapState=getLobbyMapState();
+    const mapId=mapState.activeMapId;
+    if(!mapId) return;
+    e.preventDefault();
+    removeTokenFromMap(mapId, selectedMapTokenId);
+    selectedMapTokenId=null;
+    renderLobbyMap(lastLobbyCharacters);
   });
 }
 let lastLobbyCharacters=[];
@@ -3558,6 +3597,7 @@ function renderLobbyMap(characters){
                   <button type="button" data-token-size-inc="${escapeHtml(pt.id)}">+</button>
                   ${pt.kind==='generic'?`<button type="button" data-generic-img="${escapeHtml(pt.id)}" title="Trocar imagem">🖼️</button>`:''}
                   ${pt.kind==='generic'?`<button type="button" class="map-token-remove-btn" data-token-full-remove="${escapeHtml(pt.id)}">Excluir</button>`:''}
+                  ${pt.kind==='character'?`<button type="button" class="map-token-remove-btn" data-token-map-remove="${escapeHtml(pt.id)}" title="Retirar do mapa (Delete/Backspace)">×</button>`:''}
                 </div>`:'';
               return `<div class="map-token${selectedMapTokenId===pt.id?' selected':''}" data-token-id="${escapeHtml(pt.id)}" ${dataAttr} style="left:${(pos.x*100).toFixed(2)}%; top:${(pos.y*100).toFixed(2)}%;" ${isAdmin?'draggable="true"':''}>
                 ${sizeControls}
@@ -3649,6 +3689,15 @@ function renderLobbyMap(characters){
       b.addEventListener('click',e=>{
         e.stopPropagation();
         if(confirm('Excluir este token genérico da pasta?')) removeGenericToken(b.dataset.removeGeneric);
+      });
+    });
+    section.querySelectorAll('[data-token-map-remove]').forEach(b=>{
+      b.addEventListener('click',e=>{
+        e.stopPropagation();
+        const id=b.dataset.tokenMapRemove;
+        removeTokenFromMap(activeMap.id, id);
+        if(selectedMapTokenId===id) selectedMapTokenId=null;
+        renderLobbyMap(lastLobbyCharacters);
       });
     });
     const editImgInput=document.getElementById('genericTokenImageEditInput');
@@ -3784,7 +3833,7 @@ function renderLobby(characters){
     document.getElementById('lobbyAddButton').addEventListener('click',addCharacterToLobby);
     document.getElementById('lobbyLinkInput').addEventListener('keydown',e=>{if(e.key==='Enter') addCharacterToLobby();});
     document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.addEventListener('click',()=>removeCharacterFromLobby(btn.dataset.removeLobby)));
-    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1&admin='+encodeURIComponent(LOBBY_ADMIN_TOKEN); }));
+    document.querySelectorAll('[data-edit-lobby]').forEach(btn=>btn.addEventListener('click',()=>{ location.href=location.pathname+'?ficha='+encodeURIComponent(btn.dataset.editLobby)+'&master=1&admin='+encodeURIComponent(LOBBY_ADMIN_TOKEN)+(MESA_ID!=='default'?'&mesa='+encodeURIComponent(MESA_ID):''); }));
   } else {
     document.querySelectorAll('[data-remove-lobby]').forEach(btn=>btn.remove());
   }
@@ -3874,6 +3923,7 @@ async function initLobby(){
     subscribeLobbyMap();
     ensureRollsChannel();
     renderLobbyRolls();
+    setupMapTokenKeyboardRemoval();
   }catch(e){
     console.error(e);
 
