@@ -145,6 +145,7 @@ textarea { resize:vertical; line-height:1.6; }
 .attr-row { display:grid; grid-template-columns:1fr 64px 78px 38px; gap:8px; align-items:center; }
 .attr-head { color:var(--text-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; padding-bottom:4px; border-bottom:1px solid var(--border-soft); margin-bottom:4px; }
 .attr-label { font-size:.9rem; display:flex; align-items:center; gap:5px; }
+.attr-sigla { font-size:.68em; color:var(--text-muted); vertical-align:super; opacity:.75; margin-left:1px; }
 .attr-row input { padding:6px 7px; text-align:center; }
 .attr-grid .attr-row:not(.attr-head):nth-child(even) { background:rgba(255,255,255,.025); border-radius:6px; margin:0 -6px; padding:2px 6px; }
 .attr-roll-btn { background:transparent; border:none; border-radius:50%; color:var(--gold-bright); cursor:pointer; height:38px; width:100%; padding:0; display:flex; align-items:center; justify-content:center; position:relative; transition:transform .15s ease; }
@@ -1014,16 +1015,16 @@ const FORMULA_FIELD_META = [
 ];
 
 const ATTR_META = {
-  forca: {label:'FRC', group:'fisico'},
-  vigor: {label:'VGR', group:'fisico'},
-  rapidez: {label:'RPD', group:'fisico'},
-  suavidade: {label:'SVD', group:'fisico', tip:'Coisas relacionadas à furtividade e tomar cuidado.'},
-  combate: {label:'CBT', group:'fisico'},
-  percepcao: {label:'PCP', group:'mental'},
-  raciocinio: {label:'R&C', group:'mental'},
-  carisma: {label:'CRM', group:'mental'},
-  vontade: {label:'VTD', group:'mental'},
-  poder: {label:'PDR', group:'mental'}
+  forca: {label:'Força', sigla:'FRC', group:'fisico'},
+  vigor: {label:'Vigor', sigla:'VGR', group:'fisico'},
+  rapidez: {label:'Rapidez', sigla:'RPD', group:'fisico'},
+  suavidade: {label:'Suavidade', sigla:'SVD', group:'fisico', tip:'Coisas relacionadas à furtividade e tomar cuidado.'},
+  combate: {label:'Combate', sigla:'CBT', group:'fisico'},
+  percepcao: {label:'Percepção', sigla:'PCP', group:'mental'},
+  raciocinio: {label:'Raciocínio & Conhecimento', sigla:'R&C', group:'mental'},
+  carisma: {label:'Carisma', sigla:'CRM', group:'mental'},
+  vontade: {label:'Vontade', sigla:'VTD', group:'mental'},
+  poder: {label:'Poder', sigla:'PDR', group:'mental'}
 };
 
 const STEP_DEFS = [
@@ -1677,7 +1678,7 @@ function buildAttrStep(group){
   const items = Object.entries(ATTR_META).filter(([k,v])=>v.group===group);
   const rows = items.map(([k,v])=>`
     <div class="attr-row" data-attr="${k}">
-      <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
+      <div class="attr-label">${v.label}<sup class="attr-sigla">${v.sigla}</sup>${v.tip?infoIcon(v.tip):''}</div>
       <input type="number" class="attr-valor" data-attr="${k}" min="0">
       <input type="number" class="attr-mod" data-attr="${k}">
     </div>`).join('');
@@ -2436,7 +2437,7 @@ function switchTab(tab){
 function buildTabBase(){
   const attrRows=(group)=>Object.entries(ATTR_META).filter(([k,v])=>v.group===group).map(([k,v])=>`
     <div class="attr-row" data-attr="${k}">
-      <div class="attr-label">${v.label}${v.tip?infoIcon(v.tip):''}</div>
+      <div class="attr-label">${v.label}<sup class="attr-sigla">${v.sigla}</sup>${v.tip?infoIcon(v.tip):''}</div>
       <input type="number" class="attr-valor" data-attr="${k}" min="0">
       <input type="number" class="attr-mod" data-attr="${k}">
       <button type="button" class="attr-roll-btn" data-attr="${k}" title="Rolar dados de ${v.label}">
