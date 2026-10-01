@@ -1805,7 +1805,7 @@ function updateHakiHints(prefix){
   const t=totals();
   const items=[
     ['Observacao', t.percepcao>=1, `Percepção atual: ${t.percepcao} (precisa de ao menos 1)`],
-    ['Armamento', t.poder>=1, `Poder atual: ${t.poder} (precisa de ao menos 1)`],
+    ['Armamento', t.vigor>=1, `Vigor atual: ${t.vigor} (precisa de ao menos 1)`],
     ['Conquistador', (t.carisma>=1 && t.vontade>=2), `Precisa de Carisma ≥ 1 e Vontade ≥ 2 (atual: Carisma ${t.carisma}, Vontade ${t.vontade})`]
   ];
   items.forEach(([name,ok,msg])=>{
