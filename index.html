@@ -2714,6 +2714,7 @@ function renderFocoPips(){
 /* ===== Rolagens ao vivo (o mestre vê no lobby, sem precisar de tabela nova) ===== */
 let rollsChannel=null;
 let rollsChannelReady=false;
+let rollsPending=[];
 let lobbyRollsLog=[];
 function ensureRollsChannel(){
   if(!ONLINE_ENABLED) return null;
@@ -2721,20 +2722,23 @@ function ensureRollsChannel(){
   if(!rollsChannel){
     rollsChannel=supabaseClient.channel('sonhos-lobby-rolls-'+MESA_ID);
     rollsChannel.on('broadcast',{event:'roll'},({payload})=>addLobbyRollEntry(payload));
-    rollsChannel.subscribe(status=>{ if(status==='SUBSCRIBED') rollsChannelReady=true; });
+    rollsChannel.subscribe(status=>{ if(status==='SUBSCRIBED'){ rollsChannelReady=true; const fila=rollsPending.splice(0); fila.forEach(pl=>{ try{ rollsChannel.send({type:'broadcast',event:'roll',payload:pl}).catch(()=>{}); }catch(e){} }); } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){ rollsChannelReady=false; } });
   }
   return rollsChannel;
 }
 function broadcastRoll(info){
   const ch=ensureRollsChannel();
-  if(!ch || !rollsChannelReady) return;
+  if(!ch) return;
   const payload={
     nome:(state?.identidade?.nome||'').trim() || 'Personagem sem nome',
     quando:Date.now(),
     ...info
   };
+  if(!rollsChannelReady){ rollsPending.push(payload); if(rollsPending.length>20) rollsPending.shift(); return; }
   ch.send({type:'broadcast',event:'roll',payload}).catch(()=>{});
 }
+// Abre o canal assim que a ficha carrega, pra a 1ª rolagem não se perder.
+window.addEventListener('load',()=>{ if(!IS_LOBBY) setTimeout(()=>{ try{ ensureRollsChannel(); }catch(e){} },800); });
 function buildLobbyRollEntryHtml(r){
   const hora=new Date(r.quando||Date.now()).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const icone = r.critico==='alto' ? '✨' : (r.critico==='baixo' ? '💀' : '🎲');
